@@ -1,14 +1,11 @@
 package top.quantic.sentry.config.social;
 
-import top.quantic.sentry.repository.SocialUserConnectionRepository;
-import top.quantic.sentry.repository.CustomSocialUsersConnectionRepository;
-import top.quantic.sentry.security.social.CustomSignInAdapter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.social.UserIdSource;
 import org.springframework.social.config.annotation.ConnectionFactoryConfigurer;
 import org.springframework.social.config.annotation.EnableSocial;
@@ -20,13 +17,18 @@ import org.springframework.social.connect.web.ConnectController;
 import org.springframework.social.connect.web.ProviderSignInController;
 import org.springframework.social.connect.web.ProviderSignInUtils;
 import org.springframework.social.connect.web.SignInAdapter;
-import org.springframework.social.facebook.connect.FacebookConnectionFactory;
-import org.springframework.social.google.connect.GoogleConnectionFactory;
+import org.springframework.social.discord.connect.DiscordConnectionFactory;
 import org.springframework.social.security.AuthenticationNameUserIdSource;
-import org.springframework.social.twitter.connect.TwitterConnectionFactory;
-// jhipster-needle-add-social-connection-factory-import-package
+import top.quantic.sentry.repository.AuthorityRepository;
+import top.quantic.sentry.repository.CustomSocialUsersConnectionRepository;
+import top.quantic.sentry.repository.SocialUserConnectionRepository;
+import top.quantic.sentry.repository.UserRepository;
+import top.quantic.sentry.security.social.CustomSignInAdapter;
+import top.quantic.sentry.security.social.ImplicitConnectionSignUp;
 
 import javax.inject.Inject;
+
+// jhipster-needle-add-social-connection-factory-import-package
 
 /**
  * Basic Spring Social configuration.
@@ -43,6 +45,15 @@ public class SocialConfiguration implements SocialConfigurer {
     private SocialUserConnectionRepository socialUserConnectionRepository;
 
     @Inject
+    private UserRepository userRepository;
+
+    @Inject
+    private AuthorityRepository authorityRepository;
+
+    @Inject
+    private PasswordEncoder passwordEncoder;
+
+    @Inject
     Environment environment;
 
     @Bean
@@ -56,49 +67,18 @@ public class SocialConfiguration implements SocialConfigurer {
 
     @Override
     public void addConnectionFactories(ConnectionFactoryConfigurer connectionFactoryConfigurer, Environment environment) {
-        // Google configuration
-        String googleClientId = environment.getProperty("spring.social.google.clientId");
-        String googleClientSecret = environment.getProperty("spring.social.google.clientSecret");
-        if (googleClientId != null && googleClientSecret != null) {
-            log.debug("Configuring GoogleConnectionFactory");
+        String discordClientId = environment.getProperty("spring.social.discord.clientId");
+        String discordClientSecret = environment.getProperty("spring.social.discord.clientSecret");
+        if (discordClientId != null && discordClientSecret != null) {
+            log.debug("Configuring DiscordConnectionFactory");
             connectionFactoryConfigurer.addConnectionFactory(
-                new GoogleConnectionFactory(
-                    googleClientId,
-                    googleClientSecret
+                new DiscordConnectionFactory(
+                    discordClientId,
+                    discordClientSecret
                 )
             );
         } else {
-            log.error("Cannot configure GoogleConnectionFactory id or secret null");
-        }
-
-        // Facebook configuration
-        String facebookClientId = environment.getProperty("spring.social.facebook.clientId");
-        String facebookClientSecret = environment.getProperty("spring.social.facebook.clientSecret");
-        if (facebookClientId != null && facebookClientSecret != null) {
-            log.debug("Configuring FacebookConnectionFactory");
-            connectionFactoryConfigurer.addConnectionFactory(
-                new FacebookConnectionFactory(
-                    facebookClientId,
-                    facebookClientSecret
-                )
-            );
-        } else {
-            log.error("Cannot configure FacebookConnectionFactory id or secret null");
-        }
-
-        // Twitter configuration
-        String twitterClientId = environment.getProperty("spring.social.twitter.clientId");
-        String twitterClientSecret = environment.getProperty("spring.social.twitter.clientSecret");
-        if (twitterClientId != null && twitterClientSecret != null) {
-            log.debug("Configuring TwitterConnectionFactory");
-            connectionFactoryConfigurer.addConnectionFactory(
-                new TwitterConnectionFactory(
-                    twitterClientId,
-                    twitterClientSecret
-                )
-            );
-        } else {
-            log.error("Cannot configure TwitterConnectionFactory id or secret null");
+            log.error("Cannot configure DiscordConnectionFactory id or secret null");
         }
 
         // jhipster-needle-add-social-connection-factory
@@ -111,7 +91,10 @@ public class SocialConfiguration implements SocialConfigurer {
 
     @Override
     public UsersConnectionRepository getUsersConnectionRepository(ConnectionFactoryLocator connectionFactoryLocator) {
-        return new CustomSocialUsersConnectionRepository(socialUserConnectionRepository, connectionFactoryLocator);
+        CustomSocialUsersConnectionRepository usersConnectionRepository = new CustomSocialUsersConnectionRepository(
+            socialUserConnectionRepository, connectionFactoryLocator);
+        usersConnectionRepository.setConnectionSignUp(new ImplicitConnectionSignUp(userRepository, authorityRepository, passwordEncoder));
+        return usersConnectionRepository;
     }
 
     @Bean
