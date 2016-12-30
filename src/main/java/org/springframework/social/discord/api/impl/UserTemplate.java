@@ -28,7 +28,7 @@ public class UserTemplate extends AbstractDiscordOperations implements UserOpera
     @Override
     public String getAvatarUrl() {
         DiscordUser profile = getUser();
-        return profile.getAvatar() == null ? null : String.format("https://discordcdn.com/avatars/%s/%s.jpg",
+        return profile.getAvatar() == null ? null : String.format("https://cdn.discordapp.com/avatars/%s/%s.jpg",
             profile.getId(), profile.getAvatar());
     }
 
