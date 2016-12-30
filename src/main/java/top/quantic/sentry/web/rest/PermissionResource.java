@@ -1,7 +1,9 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.security.access.annotation.Secured;
 import top.quantic.sentry.domain.Permission;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
@@ -31,7 +33,7 @@ import java.util.Optional;
 public class PermissionResource {
 
     private final Logger log = LoggerFactory.getLogger(PermissionResource.class);
-        
+
     @Inject
     private PermissionService permissionService;
 
@@ -44,6 +46,7 @@ public class PermissionResource {
      */
     @PostMapping("/permissions")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Permission> createPermission(@Valid @RequestBody Permission permission) throws URISyntaxException {
         log.debug("REST request to save Permission : {}", permission);
         if (permission.getId() != null) {
@@ -66,6 +69,7 @@ public class PermissionResource {
      */
     @PutMapping("/permissions")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Permission> updatePermission(@Valid @RequestBody Permission permission) throws URISyntaxException {
         log.debug("REST request to update Permission : {}", permission);
         if (permission.getId() == null) {
@@ -86,6 +90,7 @@ public class PermissionResource {
      */
     @GetMapping("/permissions")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<Permission>> getAllPermissions(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Permissions");
@@ -102,6 +107,7 @@ public class PermissionResource {
      */
     @GetMapping("/permissions/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Permission> getPermission(@PathVariable String id) {
         log.debug("REST request to get Permission : {}", id);
         Permission permission = permissionService.findOne(id);
@@ -120,6 +126,7 @@ public class PermissionResource {
      */
     @DeleteMapping("/permissions/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Void> deletePermission(@PathVariable String id) {
         log.debug("REST request to delete Permission : {}", id);
         permissionService.delete(id);

@@ -2,10 +2,12 @@ package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 
+import org.springframework.security.access.annotation.Secured;
 import top.quantic.sentry.domain.PersistentToken;
 import top.quantic.sentry.domain.User;
 import top.quantic.sentry.repository.PersistentTokenRepository;
 import top.quantic.sentry.repository.UserRepository;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.security.SecurityUtils;
 import top.quantic.sentry.service.MailService;
 import top.quantic.sentry.service.UserService;
@@ -60,6 +62,7 @@ public class AccountResource {
     @PostMapping(path = "/register",
                     produces={MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN) // disable non-oauth2 registration
     public ResponseEntity<?> registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
 
         HttpHeaders textPlainHeaders = new HttpHeaders();
@@ -129,6 +132,7 @@ public class AccountResource {
      */
     @PostMapping("/account")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN) // make read-only
     public ResponseEntity<String> saveAccount(@Valid @RequestBody UserDTO userDTO) {
         Optional<User> existingUser = userRepository.findOneByEmail(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userDTO.getLogin()))) {
@@ -153,6 +157,7 @@ public class AccountResource {
     @PostMapping(path = "/account/change_password",
         produces = MediaType.TEXT_PLAIN_VALUE)
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN) // make read-only
     public ResponseEntity<?> changePassword(@RequestBody String password) {
         if (!checkPasswordLength(password)) {
             return new ResponseEntity<>("Incorrect password", HttpStatus.BAD_REQUEST);

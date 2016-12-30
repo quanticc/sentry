@@ -1,5 +1,7 @@
 package top.quantic.sentry.web.rest;
 
+import org.springframework.security.access.annotation.Secured;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.AuditEventService;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
 import io.swagger.annotations.ApiParam;
@@ -38,6 +40,7 @@ public class AuditResource {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<AuditEvent>> getAll(@ApiParam Pageable pageable) throws URISyntaxException {
         Page<AuditEvent> page = auditEventService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/management/audits");
@@ -55,6 +58,7 @@ public class AuditResource {
      */
 
     @GetMapping(params = {"fromDate", "toDate"})
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<AuditEvent>> getByDates(
         @RequestParam(value = "fromDate") LocalDate fromDate,
         @RequestParam(value = "toDate") LocalDate toDate,
@@ -72,6 +76,7 @@ public class AuditResource {
      * @return the ResponseEntity with status 200 (OK) and the AuditEvent in body, or status 404 (Not Found)
      */
     @GetMapping("/{id:.+}")
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<AuditEvent> get(@PathVariable String id) {
         return auditEventService.find(id)
                 .map((entity) -> new ResponseEntity<>(entity, HttpStatus.OK))

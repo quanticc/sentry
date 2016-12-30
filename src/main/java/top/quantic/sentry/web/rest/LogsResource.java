@@ -1,5 +1,7 @@
 package top.quantic.sentry.web.rest;
 
+import org.springframework.security.access.annotation.Secured;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.web.rest.vm.LoggerVM;
 
 import ch.qos.logback.classic.Level;
@@ -21,6 +23,7 @@ public class LogsResource {
 
     @GetMapping("/logs")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public List<LoggerVM> getList() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         return context.getLoggerList()
@@ -32,6 +35,7 @@ public class LogsResource {
     @PutMapping("/logs")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public void changeLevel(@RequestBody LoggerVM jsonLogger) {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         context.getLogger(jsonLogger.getName()).setLevel(Level.valueOf(jsonLogger.getLevel()));

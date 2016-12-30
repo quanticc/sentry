@@ -1,7 +1,9 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.security.access.annotation.Secured;
 import top.quantic.sentry.domain.Bot;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.BotService;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
@@ -31,7 +33,7 @@ import java.util.Optional;
 public class BotResource {
 
     private final Logger log = LoggerFactory.getLogger(BotResource.class);
-        
+
     @Inject
     private BotService botService;
 
@@ -44,6 +46,7 @@ public class BotResource {
      */
     @PostMapping("/bots")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Bot> createBot(@Valid @RequestBody Bot bot) throws URISyntaxException {
         log.debug("REST request to save Bot : {}", bot);
         if (bot.getId() != null) {
@@ -66,6 +69,7 @@ public class BotResource {
      */
     @PutMapping("/bots")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Bot> updateBot(@Valid @RequestBody Bot bot) throws URISyntaxException {
         log.debug("REST request to update Bot : {}", bot);
         if (bot.getId() == null) {
@@ -86,6 +90,7 @@ public class BotResource {
      */
     @GetMapping("/bots")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<Bot>> getAllBots(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Bots");
@@ -102,6 +107,7 @@ public class BotResource {
      */
     @GetMapping("/bots/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Bot> getBot(@PathVariable String id) {
         log.debug("REST request to get Bot : {}", id);
         Bot bot = botService.findOne(id);
@@ -120,6 +126,7 @@ public class BotResource {
      */
     @DeleteMapping("/bots/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Void> deleteBot(@PathVariable String id) {
         log.debug("REST request to delete Bot : {}", id);
         botService.delete(id);
