@@ -1,0 +1,36 @@
+{
+    "fluentMethods": true,
+    "relationships": [],
+    "fields": [
+        {
+            "fieldName": "type",
+            "fieldType": "PermissionType",
+            "fieldValues": "ALLOW, DENY",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "role",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "operation",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "resource",
+            "fieldType": "String"
+        }
+    ],
+    "dto": "no",
+    "service": "serviceClass",
+    "entityTableName": "permission",
+    "pagination": "pagination"
+}
