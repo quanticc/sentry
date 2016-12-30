@@ -1,0 +1,49 @@
+{
+    "fluentMethods": true,
+    "relationships": [],
+    "fields": [
+        {
+            "fieldName": "name",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "token",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "autoLogin",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "daemon",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "maxMissedPings",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "maxReconnectAttempts",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "shardCount",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "primary",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "tags",
+            "fieldType": "String"
+        }
+    ],
+    "dto": "no",
+    "service": "serviceClass",
+    "entityTableName": "bot",
+    "pagination": "pagination"
+}

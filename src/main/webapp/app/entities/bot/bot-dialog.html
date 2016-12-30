@@ -1,0 +1,86 @@
+
+<form name="editForm" role="form" novalidate ng-submit="vm.save()" show-validation>
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                ng-click="vm.clear()">&times;</button>
+        <h4 class="modal-title" id="myBotLabel">Create or edit a Bot</h4>
+    </div>
+    <div class="modal-body">
+        <jhi-alert-error></jhi-alert-error>
+        <div class="form-group" ng-show="vm.bot.id">
+            <label for="id">ID</label>
+            <input type="text" class="form-control" id="id" name="id"
+                    ng-model="vm.bot.id" readonly />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_name">Name</label>
+            <input type="text" class="form-control" name="name" id="field_name"
+                    ng-model="vm.bot.name"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_token">Token</label>
+            <input type="text" class="form-control" name="token" id="field_token"
+                    ng-model="vm.bot.token"
+                    required />
+            <div ng-show="editForm.token.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.token.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_autoLogin">Auto Login</label>
+            <input type="checkbox" class="form-control" name="autoLogin" id="field_autoLogin"
+                    ng-model="vm.bot.autoLogin"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_daemon">Daemon</label>
+            <input type="checkbox" class="form-control" name="daemon" id="field_daemon"
+                    ng-model="vm.bot.daemon"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_maxMissedPings">Max Missed Pings</label>
+            <input type="number" class="form-control" name="maxMissedPings" id="field_maxMissedPings"
+                    ng-model="vm.bot.maxMissedPings"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_maxReconnectAttempts">Max Reconnect Attempts</label>
+            <input type="number" class="form-control" name="maxReconnectAttempts" id="field_maxReconnectAttempts"
+                    ng-model="vm.bot.maxReconnectAttempts"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_shardCount">Shard Count</label>
+            <input type="number" class="form-control" name="shardCount" id="field_shardCount"
+                    ng-model="vm.bot.shardCount"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_primary">Primary</label>
+            <input type="checkbox" class="form-control" name="primary" id="field_primary"
+                    ng-model="vm.bot.primary"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_tags">Tags</label>
+            <input type="text" class="form-control" name="tags" id="field_tags"
+                    ng-model="vm.bot.tags"
+                     />
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="vm.clear()">
+            <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;<span>Cancel</span>
+        </button>
+        <button type="submit" ng-disabled="editForm.$invalid || vm.isSaving" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span>&nbsp;<span>Save</span>
+        </button>
+    </div>
+</form>
