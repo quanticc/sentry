@@ -2,7 +2,7 @@
 # Project Specific
 ######################
 /build/www/**
-/src/main/resources/config/application-custom.yml
+/application*.yml
 /logs
 
 ######################
