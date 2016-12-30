@@ -5,9 +5,9 @@
         .module('sentryApp')
         .controller('NavbarController', NavbarController);
 
-    NavbarController.$inject = ['$state', 'Auth', 'Principal', 'ProfileService', 'LoginService'];
+    NavbarController.$inject = ['$state', 'Auth', 'Principal', 'ProfileService', 'LoginService', 'Discord'];
 
-    function NavbarController ($state, Auth, Principal, ProfileService, LoginService) {
+    function NavbarController ($state, Auth, Principal, ProfileService, LoginService, Discord) {
         var vm = this;
 
         vm.isNavbarCollapsed = true;
@@ -41,6 +41,18 @@
 
         function collapseNavbar() {
             vm.isNavbarCollapsed = true;
+        }
+
+        if (vm.isAuthenticated) {
+            Discord.getDiscordInfo().then(function(response) {
+                if (response.username) {
+                    vm.discord = {};
+                    vm.discord.username = response.username;
+                    vm.discord.avatar = response.avatar;
+                } else {
+                    vm.discord = {};
+                }
+            });
         }
     }
 })();

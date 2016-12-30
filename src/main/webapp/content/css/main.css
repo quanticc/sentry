@@ -373,4 +373,42 @@ Social Buttons
     color: #fff;
 }
 
+.btn-clean {
+    padding: 0px 6px 0px 6px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+}
+
+.btn-clean:hover {
+    text-decoration: none;
+}
+
+.frm-clean {
+    padding: 15px;
+}
+
+.profile-image {
+    height: 20px;
+    width: 20px;
+    line-height: 20px;
+}
+
+.no-border {
+    border-radius: 0;
+}
+
+.beepblue-bg {
+    background-color: #1062f1;
+}
+
+.dashboard-discord-logo {
+    width: 5em;
+    margin-bottom: 0.2em;
+}
+
+.dashboard-circle {
+    width: 100%;
+    border: 2px #CCC solid;
+}
+
 /* jhipster-needle-css-add-main JHipster will add new css style */

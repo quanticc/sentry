@@ -5,9 +5,9 @@
         .module('sentryApp')
         .controller('HomeController', HomeController);
 
-    HomeController.$inject = ['$scope', 'Principal', 'LoginService', '$state'];
+    HomeController.$inject = ['$scope', 'Principal', 'LoginService', '$state', 'Discord'];
 
-    function HomeController ($scope, Principal, LoginService, $state) {
+    function HomeController ($scope, Principal, LoginService, $state, Discord) {
         var vm = this;
 
         vm.account = null;
@@ -24,6 +24,15 @@
             Principal.identity().then(function(account) {
                 vm.account = account;
                 vm.isAuthenticated = Principal.isAuthenticated;
+            });
+            Discord.getDiscordInfo().then(function(response) {
+                vm.discord = {};
+                if (response.username) {
+                    vm.discord.username = response.username;
+                    vm.discord.avatar = response.avatar;
+                } else {
+                    vm.discord.username = vm.account.login;
+                }
             });
         }
         function register () {
