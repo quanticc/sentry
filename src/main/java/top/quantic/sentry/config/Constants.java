@@ -22,10 +22,11 @@ public final class Constants {
 
     public static final String SYSTEM_ACCOUNT = "system";
 
-    public static final String ANY = "*";
+    // Settings
     public static final String KEY_PREFIX = "prefix";
-    public static final String DEFAULT_PREFIX = "!";
 
+    // Permissions
+    public static final String ANY = "*";
     public static final String ALL_PERMISSIONS = "*.*";
     public static final String BOT_COMMAND_EXECUTE = "bot.command.execute";
 

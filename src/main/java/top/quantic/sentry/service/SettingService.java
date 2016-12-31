@@ -1,5 +1,6 @@
 package top.quantic.sentry.service;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import top.quantic.sentry.repository.SettingRepository;
 import top.quantic.sentry.service.dto.SettingDTO;
 import top.quantic.sentry.service.mapper.SettingMapper;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,8 +42,8 @@ public class SettingService {
             // try with "*"
             settings = settingRepository.findByGuildAndKey(Constants.ANY, Constants.KEY_PREFIX);
             if (settings.isEmpty()) {
-                // fallback to '!'
-                return Collections.singletonList(Constants.DEFAULT_PREFIX);
+                // fallback to '!' and '.'
+                return Lists.newArrayList("!", ".");
             }
         }
         return extractValues(settings);
