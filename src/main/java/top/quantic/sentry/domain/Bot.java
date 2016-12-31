@@ -198,7 +198,7 @@ public class Bot extends AbstractAuditingEntity implements Serializable {
         return "Bot{" +
             "id=" + id +
             ", name='" + name + "'" +
-            ", token='" + token + "'" +
+            ", token='******'" +
             ", autoLogin='" + autoLogin + "'" +
             ", daemon='" + daemon + "'" +
             ", maxMissedPings='" + maxMissedPings + "'" +
