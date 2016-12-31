@@ -112,7 +112,7 @@ if (project.hasProperty('shell')) {
 }
 
 group = 'top.quantic.sentry'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 description = 'Game server manager for UGC League'
 
