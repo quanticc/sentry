@@ -1,4 +1,4 @@
-package top.quantic.sentry.service.util;
+package top.quantic.sentry.discord.util;
 
 import com.google.common.util.concurrent.RateLimiter;
 import sx.blah.discord.handle.obj.IChannel;

@@ -1,4 +1,4 @@
-package top.quantic.sentry.service.util;
+package top.quantic.sentry.discord.util;
 
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static top.quantic.sentry.service.util.DiscordLimiter.acquire;
-import static top.quantic.sentry.service.util.DiscordLimiter.acquireDelete;
-import static top.quantic.sentry.service.util.MessageSplitter.LENGTH_LIMIT;
+import static top.quantic.sentry.discord.util.DiscordLimiter.acquire;
 
 public class DiscordUtil {
 
@@ -74,7 +72,7 @@ public class DiscordUtil {
                 List<IMessage> subList = toDelete.subList(x * 100, Math.min(toDelete.size(), (x + 1) * 100));
                 RequestBuffer.request(() -> {
                     try {
-                        acquireDelete();
+                        DiscordLimiter.acquireDelete();
                         channel.getMessages().bulkDelete(subList);
                     } catch (MissingPermissionsException | DiscordException e) {
                         log.warn("Failed to delete message", e);
@@ -96,9 +94,9 @@ public class DiscordUtil {
     }
 
     public static void reply(IMessage to, String content) {
-        if (content.length() > LENGTH_LIMIT) {
+        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (String split : splits) {
                 innerReply(to, split);
             }
@@ -123,9 +121,9 @@ public class DiscordUtil {
     }
 
     public static void answerWithFile(IMessage to, String content, File file) {
-        if (content.length() > LENGTH_LIMIT) {
+        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
                 sendMessage(to.getChannel(), splits.get(i), false);
             }
@@ -147,9 +145,9 @@ public class DiscordUtil {
     }
 
     private static void answerToChannel(IChannel channel, String content, boolean tts) {
-        if (content.length() > LENGTH_LIMIT) {
+        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (String split : splits) {
                 sendMessage(channel, split, false);
             }
@@ -159,9 +157,9 @@ public class DiscordUtil {
     }
 
     private static void answerToChannelWithFile(IChannel channel, String content, File file) {
-        if (content.length() > LENGTH_LIMIT) {
+        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
                 sendMessage(channel, splits.get(i), false);
             }
@@ -172,7 +170,7 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
-        acquire(channel);
+        DiscordLimiter.acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendMessage(content, tts);
@@ -188,7 +186,7 @@ public class DiscordUtil {
     }
 
     private static void innerReply(IMessage message, String content) {
-        acquire(message);
+        DiscordLimiter.acquire(message);
         RequestBuffer.request(() -> {
             try {
                 message.reply(content);
@@ -203,7 +201,7 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, File file) {
-        acquire(channel);
+        DiscordLimiter.acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendFile(content, file);

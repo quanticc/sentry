@@ -1,4 +1,4 @@
-package top.quantic.sentry.service.util;
+package top.quantic.sentry.discord.util;
 
 import org.springframework.util.StringUtils;
 

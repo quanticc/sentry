@@ -28,9 +28,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static top.quantic.sentry.service.util.DiscordLimiter.acquireDelete;
-import static top.quantic.sentry.service.util.DiscordUtil.getRoles;
-import static top.quantic.sentry.service.util.DiscordUtil.humanize;
+import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
+import static top.quantic.sentry.discord.util.DiscordUtil.getRoles;
+import static top.quantic.sentry.discord.util.DiscordUtil.humanize;
 
 @Component
 public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEvent> {
