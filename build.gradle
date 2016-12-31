@@ -136,6 +136,7 @@ repositories {
 
 dependencies {
     compile "com.github.austinv11:Discord4j:2.7.0"
+    compile "net.sf.jopt-simple:jopt-simple:6.0-alpha-1"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"
