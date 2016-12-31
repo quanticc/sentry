@@ -1,11 +1,6 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import top.quantic.sentry.service.SettingService;
-import top.quantic.sentry.web.rest.util.HeaderUtil;
-import top.quantic.sentry.web.rest.util.PaginationUtil;
-import top.quantic.sentry.service.dto.SettingDTO;
-
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +9,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import top.quantic.sentry.security.AuthoritiesConstants;
+import top.quantic.sentry.service.SettingService;
+import top.quantic.sentry.service.dto.SettingDTO;
+import top.quantic.sentry.web.rest.util.HeaderUtil;
+import top.quantic.sentry.web.rest.util.PaginationUtil;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for managing Setting.
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 public class SettingResource {
 
     private final Logger log = LoggerFactory.getLogger(SettingResource.class);
-        
+
     @Inject
     private SettingService settingService;
 
@@ -46,6 +45,7 @@ public class SettingResource {
      */
     @PostMapping("/settings")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<SettingDTO> createSetting(@Valid @RequestBody SettingDTO settingDTO) throws URISyntaxException {
         log.debug("REST request to save Setting : {}", settingDTO);
         if (settingDTO.getId() != null) {
@@ -68,6 +68,7 @@ public class SettingResource {
      */
     @PutMapping("/settings")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<SettingDTO> updateSetting(@Valid @RequestBody SettingDTO settingDTO) throws URISyntaxException {
         log.debug("REST request to update Setting : {}", settingDTO);
         if (settingDTO.getId() == null) {
@@ -88,6 +89,7 @@ public class SettingResource {
      */
     @GetMapping("/settings")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<SettingDTO>> getAllSettings(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Settings");
@@ -104,6 +106,7 @@ public class SettingResource {
      */
     @GetMapping("/settings/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<SettingDTO> getSetting(@PathVariable String id) {
         log.debug("REST request to get Setting : {}", id);
         SettingDTO settingDTO = settingService.findOne(id);
@@ -122,6 +125,7 @@ public class SettingResource {
      */
     @DeleteMapping("/settings/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Void> deleteSetting(@PathVariable String id) {
         log.debug("REST request to delete Setting : {}", id);
         settingService.delete(id);
