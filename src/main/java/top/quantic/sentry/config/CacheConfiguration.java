@@ -7,16 +7,19 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.*;
-import org.springframework.cache.support.NoOpCacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import java.util.Arrays;
 
 @Configuration
 @EnableCaching
-@AutoConfigureAfter(value = { MetricsConfiguration.class })
-@AutoConfigureBefore(value = { WebConfigurer.class, DatabaseConfiguration.class })
+@AutoConfigureAfter(value = {MetricsConfiguration.class})
+@AutoConfigureBefore(value = {WebConfigurer.class, DatabaseConfiguration.class})
 public class CacheConfiguration {
 
     private final Logger log = LoggerFactory.getLogger(CacheConfiguration.class);
@@ -29,10 +32,21 @@ public class CacheConfiguration {
         log.info("Closing Cache Manager");
     }
 
+//    @Bean
+//    public CacheManager cacheManager() {
+//        log.debug("No cache");
+//        cacheManager = new NoOpCacheManager();
+//        return cacheManager;
+//    }
+
     @Bean
     public CacheManager cacheManager() {
-        log.debug("No cache");
-        cacheManager = new NoOpCacheManager();
+        log.debug("Simple cache enabled");
+        SimpleCacheManager manager = new SimpleCacheManager();
+        manager.setCaches(Arrays.asList(
+            new ConcurrentMapCache("permissions"),
+            new ConcurrentMapCache("prefixes")));
+        cacheManager = manager;
         return cacheManager;
     }
 }
