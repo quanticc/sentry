@@ -32,9 +32,11 @@ public class DiscordAdapter implements ApiAdapter<Discord> {
     public UserProfile fetchUserProfile(Discord api) {
         DiscordUser profile = api.userOperations().getUser();
         return new UserProfileBuilder()
-            .setFirstName(api.userOperations().getNickname())
+            .setId(profile.getId())
+            .setFirstName(profile.getUsername())
+            .setLastName("#" + profile.getDiscriminator())
+            .setUsername(api.userOperations().getNickname())
             .setEmail(profile.getEmail())
-            .setUsername(profile.getId())
             .build();
     }
 

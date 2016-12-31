@@ -30,12 +30,8 @@ public class SocialController {
         try {
             Connection<?> connection = providerSignInUtils.getConnectionFromSession(webRequest);
             socialService.createSocialUser(connection, langKey.replace("\"", ""));
-            // redirect to home
             return new RedirectView(URIBuilder.fromUri("/#/")
                 .build().toString(), true);
-//            return new RedirectView(URIBuilder.fromUri("/#/social-register/" + connection.getKey().getProviderId())
-//                .queryParam("success", "true")
-//                .build().toString(), true);
         } catch (Exception e) {
             log.error("Exception creating social user: ", e);
             return new RedirectView(URIBuilder.fromUri("/#/social-register/no-provider")

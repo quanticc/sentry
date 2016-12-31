@@ -1,18 +1,18 @@
 package top.quantic.sentry;
 
-import top.quantic.sentry.config.Constants;
-import top.quantic.sentry.config.DefaultProfileUtil;
-import top.quantic.sentry.config.JHipsterProperties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.autoconfigure.*;
+import org.springframework.boot.actuate.autoconfigure.MetricFilterAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
+import top.quantic.sentry.config.Constants;
+import top.quantic.sentry.config.DefaultProfileUtil;
+import top.quantic.sentry.config.JHipsterProperties;
+import top.quantic.sentry.config.SentryProperties;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -22,8 +22,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 @ComponentScan
-@EnableAutoConfiguration(exclude = { MetricFilterAutoConfiguration.class, MetricRepositoryAutoConfiguration.class })
-@EnableConfigurationProperties({ JHipsterProperties.class })
+@EnableAutoConfiguration(exclude = {MetricFilterAutoConfiguration.class, MetricRepositoryAutoConfiguration.class})
+@EnableConfigurationProperties({JHipsterProperties.class, SentryProperties.class})
 public class SentryApp {
 
     private static final Logger log = LoggerFactory.getLogger(SentryApp.class);

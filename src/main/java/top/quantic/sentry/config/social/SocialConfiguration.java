@@ -19,6 +19,7 @@ import org.springframework.social.connect.web.ProviderSignInUtils;
 import org.springframework.social.connect.web.SignInAdapter;
 import org.springframework.social.discord.connect.DiscordConnectionFactory;
 import org.springframework.social.security.AuthenticationNameUserIdSource;
+import top.quantic.sentry.config.SentryProperties;
 import top.quantic.sentry.repository.AuthorityRepository;
 import top.quantic.sentry.repository.CustomSocialUsersConnectionRepository;
 import top.quantic.sentry.repository.SocialUserConnectionRepository;
@@ -55,6 +56,9 @@ public class SocialConfiguration implements SocialConfigurer {
 
     @Inject
     Environment environment;
+
+    @Inject
+    private SentryProperties sentryProperties;
 
     @Bean
     public ConnectController connectController(ConnectionFactoryLocator connectionFactoryLocator,
@@ -93,7 +97,7 @@ public class SocialConfiguration implements SocialConfigurer {
     public UsersConnectionRepository getUsersConnectionRepository(ConnectionFactoryLocator connectionFactoryLocator) {
         CustomSocialUsersConnectionRepository usersConnectionRepository = new CustomSocialUsersConnectionRepository(
             socialUserConnectionRepository, connectionFactoryLocator);
-        usersConnectionRepository.setConnectionSignUp(new ImplicitConnectionSignUp(userRepository, authorityRepository, passwordEncoder));
+        usersConnectionRepository.setConnectionSignUp(new ImplicitConnectionSignUp(userRepository, authorityRepository, passwordEncoder, sentryProperties));
         return usersConnectionRepository;
     }
 

@@ -1,10 +1,10 @@
 package top.quantic.sentry.repository;
 
+import org.springframework.data.mongodb.repository.MongoRepository;
+import top.quantic.sentry.domain.Authority;
 import top.quantic.sentry.domain.User;
 
 import java.time.ZonedDateTime;
-import org.springframework.data.mongodb.repository.MongoRepository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +22,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findOneByEmail(String email);
 
     Optional<User> findOneByLogin(String login);
+
+    List<User> findByAuthoritiesContaining(Authority authority);
 }

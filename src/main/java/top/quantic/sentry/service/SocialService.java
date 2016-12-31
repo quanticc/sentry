@@ -1,22 +1,23 @@
 package top.quantic.sentry.service;
 
-import top.quantic.sentry.domain.Authority;
-import top.quantic.sentry.domain.User;
-import top.quantic.sentry.repository.AuthorityRepository;
-import top.quantic.sentry.repository.UserRepository;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionRepository;
 import org.springframework.social.connect.UserProfile;
 import org.springframework.social.connect.UsersConnectionRepository;
 import org.springframework.stereotype.Service;
+import top.quantic.sentry.config.SentryProperties;
+import top.quantic.sentry.domain.Authority;
+import top.quantic.sentry.domain.User;
+import top.quantic.sentry.repository.AuthorityRepository;
+import top.quantic.sentry.repository.UserRepository;
+import top.quantic.sentry.security.AuthoritiesConstants;
 
-import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
@@ -24,22 +25,27 @@ import java.util.Set;
 
 @Service
 public class SocialService {
+
     private final Logger log = LoggerFactory.getLogger(SocialService.class);
 
-    @Inject
-    private UsersConnectionRepository usersConnectionRepository;
+    private final UsersConnectionRepository usersConnectionRepository;
+    private final AuthorityRepository authorityRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final MailService mailService;
+    private final SentryProperties sentryProperties;
 
-    @Inject
-    private AuthorityRepository authorityRepository;
-
-    @Inject
-    private PasswordEncoder passwordEncoder;
-
-    @Inject
-    private UserRepository userRepository;
-
-    @Inject
-    private MailService mailService;
+    @Autowired
+    public SocialService(UsersConnectionRepository usersConnectionRepository, AuthorityRepository authorityRepository,
+                         PasswordEncoder passwordEncoder, UserRepository userRepository, MailService mailService,
+                         SentryProperties sentryProperties) {
+        this.usersConnectionRepository = usersConnectionRepository;
+        this.authorityRepository = authorityRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.mailService = mailService;
+        this.sentryProperties = sentryProperties;
+    }
 
     public void deleteUserSocialConnection(String login) {
         ConnectionRepository connectionRepository = usersConnectionRepository.createConnectionRepository(login);
@@ -86,8 +92,17 @@ public class SocialService {
 
         String login = getLoginDependingOnProviderId(userProfile, providerId);
         String encryptedPassword = passwordEncoder.encode(RandomStringUtils.random(10));
-        Set<Authority> authorities = new HashSet<>(1);
-        authorities.add(authorityRepository.findOne("ROLE_USER"));
+
+        Set<Authority> authorities;
+        if (sentryProperties.getDiscord().getAdministrators().contains(login)) {
+            log.info("Giving administrative role to {} ({})", userProfile.getUsername(), userProfile.getId());
+            authorities = new HashSet<>(2);
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.ADMIN));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));
+        } else {
+            authorities = new HashSet<>(1);
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));
+        }
 
         User newUser = new User();
         newUser.setLogin(login);
@@ -104,12 +119,14 @@ public class SocialService {
 
     /**
      * @return login if provider manage a login like Twitter or Github otherwise email address.
-     *         Because provider like Google or Facebook didn't provide login or login like "12099388847393"
+     * Because provider like Google or Facebook didn't provide login or login like "12099388847393"
      */
     private String getLoginDependingOnProviderId(UserProfile userProfile, String providerId) {
         switch (providerId) {
             case "discord":
-                return userProfile.getUsername().toLowerCase();
+            case "twitter":
+                // username is actually the user's snowflake id
+                return userProfile.getUsername();
             default:
                 return userProfile.getEmail();
         }

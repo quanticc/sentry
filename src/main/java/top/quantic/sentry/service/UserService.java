@@ -1,5 +1,11 @@
 package top.quantic.sentry.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.Authority;
 import top.quantic.sentry.domain.User;
 import top.quantic.sentry.repository.AuthorityRepository;
@@ -9,16 +15,13 @@ import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.security.SecurityUtils;
 import top.quantic.sentry.service.util.RandomUtil;
 import top.quantic.sentry.web.rest.vm.ManagedUserVM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import javax.inject.Inject;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service class for managing users.
@@ -28,20 +31,25 @@ public class UserService {
 
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    @Inject
-    private SocialService socialService;
+    private final SocialService socialService;
 
-    @Inject
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    @Inject
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Inject
-    private PersistentTokenRepository persistentTokenRepository;
+    private final PersistentTokenRepository persistentTokenRepository;
 
-    @Inject
-    private AuthorityRepository authorityRepository;
+    private final AuthorityRepository authorityRepository;
+
+    @Autowired
+    public UserService(SocialService socialService, PasswordEncoder passwordEncoder, UserRepository userRepository,
+                       PersistentTokenRepository persistentTokenRepository, AuthorityRepository authorityRepository) {
+        this.socialService = socialService;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.persistentTokenRepository = persistentTokenRepository;
+        this.authorityRepository = authorityRepository;
+    }
 
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
@@ -57,20 +65,20 @@ public class UserService {
     }
 
     public Optional<User> completePasswordReset(String newPassword, String key) {
-       log.debug("Reset user password for reset key {}", key);
+        log.debug("Reset user password for reset key {}", key);
 
-       return userRepository.findOneByResetKey(key)
+        return userRepository.findOneByResetKey(key)
             .filter(user -> {
                 ZonedDateTime oneDayAgo = ZonedDateTime.now().minusHours(24);
                 return user.getResetDate().isAfter(oneDayAgo);
-           })
-           .map(user -> {
+            })
+            .map(user -> {
                 user.setPassword(passwordEncoder.encode(newPassword));
                 user.setResetKey(null);
                 user.setResetDate(null);
                 userRepository.save(user);
                 return user;
-           });
+            });
     }
 
     public Optional<User> requestPasswordReset(String mail) {
@@ -85,7 +93,7 @@ public class UserService {
     }
 
     public User createUser(String login, String password, String firstName, String lastName, String email,
-        String langKey) {
+                           String langKey) {
 
         User newUser = new User();
         Authority authority = authorityRepository.findOne(AuthoritiesConstants.USER);
@@ -149,7 +157,7 @@ public class UserService {
     }
 
     public void updateUser(String id, String login, String firstName, String lastName, String email,
-        boolean activated, String langKey, Set<String> authorities) {
+                           boolean activated, String langKey, Set<String> authorities) {
 
         Optional.of(userRepository
             .findOne(id))
@@ -200,9 +208,9 @@ public class UserService {
         Optional<User> optionalUser = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
         User user = null;
         if (optionalUser.isPresent()) {
-          user = optionalUser.get();
-         }
-         return user;
+            user = optionalUser.get();
+        }
+        return user;
     }
 
     /**
@@ -235,5 +243,24 @@ public class UserService {
             log.debug("Deleting not activated user {}", user.getLogin());
             userRepository.delete(user);
         }
+    }
+
+    ///////////////////
+    // Added methods //
+    ///////////////////
+
+    void changePassword(String login, String password) {
+        userRepository.findOneByLogin(login).ifPresent(user -> {
+            String encryptedPassword = passwordEncoder.encode(password);
+            user.setPassword(encryptedPassword);
+            userRepository.save(user);
+            log.debug("Changed password for User: {}", user);
+        });
+    }
+
+    long getAdminCount() {
+        return userRepository.findByAuthoritiesContaining(authorityRepository.findOne(AuthoritiesConstants.ADMIN)).stream()
+            .filter(u -> !u.getLogin().equals("admin") && !u.getLogin().equals("system"))
+            .count();
     }
 }

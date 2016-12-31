@@ -1,12 +1,5 @@
 package top.quantic.sentry.service;
 
-import top.quantic.sentry.SentryApp;
-import top.quantic.sentry.domain.Authority;
-import top.quantic.sentry.domain.User;
-import top.quantic.sentry.repository.AuthorityRepository;
-import top.quantic.sentry.repository.UserRepository;
-import top.quantic.sentry.service.MailService;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,9 +9,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.social.connect.*;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import top.quantic.sentry.SentryApp;
+import top.quantic.sentry.config.SentryProperties;
+import top.quantic.sentry.domain.Authority;
+import top.quantic.sentry.domain.User;
+import top.quantic.sentry.repository.AuthorityRepository;
+import top.quantic.sentry.repository.UserRepository;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -39,6 +37,9 @@ public class SocialServiceIntTest {
     @Inject
     private UserRepository userRepository;
 
+    @Inject
+    private SentryProperties sentryProperties;
+
     @Mock
     private MailService mockMailService;
 
@@ -57,12 +58,13 @@ public class SocialServiceIntTest {
         doNothing().when(mockConnectionRepository).addConnection(anyObject());
         when(mockUsersConnectionRepository.createConnectionRepository(anyString())).thenReturn(mockConnectionRepository);
 
-        socialService = new SocialService();
-        ReflectionTestUtils.setField(socialService, "authorityRepository", authorityRepository);
-        ReflectionTestUtils.setField(socialService, "passwordEncoder", passwordEncoder);
-        ReflectionTestUtils.setField(socialService, "mailService", mockMailService);
-        ReflectionTestUtils.setField(socialService, "userRepository", userRepository);
-        ReflectionTestUtils.setField(socialService, "usersConnectionRepository", mockUsersConnectionRepository);
+        socialService = new SocialService(mockUsersConnectionRepository,
+            authorityRepository, passwordEncoder, userRepository, mockMailService, sentryProperties);
+//        ReflectionTestUtils.setField(socialService, "authorityRepository", authorityRepository);
+//        ReflectionTestUtils.setField(socialService, "passwordEncoder", passwordEncoder);
+//        ReflectionTestUtils.setField(socialService, "mailService", mockMailService);
+//        ReflectionTestUtils.setField(socialService, "userRepository", userRepository);
+//        ReflectionTestUtils.setField(socialService, "usersConnectionRepository", mockUsersConnectionRepository);
     }
 
     @Test
