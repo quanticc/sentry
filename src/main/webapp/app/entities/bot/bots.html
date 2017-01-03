@@ -18,7 +18,7 @@
         <table class="jh-table table table-striped">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
-                    <th jh-sort-by="id"><span>Status</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th><span>Status</span></th>
                     <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="autoLogin"><span>Auto Login</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -40,12 +40,24 @@
                     </td>
                     <td><a ui-sref="bot-detail({id:bot.id})">{{bot.id}}</a></td>
                     <td>{{bot.name}}</td>
-                    <td>{{bot.autoLogin}}</td>
-                    <td>{{bot.daemon}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(bot.autoLogin)">
+                            {{vm.prettyBoolText(bot.autoLogin)}}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(bot.daemon)">
+                            {{vm.prettyBoolText(bot.daemon)}}
+                        </span>
+                    </td>
                     <td>{{bot.maxMissedPings}}</td>
                     <td>{{bot.maxReconnectAttempts}}</td>
                     <td>{{bot.shardCount}}</td>
-                    <td>{{bot.primary}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(bot.primary)">
+                            {{vm.prettyBoolText(bot.primary)}}
+                        </span>
+                    </td>
                     <td>{{bot.tags}}</td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
