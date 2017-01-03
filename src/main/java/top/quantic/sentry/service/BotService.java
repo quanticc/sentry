@@ -12,7 +12,6 @@ import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.IListener;
 import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
@@ -22,6 +21,7 @@ import top.quantic.sentry.repository.BotRepository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -51,8 +51,10 @@ public class BotService implements InitializingBean, DisposableBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.debug("*** Initializing BotService ***");
+        autoLoginBots();
+    }
 
+    private void autoLoginBots() {
         if (botRepository.count() == 0) {
             log.warn("No bots in store - Please add at least one bot definition");
         } else {
@@ -101,31 +103,36 @@ public class BotService implements InitializingBean, DisposableBean {
         return client;
     }
 
-    public void logout(Bot bot) {
-        log.debug("Request to logout : {}", bot);
+    public IDiscordClient logout(Bot bot) throws DiscordException {
+        log.debug("Request to logout: {}", bot);
         if (!discordClientMap.containsKey(bot)) {
             throw new IllegalStateException("Bot is not logged in");
         }
 
         IDiscordClient client = discordClientMap.get(bot);
-        RequestBuffer.request(() -> {
-            if (client.isLoggedIn()) {
-                try {
-                    client.logout();
-                } catch (DiscordException e) {
-                    log.warn("Could not logout bot", e);
-                }
-            } else {
-                log.warn("Bot {} is not logged in", bot.getName());
-            }
-            discordClientMap.remove(bot);
-        });
+        if (client.isLoggedIn()) {
+            client.logout();
+        } else {
+            log.warn("Bot {} is not logged in", bot.getName());
+        }
+        discordClientMap.remove(bot);
+
+        return client;
     }
 
     public void reset(Bot bot) {
-        log.debug("Request to reset : {}", bot);
-        logout(bot);
+        log.debug("Request to reset: {}", bot);
+        try {
+            logout(bot);
+        } catch (DiscordException e) {
+            log.warn("Could not logout: {}", bot, e);
+        }
         discordClientMap.remove(bot);
+    }
+
+    public Optional<IDiscordClient> getBotClient(Bot bot) {
+        log.debug("Request to get client of: {}", bot);
+        return Optional.ofNullable(discordClientMap.get(bot));
     }
 
     /**
@@ -176,7 +183,14 @@ public class BotService implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        log.debug("Logging out all bots");
-        discordClientMap.keySet().forEach(this::logout);
+        discordClientMap.entrySet().forEach(entry -> {
+            if (entry.getValue().isLoggedIn()) {
+                try {
+                    logout(entry.getKey());
+                } catch (DiscordException e) {
+                    log.warn("Could not logout: {}", entry.getKey(), e);
+                }
+            }
+        });
     }
 }

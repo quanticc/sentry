@@ -1,13 +1,6 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import org.springframework.security.access.annotation.Secured;
-import top.quantic.sentry.domain.Bot;
-import top.quantic.sentry.security.AuthoritiesConstants;
-import top.quantic.sentry.service.BotService;
-import top.quantic.sentry.web.rest.util.HeaderUtil;
-import top.quantic.sentry.web.rest.util.PaginationUtil;
-
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +9,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import sx.blah.discord.util.DiscordException;
+import top.quantic.sentry.domain.Bot;
+import top.quantic.sentry.security.AuthoritiesConstants;
+import top.quantic.sentry.service.BotService;
+import top.quantic.sentry.web.rest.util.HeaderUtil;
+import top.quantic.sentry.web.rest.util.PaginationUtil;
+import top.quantic.sentry.web.rest.vm.BotStatusVM;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -131,6 +132,99 @@ public class BotResource {
         log.debug("REST request to delete Bot : {}", id);
         botService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("bot", id.toString())).build();
+    }
+
+    private ResponseEntity<Void> loginBot(@PathVariable String id) {
+        Bot bot = botService.findOne(id);
+        if (bot == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            try {
+                botService.login(bot);
+                return ResponseEntity.ok()
+                    .headers(HeaderUtil.createAlert("Request to login bot " + bot.getId() + " sent", bot.getId()))
+                    .build();
+            } catch (DiscordException e) {
+                log.warn("Could not login bot: {}", bot, e);
+                return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createAlert("Could not login bot: " + e.getErrorMessage(),
+                        bot.getId()))
+                    .body(null);
+            }
+        }
+    }
+
+    private ResponseEntity<Void> logoutBot(@PathVariable String id) {
+        Bot bot = botService.findOne(id);
+        if (bot == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            try {
+                botService.logout(bot);
+                return ResponseEntity.ok()
+                    .headers(HeaderUtil.createAlert("Request to logout bot " + bot.getId() + " sent", bot.getId()))
+                    .build();
+            } catch (DiscordException e) {
+                log.warn("Could not logout bot: {}", bot, e);
+                return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createErrorAlert("Could not logout bot: " + e.getErrorMessage(),
+                        bot.getId()))
+                    .body(null);
+            }
+        }
+    }
+
+    private ResponseEntity<Void> resetBot(@PathVariable String id) {
+        Bot bot = botService.findOne(id);
+        if (bot == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            botService.reset(bot);
+            return ResponseEntity.ok()
+                .headers(HeaderUtil.createAlert("Request to reset bot " + bot.getId() + " sent", bot.getId()))
+                .build();
+        }
+    }
+
+    @PostMapping("/bots/{id}/{action}")
+    @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
+    public ResponseEntity<Void> performAction(@PathVariable String id, @PathVariable String action) {
+        log.debug("REST request to perform action {} on Bot : {}", action, id);
+        switch (action) {
+            case "login":
+                return loginBot(id);
+            case "logout":
+                return logoutBot(id);
+            case "reset":
+                return resetBot(id);
+            default:
+                return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createAlert("Invalid action: " + action, action))
+                    .body(null);
+        }
+    }
+
+    @GetMapping("/bots/{id}/status")
+    @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
+    public ResponseEntity<BotStatusVM> getStatus(@PathVariable String id) {
+        log.debug("REST request to get status of Bot : {}", id);
+        Bot bot = botService.findOne(id);
+        if (bot == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return botService.getBotClient(bot)
+                .map(client -> {
+                    BotStatusVM vm = new BotStatusVM(id);
+                    vm.setCreated(true);
+                    vm.setLoggedIn(client.isLoggedIn());
+                    vm.setReady(client.isReady());
+                    return ResponseEntity.ok(vm);
+                }).orElse(ResponseEntity.ok()
+                    .headers(HeaderUtil.createAlert("Bot client not created yet", id))
+                    .body(new BotStatusVM(id)));
+        }
     }
 
 }

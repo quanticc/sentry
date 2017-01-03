@@ -20,7 +20,16 @@
                     return data;
                 }
             },
-            'update': { method:'PUT' }
+            'update': { method: 'PUT' },
+            'action': { method: 'POST', url: 'api/bots/:id/:action' },
+            'status': { method: 'GET', url: 'api/bots/:id/status',
+                transformResponse: function (data) {
+                    if (data) {
+                        data = angular.fromJson(data);
+                    }
+                    return data;
+                }
+            }
         });
     }
 })();

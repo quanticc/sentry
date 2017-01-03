@@ -40,4 +40,11 @@ public final class HeaderUtil {
         headers.add("X-sentryApp-params", entityName);
         return headers;
     }
+
+    public static HttpHeaders createErrorAlert(String message, String param) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-sentryApp-error", message);
+        headers.add("X-sentryApp-params", param);
+        return headers;
+    }
 }

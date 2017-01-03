@@ -20,7 +20,6 @@
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
                     <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="token"><span>Token</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="autoLogin"><span>Auto Login</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="daemon"><span>Daemon</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="maxMissedPings"><span>Max Missed Pings</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -35,7 +34,6 @@
                 <tr ng-repeat="bot in vm.bots track by bot.id">
                     <td><a ui-sref="bot-detail({id:bot.id})">{{bot.id}}</a></td>
                     <td>{{bot.name}}</td>
-                    <td>{{bot.token}}</td>
                     <td>{{bot.autoLogin}}</td>
                     <td>{{bot.daemon}}</td>
                     <td>{{bot.maxMissedPings}}</td>
@@ -61,6 +59,24 @@
                                     ui-sref="bot.delete({id:bot.id})"
                                     class="btn btn-danger btn-sm">
                                 <span class="glyphicon glyphicon-remove-circle"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                            <button type="submit"
+                                    ui-sref="bot.action({id:bot.id, action:'login'})"
+                                    class="btn btn-success btn-sm">
+                                <span class="glyphicon glyphicon-log-in"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                            <button type="submit"
+                                    ui-sref="bot.action({id:bot.id, action:'logout'})"
+                                    class="btn btn-warning btn-sm">
+                                <span class="glyphicon glyphicon-log-out"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                            <button type="submit"
+                                    ui-sref="bot.action({id:bot.id, action:'reset'})"
+                                    class="btn btn-info btn-sm">
+                                <span class="glyphicon glyphicon-repeat"></span>
                                 <span class="hidden-xs hidden-sm"></span>
                             </button>
                         </div>

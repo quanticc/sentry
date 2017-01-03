@@ -13,7 +13,7 @@
             parent: 'entity',
             url: '/bot?page&sort&search',
             data: {
-                authorities: ['ROLE_USER'],
+                authorities: ['ROLE_ADMIN'],
                 pageTitle: 'Bots'
             },
             views: {
@@ -50,7 +50,7 @@
             parent: 'entity',
             url: '/bot/{id}',
             data: {
-                authorities: ['ROLE_USER'],
+                authorities: ['ROLE_ADMIN'],
                 pageTitle: 'Bot'
             },
             views: {
@@ -78,7 +78,7 @@
             parent: 'bot-detail',
             url: '/detail/edit',
             data: {
-                authorities: ['ROLE_USER']
+                authorities: ['ROLE_ADMIN']
             },
             onEnter: ['$stateParams', '$state', '$uibModal', function($stateParams, $state, $uibModal) {
                 $uibModal.open({
@@ -103,7 +103,7 @@
             parent: 'bot',
             url: '/new',
             data: {
-                authorities: ['ROLE_USER']
+                authorities: ['ROLE_ADMIN']
             },
             onEnter: ['$stateParams', '$state', '$uibModal', function($stateParams, $state, $uibModal) {
                 $uibModal.open({
@@ -139,7 +139,7 @@
             parent: 'bot',
             url: '/{id}/edit',
             data: {
-                authorities: ['ROLE_USER']
+                authorities: ['ROLE_ADMIN']
             },
             onEnter: ['$stateParams', '$state', '$uibModal', function($stateParams, $state, $uibModal) {
                 $uibModal.open({
@@ -164,7 +164,7 @@
             parent: 'bot',
             url: '/{id}/delete',
             data: {
-                authorities: ['ROLE_USER']
+                authorities: ['ROLE_ADMIN']
             },
             onEnter: ['$stateParams', '$state', '$uibModal', function($stateParams, $state, $uibModal) {
                 $uibModal.open({
@@ -175,6 +175,33 @@
                     resolve: {
                         entity: ['Bot', function(Bot) {
                             return Bot.get({id : $stateParams.id}).$promise;
+                        }]
+                    }
+                }).result.then(function() {
+                    $state.go('bot', null, { reload: 'bot' });
+                }, function() {
+                    $state.go('^');
+                });
+            }]
+        })
+        .state('bot.action', {
+            parent: 'bot',
+            url: '/{id}/{action}',
+            data: {
+                authorities: ['ROLE_ADMIN']
+            },
+            onEnter: ['$stateParams', '$state', '$uibModal', function($stateParams, $state, $uibModal) {
+                $uibModal.open({
+                    templateUrl: 'app/entities/bot/bot-action-dialog.html',
+                    controller: 'BotActionController',
+                    controllerAs: 'vm',
+                    size: 'md',
+                    resolve: {
+                        entity: ['Bot', function(Bot) {
+                            return Bot.get({id : $stateParams.id}).$promise;
+                        }],
+                        action: ['Bot', function() {
+                            return 'info';
                         }]
                     }
                 }).result.then(function() {

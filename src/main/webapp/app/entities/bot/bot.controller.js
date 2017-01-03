@@ -1,4 +1,4 @@
-(function() {
+(function () {
     'use strict';
 
     angular
@@ -7,7 +7,7 @@
 
     BotController.$inject = ['$scope', '$state', 'Bot', 'ParseLinks', 'AlertService', 'paginationConstants', 'pagingParams'];
 
-    function BotController ($scope, $state, Bot, ParseLinks, AlertService, paginationConstants, pagingParams) {
+    function BotController($scope, $state, Bot, ParseLinks, AlertService, paginationConstants, pagingParams) {
         var vm = this;
 
         vm.loadPage = loadPage;
@@ -18,7 +18,7 @@
 
         loadAll();
 
-        function loadAll () {
+        function loadAll() {
             Bot.query({
                 page: pagingParams.page - 1,
                 size: vm.itemsPerPage,
@@ -31,6 +31,7 @@
                 }
                 return result;
             }
+
             function onSuccess(data, headers) {
                 vm.links = ParseLinks.parse(headers('link'));
                 vm.totalItems = headers('X-Total-Count');
@@ -38,6 +39,7 @@
                 vm.bots = data;
                 vm.page = pagingParams.page;
             }
+
             function onError(error) {
                 AlertService.error(error.data.message);
             }
