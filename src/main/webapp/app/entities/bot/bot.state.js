@@ -201,7 +201,7 @@
                             return Bot.get({id : $stateParams.id}).$promise;
                         }],
                         action: ['Bot', function() {
-                            return 'info';
+                            return $stateParams.action;
                         }]
                     }
                 }).result.then(function() {
