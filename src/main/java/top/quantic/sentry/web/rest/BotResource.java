@@ -12,12 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import sx.blah.discord.util.DiscordException;
-import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.BotService;
+import top.quantic.sentry.service.dto.BotDTO;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
-import top.quantic.sentry.web.rest.vm.BotStatusVM;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -41,19 +40,19 @@ public class BotResource {
     /**
      * POST  /bots : Create a new bot.
      *
-     * @param bot the bot to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new bot, or with status 400 (Bad Request) if the bot has already an ID
+     * @param botDTO the botDTO to create
+     * @return the ResponseEntity with status 201 (Created) and with body the new botDTO, or with status 400 (Bad Request) if the bot has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/bots")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<Bot> createBot(@Valid @RequestBody Bot bot) throws URISyntaxException {
-        log.debug("REST request to save Bot : {}", bot);
-        if (bot.getId() != null) {
+    public ResponseEntity<BotDTO> createBot(@Valid @RequestBody BotDTO botDTO) throws URISyntaxException {
+        log.debug("REST request to save Bot : {}", botDTO);
+        if (botDTO.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("bot", "idexists", "A new bot cannot already have an ID")).body(null);
         }
-        Bot result = botService.save(bot);
+        BotDTO result = botService.save(botDTO);
         return ResponseEntity.created(new URI("/api/bots/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert("bot", result.getId().toString()))
             .body(result);
@@ -62,23 +61,23 @@ public class BotResource {
     /**
      * PUT  /bots : Updates an existing bot.
      *
-     * @param bot the bot to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated bot,
-     * or with status 400 (Bad Request) if the bot is not valid,
-     * or with status 500 (Internal Server Error) if the bot couldnt be updated
+     * @param botDTO the botDTO to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated botDTO,
+     * or with status 400 (Bad Request) if the botDTO is not valid,
+     * or with status 500 (Internal Server Error) if the botDTO couldnt be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/bots")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<Bot> updateBot(@Valid @RequestBody Bot bot) throws URISyntaxException {
-        log.debug("REST request to update Bot : {}", bot);
-        if (bot.getId() == null) {
-            return createBot(bot);
+    public ResponseEntity<BotDTO> updateBot(@Valid @RequestBody BotDTO botDTO) throws URISyntaxException {
+        log.debug("REST request to update Bot : {}", botDTO);
+        if (botDTO.getId() == null) {
+            return createBot(botDTO);
         }
-        Bot result = botService.save(bot);
+        BotDTO result = botService.save(botDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("bot", bot.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("bot", botDTO.getId().toString()))
             .body(result);
     }
 
@@ -92,10 +91,10 @@ public class BotResource {
     @GetMapping("/bots")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<List<Bot>> getAllBots(@ApiParam Pageable pageable)
+    public ResponseEntity<List<BotDTO>> getAllBots(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Bots");
-        Page<Bot> page = botService.findAll(pageable);
+        Page<BotDTO> page = botService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/bots");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -103,16 +102,16 @@ public class BotResource {
     /**
      * GET  /bots/:id : get the "id" bot.
      *
-     * @param id the id of the bot to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the bot, or with status 404 (Not Found)
+     * @param id the id of the botDTO to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the botDTO, or with status 404 (Not Found)
      */
     @GetMapping("/bots/{id}")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<Bot> getBot(@PathVariable String id) {
+    public ResponseEntity<BotDTO> getBot(@PathVariable String id) {
         log.debug("REST request to get Bot : {}", id);
-        Bot bot = botService.findOne(id);
-        return Optional.ofNullable(bot)
+        BotDTO botDTO = botService.findOne(id);
+        return Optional.ofNullable(botDTO)
             .map(result -> new ResponseEntity<>(
                 result,
                 HttpStatus.OK))
@@ -122,7 +121,7 @@ public class BotResource {
     /**
      * DELETE  /bots/:id : delete the "id" bot.
      *
-     * @param id the id of the bot to delete
+     * @param id the id of the botDTO to delete
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/bots/{id}")
@@ -135,7 +134,7 @@ public class BotResource {
     }
 
     private ResponseEntity<Void> loginBot(@PathVariable String id) {
-        Bot bot = botService.findOne(id);
+        BotDTO bot = botService.findOne(id);
         if (bot == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } else {
@@ -155,7 +154,7 @@ public class BotResource {
     }
 
     private ResponseEntity<Void> logoutBot(@PathVariable String id) {
-        Bot bot = botService.findOne(id);
+        BotDTO bot = botService.findOne(id);
         if (bot == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } else {
@@ -175,7 +174,7 @@ public class BotResource {
     }
 
     private ResponseEntity<Void> resetBot(@PathVariable String id) {
-        Bot bot = botService.findOne(id);
+        BotDTO bot = botService.findOne(id);
         if (bot == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } else {
@@ -202,28 +201,6 @@ public class BotResource {
                 return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createAlert("Invalid action: " + action, action))
                     .body(null);
-        }
-    }
-
-    @GetMapping("/bots/{id}/status")
-    @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<BotStatusVM> getStatus(@PathVariable String id) {
-        log.debug("REST request to get status of Bot : {}", id);
-        Bot bot = botService.findOne(id);
-        if (bot == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } else {
-            return botService.getBotClient(bot)
-                .map(client -> {
-                    BotStatusVM vm = new BotStatusVM(id);
-                    vm.setCreated(true);
-                    vm.setLoggedIn(client.isLoggedIn());
-                    vm.setReady(client.isReady());
-                    return ResponseEntity.ok(vm);
-                }).orElse(ResponseEntity.ok()
-                    .headers(HeaderUtil.createAlert("Bot client not created yet", id))
-                    .body(new BotStatusVM(id)));
         }
     }
 

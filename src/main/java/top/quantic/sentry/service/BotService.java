@@ -18,10 +18,11 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.module.ListenerSupplier;
 import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.repository.BotRepository;
+import top.quantic.sentry.service.dto.BotDTO;
+import top.quantic.sentry.service.mapper.BotMapper;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,7 @@ public class BotService implements InitializingBean, DisposableBean {
 
     private final Logger log = LoggerFactory.getLogger(BotService.class);
 
+    private final BotMapper botMapper;
     private final BotRepository botRepository;
     private final CommandRegistry commandRegistry;
     private final List<CommandSupplier> commandSuppliers;
@@ -41,38 +43,28 @@ public class BotService implements InitializingBean, DisposableBean {
     private final Map<Bot, IDiscordClient> discordClientMap = new ConcurrentHashMap<>();
 
     @Autowired
-    public BotService(BotRepository botRepository, CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
+    public BotService(BotMapper botMapper, BotRepository botRepository, CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
                       List<ListenerSupplier> listenerSuppliers) {
+        this.botMapper = botMapper;
         this.botRepository = botRepository;
         this.commandRegistry = commandRegistry;
         this.commandSuppliers = commandSuppliers;
         this.listenerSuppliers = listenerSuppliers;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        autoLoginBots();
+    public void login(BotDTO dto) throws DiscordException {
+        login(botMapper.botDTOToBot(dto));
     }
 
-    private void autoLoginBots() {
-        if (botRepository.count() == 0) {
-            log.warn("No bots in store - Please add at least one bot definition");
-        } else {
-            botRepository.findAll().stream()
-                .filter(Bot::isAutoLogin)
-                .forEach(this::checkedLogin);
-        }
+    public void logout(BotDTO dto) throws DiscordException {
+        logout(botMapper.botDTOToBot(dto));
     }
 
-    private void checkedLogin(Bot bot) {
-        try {
-            login(bot);
-        } catch (DiscordException e) {
-            log.warn("Could not auto-login : " + bot.toString(), e);
-        }
+    public void reset(BotDTO dto) {
+        reset(botMapper.botDTOToBot(dto));
     }
 
-    public IDiscordClient login(Bot bot) throws DiscordException {
+    private IDiscordClient login(Bot bot) throws DiscordException {
         log.debug("Request to login : {}", bot);
         if (discordClientMap.containsKey(bot)) {
             throw new IllegalStateException("Bot is already logged in");
@@ -103,7 +95,7 @@ public class BotService implements InitializingBean, DisposableBean {
         return client;
     }
 
-    public IDiscordClient logout(Bot bot) throws DiscordException {
+    private IDiscordClient logout(Bot bot) throws DiscordException {
         log.debug("Request to logout: {}", bot);
         if (!discordClientMap.containsKey(bot)) {
             throw new IllegalStateException("Bot is not logged in");
@@ -120,7 +112,7 @@ public class BotService implements InitializingBean, DisposableBean {
         return client;
     }
 
-    public void reset(Bot bot) {
+    private void reset(Bot bot) {
         log.debug("Request to reset: {}", bot);
         try {
             logout(bot);
@@ -130,55 +122,88 @@ public class BotService implements InitializingBean, DisposableBean {
         discordClientMap.remove(bot);
     }
 
-    public Optional<IDiscordClient> getBotClient(Bot bot) {
-        log.debug("Request to get client of: {}", bot);
-        return Optional.ofNullable(discordClientMap.get(bot));
+    public IDiscordClient getBotClient(Bot bot) {
+        return discordClientMap.get(bot);
     }
+
+    //////////////////
+    // CRUD Methods //
+    //////////////////
 
     /**
      * Save a bot.
      *
-     * @param bot the entity to save
+     * @param botDTO the entity to save
      * @return the persisted entity
      */
-    public Bot save(Bot bot) {
-        log.debug("Request to save Bot : {}", bot);
-        Bot result = botRepository.save(bot);
+    public BotDTO save(BotDTO botDTO) {
+        log.debug("Request to save Bot : {}", botDTO);
+        Bot bot = botMapper.botDTOToBot(botDTO);
+        bot = botRepository.save(bot);
+        BotDTO result = botMapper.botToBotDTO(bot);
         return result;
     }
 
     /**
-     * Get all the bots.
+     *  Get all the bots.
      *
-     * @param pageable the pagination information
-     * @return the list of entities
+     *  @param pageable the pagination information
+     *  @return the list of entities
      */
-    public Page<Bot> findAll(Pageable pageable) {
+    public Page<BotDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Bots");
         Page<Bot> result = botRepository.findAll(pageable);
-        return result;
+        return result.map(bot -> botMapper.botToBotDTO(bot));
     }
 
     /**
-     * Get one bot by id.
+     *  Get one bot by id.
      *
-     * @param id the id of the entity
-     * @return the entity
+     *  @param id the id of the entity
+     *  @return the entity
      */
-    public Bot findOne(String id) {
+    public BotDTO findOne(String id) {
         log.debug("Request to get Bot : {}", id);
         Bot bot = botRepository.findOne(id);
-        return bot;
+        BotDTO botDTO = botMapper.botToBotDTO(bot);
+        return botDTO;
     }
 
     /**
-     * Delete the  bot by id.
+     *  Delete the  bot by id.
      *
-     * @param id the id of the entity
+     *  @param id the id of the entity
      */
     public void delete(String id) {
         log.debug("Request to delete Bot : {}", id);
         botRepository.delete(id);
+    }
+
+    ///////////////
+    // Lifecycle //
+    ///////////////
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        autoLoginBots();
+    }
+
+    private void autoLoginBots() {
+        if (botRepository.count() == 0) {
+            log.warn("No bots in store - Please add at least one bot definition");
+        } else {
+            botRepository.findAll().stream()
+                .filter(Bot::isAutoLogin)
+                .forEach(this::checkedLogin);
+        }
+    }
+
+    private void checkedLogin(Bot bot) {
+        try {
+            login(bot);
+        } catch (DiscordException e) {
+            log.warn("Could not auto-login : " + bot.toString(), e);
+        }
     }
 
     @Override

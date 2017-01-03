@@ -15,6 +15,8 @@
         vm.reverse = pagingParams.ascending;
         vm.transition = transition;
         vm.itemsPerPage = paginationConstants.itemsPerPage;
+        vm.statusText = statusText;
+        vm.statusClass = statusClass;
 
         loadAll();
 
@@ -56,6 +58,32 @@
                 sort: vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc'),
                 search: vm.currentSearch
             });
+        }
+
+        function statusText(bot) {
+            if (bot.created) {
+                if (bot.loggedIn) {
+                    if (bot.ready) {
+                        return 'ONLINE';
+                    } else {
+                        return 'LOADING';
+                    }
+                }
+            }
+            return 'OFFLINE';
+        }
+
+        function statusClass(bot) {
+            if (bot.created) {
+                if (bot.loggedIn) {
+                    if (bot.ready) {
+                        return 'label-success';
+                    } else {
+                        return 'label-warning';
+                    }
+                }
+            }
+            return 'label-default';
         }
     }
 })();

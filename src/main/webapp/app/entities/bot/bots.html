@@ -18,6 +18,7 @@
         <table class="jh-table table table-striped">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
+                    <th jh-sort-by="id"><span>Status</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="autoLogin"><span>Auto Login</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -32,6 +33,11 @@
             </thead>
             <tbody>
                 <tr ng-repeat="bot in vm.bots track by bot.id">
+                    <td>
+                        <span class="label" ng-class="vm.statusClass(bot)">
+                            {{vm.statusText(bot)}}
+                        </span>
+                    </td>
                     <td><a ui-sref="bot-detail({id:bot.id})">{{bot.id}}</a></td>
                     <td>{{bot.name}}</td>
                     <td>{{bot.autoLogin}}</td>

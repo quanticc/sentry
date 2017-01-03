@@ -42,7 +42,7 @@
             "fieldType": "String"
         }
     ],
-    "dto": "no",
+    "dto": "mapstruct",
     "service": "serviceClass",
     "entityTableName": "bot",
     "pagination": "pagination"

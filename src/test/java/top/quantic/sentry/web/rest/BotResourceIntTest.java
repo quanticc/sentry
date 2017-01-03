@@ -5,6 +5,8 @@ import top.quantic.sentry.SentryApp;
 import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.repository.BotRepository;
 import top.quantic.sentry.service.BotService;
+import top.quantic.sentry.service.dto.BotDTO;
+import top.quantic.sentry.service.mapper.BotMapper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +69,9 @@ public class BotResourceIntTest {
     private BotRepository botRepository;
 
     @Inject
+    private BotMapper botMapper;
+
+    @Inject
     private BotService botService;
 
     @Inject
@@ -120,10 +125,11 @@ public class BotResourceIntTest {
         int databaseSizeBeforeCreate = botRepository.findAll().size();
 
         // Create the Bot
+        BotDTO botDTO = botMapper.botToBotDTO(bot);
 
         restBotMockMvc.perform(post("/api/bots")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(bot)))
+            .content(TestUtil.convertObjectToJsonBytes(botDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Bot in the database
@@ -148,11 +154,12 @@ public class BotResourceIntTest {
         // Create the Bot with an existing ID
         Bot existingBot = new Bot();
         existingBot.setId("existing_id");
+        BotDTO existingBotDTO = botMapper.botToBotDTO(existingBot);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restBotMockMvc.perform(post("/api/bots")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(existingBot)))
+            .content(TestUtil.convertObjectToJsonBytes(existingBotDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Alice in the database
@@ -167,10 +174,11 @@ public class BotResourceIntTest {
         bot.setToken(null);
 
         // Create the Bot, which fails.
+        BotDTO botDTO = botMapper.botToBotDTO(bot);
 
         restBotMockMvc.perform(post("/api/bots")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(bot)))
+            .content(TestUtil.convertObjectToJsonBytes(botDTO)))
             .andExpect(status().isBadRequest());
 
         List<Bot> botList = botRepository.findAll();
@@ -229,8 +237,7 @@ public class BotResourceIntTest {
     @Test
     public void updateBot() throws Exception {
         // Initialize the database
-        botService.save(bot);
-
+        botRepository.save(bot);
         int databaseSizeBeforeUpdate = botRepository.findAll().size();
 
         // Update the bot
@@ -245,10 +252,11 @@ public class BotResourceIntTest {
                 .shardCount(UPDATED_SHARD_COUNT)
                 .primary(UPDATED_PRIMARY)
                 .tags(UPDATED_TAGS);
+        BotDTO botDTO = botMapper.botToBotDTO(updatedBot);
 
         restBotMockMvc.perform(put("/api/bots")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedBot)))
+            .content(TestUtil.convertObjectToJsonBytes(botDTO)))
             .andExpect(status().isOk());
 
         // Validate the Bot in the database
@@ -271,11 +279,12 @@ public class BotResourceIntTest {
         int databaseSizeBeforeUpdate = botRepository.findAll().size();
 
         // Create the Bot
+        BotDTO botDTO = botMapper.botToBotDTO(bot);
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restBotMockMvc.perform(put("/api/bots")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(bot)))
+            .content(TestUtil.convertObjectToJsonBytes(botDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Bot in the database
@@ -286,8 +295,7 @@ public class BotResourceIntTest {
     @Test
     public void deleteBot() throws Exception {
         // Initialize the database
-        botService.save(bot);
-
+        botRepository.save(bot);
         int databaseSizeBeforeDelete = botRepository.findAll().size();
 
         // Get the bot
