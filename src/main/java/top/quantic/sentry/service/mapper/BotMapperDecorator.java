@@ -2,29 +2,26 @@ package top.quantic.sentry.service.mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
 import top.quantic.sentry.domain.Bot;
-import top.quantic.sentry.service.BotService;
+import top.quantic.sentry.service.DiscordService;
 import top.quantic.sentry.service.dto.BotDTO;
 
-@Component
 public abstract class BotMapperDecorator implements BotMapper {
 
-    private final BotMapper delegate;
-    private final BotService botService;
+    @Autowired
+    @Qualifier("delegate")
+    private BotMapper delegate;
 
     @Autowired
-    public BotMapperDecorator(@Qualifier("delegate") BotMapper delegate, BotService botService) {
-        this.delegate = delegate;
-        this.botService = botService;
-    }
+    private DiscordService discordService;
 
     @Override
     public BotDTO botToBotDTO(Bot bot) {
         BotDTO dto = delegate.botToBotDTO(bot);
-        IDiscordClient client = botService.getBotClient(bot);
+        IDiscordClient client = discordService.getClients().get(bot);
         if (client != null) {
+            dto.setCreated(true);
             dto.setReady(client.isReady());
             dto.setLoggedIn(client.isLoggedIn());
         }

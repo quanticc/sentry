@@ -1,15 +1,17 @@
 package top.quantic.sentry.service.mapper;
 
-import top.quantic.sentry.domain.*;
+import org.mapstruct.DecoratedWith;
+import org.mapstruct.Mapper;
+import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.service.dto.BotDTO;
 
-import org.mapstruct.*;
 import java.util.List;
 
 /**
  * Mapper for the entity Bot and its DTO BotDTO.
  */
 @Mapper(componentModel = "spring", uses = {})
+@DecoratedWith(BotMapperDecorator.class)
 public interface BotMapper {
 
     BotDTO botToBotDTO(Bot bot);

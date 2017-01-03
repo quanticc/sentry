@@ -22,8 +22,6 @@ import top.quantic.sentry.service.dto.BotDTO;
 import top.quantic.sentry.service.mapper.BotMapper;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -36,17 +34,18 @@ public class BotService implements InitializingBean, DisposableBean {
 
     private final BotMapper botMapper;
     private final BotRepository botRepository;
+    private final DiscordService discordService;
     private final CommandRegistry commandRegistry;
     private final List<CommandSupplier> commandSuppliers;
     private final List<ListenerSupplier> listenerSuppliers;
 
-    private final Map<Bot, IDiscordClient> discordClientMap = new ConcurrentHashMap<>();
-
     @Autowired
-    public BotService(BotMapper botMapper, BotRepository botRepository, CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
+    public BotService(BotMapper botMapper, BotRepository botRepository, DiscordService discordService,
+                      CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
                       List<ListenerSupplier> listenerSuppliers) {
         this.botMapper = botMapper;
         this.botRepository = botRepository;
+        this.discordService = discordService;
         this.commandRegistry = commandRegistry;
         this.commandSuppliers = commandSuppliers;
         this.listenerSuppliers = listenerSuppliers;
@@ -66,7 +65,7 @@ public class BotService implements InitializingBean, DisposableBean {
 
     private IDiscordClient login(Bot bot) throws DiscordException {
         log.debug("Request to login : {}", bot);
-        if (discordClientMap.containsKey(bot)) {
+        if (discordService.getClients().containsKey(bot)) {
             throw new IllegalStateException("Bot is already logged in");
         }
         IDiscordClient client = new ClientBuilder()
@@ -75,7 +74,7 @@ public class BotService implements InitializingBean, DisposableBean {
             .withPingTimeout(bot.getMaxMissedPings())
             .setMaxReconnectAttempts(bot.getMaxReconnectAttempts())
             .login();
-        discordClientMap.put(bot, client);
+        discordService.getClients().put(bot, client);
 
         for (ListenerSupplier supplier : listenerSuppliers) {
             List<IListener<?>> listeners = supplier.getListeners();
@@ -97,17 +96,17 @@ public class BotService implements InitializingBean, DisposableBean {
 
     private IDiscordClient logout(Bot bot) throws DiscordException {
         log.debug("Request to logout: {}", bot);
-        if (!discordClientMap.containsKey(bot)) {
+        if (!discordService.getClients().containsKey(bot)) {
             throw new IllegalStateException("Bot is not logged in");
         }
 
-        IDiscordClient client = discordClientMap.get(bot);
+        IDiscordClient client = discordService.getClients().get(bot);
         if (client.isLoggedIn()) {
             client.logout();
         } else {
             log.warn("Bot {} is not logged in", bot.getName());
         }
-        discordClientMap.remove(bot);
+        discordService.getClients().remove(bot);
 
         return client;
     }
@@ -119,11 +118,7 @@ public class BotService implements InitializingBean, DisposableBean {
         } catch (DiscordException e) {
             log.warn("Could not logout: {}", bot, e);
         }
-        discordClientMap.remove(bot);
-    }
-
-    public IDiscordClient getBotClient(Bot bot) {
-        return discordClientMap.get(bot);
+        discordService.getClients().remove(bot);
     }
 
     //////////////////
@@ -145,10 +140,10 @@ public class BotService implements InitializingBean, DisposableBean {
     }
 
     /**
-     *  Get all the bots.
+     * Get all the bots.
      *
-     *  @param pageable the pagination information
-     *  @return the list of entities
+     * @param pageable the pagination information
+     * @return the list of entities
      */
     public Page<BotDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Bots");
@@ -157,10 +152,10 @@ public class BotService implements InitializingBean, DisposableBean {
     }
 
     /**
-     *  Get one bot by id.
+     * Get one bot by id.
      *
-     *  @param id the id of the entity
-     *  @return the entity
+     * @param id the id of the entity
+     * @return the entity
      */
     public BotDTO findOne(String id) {
         log.debug("Request to get Bot : {}", id);
@@ -170,9 +165,9 @@ public class BotService implements InitializingBean, DisposableBean {
     }
 
     /**
-     *  Delete the  bot by id.
+     * Delete the  bot by id.
      *
-     *  @param id the id of the entity
+     * @param id the id of the entity
      */
     public void delete(String id) {
         log.debug("Request to delete Bot : {}", id);
@@ -208,7 +203,7 @@ public class BotService implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        discordClientMap.entrySet().forEach(entry -> {
+        discordService.getClients().entrySet().forEach(entry -> {
             if (entry.getValue().isLoggedIn()) {
                 try {
                     logout(entry.getKey());
