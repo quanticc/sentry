@@ -1,6 +1,5 @@
 package top.quantic.sentry.service;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -23,15 +22,11 @@ public class DiscordService implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        // avoid leaving the application exposed with default credentials
-        userService.changePassword("system", RandomStringUtils.random(10));
-        userService.changePassword("anonymousUser", RandomStringUtils.random(10));
+    public void afterPropertiesSet() {
         userService.deleteUser("admin");
         userService.deleteUser("user");
         if (sentryProperties.getDiscord().getAdministrators().isEmpty() && userService.getAdminCount() == 0) {
-            log.info("No administrators set - Set at least one under 'sentry.discord.administrators' property");
+            log.info("*** No administrators set - Define some under 'sentry.discord.administrators' property");
         }
     }
-
 }
