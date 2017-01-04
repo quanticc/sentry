@@ -1,42 +1,42 @@
-(function() {
+(function () {
     'use strict';
 
     angular
         .module('sentryApp')
         .controller('HomeController', HomeController);
 
-    HomeController.$inject = ['$scope', 'Principal', 'LoginService', '$state', 'Discord'];
+    HomeController.$inject = ['$scope', 'Principal', 'LoginService', 'Discord'];
 
-    function HomeController ($scope, Principal, LoginService, $state, Discord) {
+    function HomeController($scope, Principal, LoginService, Discord) {
         var vm = this;
 
         vm.account = null;
         vm.isAuthenticated = null;
         vm.login = LoginService.open;
-        vm.register = register;
-        $scope.$on('authenticationSuccess', function() {
+        $scope.$on('authenticationSuccess', function () {
             getAccount();
         });
 
         getAccount();
 
         function getAccount() {
-            Principal.identity().then(function(account) {
+            Principal.identity().then(function (account) {
                 vm.account = account;
                 vm.isAuthenticated = Principal.isAuthenticated;
-            });
-            Discord.getDiscordInfo().then(function(response) {
-                vm.discord = {};
-                if (response.username) {
-                    vm.discord.username = response.username;
-                    vm.discord.avatar = response.avatar;
-                } else {
-                    vm.discord.username = vm.account.login;
+                if (vm.isAuthenticated()) {
+                    getDiscordInfo();
                 }
             });
         }
-        function register () {
-            $state.go('register');
+
+        function getDiscordInfo() {
+            Discord.me(function (data) {
+                vm.discord = {};
+                if (data.username) {
+                    vm.discord.username = data.username;
+                    vm.discord.avatar = data.avatarUrl;
+                }
+            });
         }
     }
 })();

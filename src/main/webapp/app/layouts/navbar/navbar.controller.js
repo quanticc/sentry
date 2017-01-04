@@ -24,6 +24,16 @@
         vm.collapseNavbar = collapseNavbar;
         vm.$state = $state;
 
+        if (vm.isAuthenticated()) {
+            Discord.me(function (data) {
+                vm.discord = {};
+                if (data.username) {
+                    vm.discord.username = data.username;
+                    vm.discord.avatar = data.avatarUrl;
+                }
+            });
+        }
+
         function login() {
             collapseNavbar();
             LoginService.open();
@@ -41,18 +51,6 @@
 
         function collapseNavbar() {
             vm.isNavbarCollapsed = true;
-        }
-
-        if (vm.isAuthenticated) {
-            Discord.getDiscordInfo().then(function(response) {
-                if (response.username) {
-                    vm.discord = {};
-                    vm.discord.username = response.username;
-                    vm.discord.avatar = response.avatar;
-                } else {
-                    vm.discord = {};
-                }
-            });
         }
     }
 })();
