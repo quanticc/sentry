@@ -1,6 +1,5 @@
 package top.quantic.sentry.service;
 
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import top.quantic.sentry.config.Constants;
+import top.quantic.sentry.config.SentryProperties;
 import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.repository.SettingRepository;
 import top.quantic.sentry.service.dto.SettingDTO;
@@ -28,22 +28,23 @@ public class SettingService {
 
     private final SettingRepository settingRepository;
     private final SettingMapper settingMapper;
+    private final SentryProperties sentryProperties;
 
     @Autowired
-    public SettingService(SettingRepository settingRepository, SettingMapper settingMapper) {
+    public SettingService(SettingRepository settingRepository, SettingMapper settingMapper,
+                          SentryProperties sentryProperties) {
         this.settingRepository = settingRepository;
         this.settingMapper = settingMapper;
+        this.sentryProperties = sentryProperties;
     }
 
     @Cacheable("prefixes")
     public List<String> getPrefixes(String guild) {
         List<Setting> settings = settingRepository.findByGuildAndKey(guild, Constants.KEY_PREFIX);
         if (settings.isEmpty()) {
-            // try with "*"
             settings = settingRepository.findByGuildAndKey(Constants.ANY, Constants.KEY_PREFIX);
             if (settings.isEmpty()) {
-                // fallback to '!' and '.'
-                return Lists.newArrayList("!", ".");
+                return sentryProperties.getDiscord().getDefaultPrefixes();
             }
         }
         return extractValues(settings);

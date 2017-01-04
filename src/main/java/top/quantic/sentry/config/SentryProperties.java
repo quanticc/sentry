@@ -1,5 +1,6 @@
 package top.quantic.sentry.config;
 
+import com.google.common.collect.Lists;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
@@ -17,9 +18,22 @@ public class SentryProperties {
     public static class Discord {
 
         private List<String> administrators = new ArrayList<>();
+        private List<String> defaultPrefixes = Lists.newArrayList("!");
 
         public List<String> getAdministrators() {
             return administrators;
+        }
+
+        public void setAdministrators(List<String> administrators) {
+            this.administrators = administrators;
+        }
+
+        public List<String> getDefaultPrefixes() {
+            return defaultPrefixes;
+        }
+
+        public void setDefaultPrefixes(List<String> defaultPrefixes) {
+            this.defaultPrefixes = defaultPrefixes;
         }
     }
 
