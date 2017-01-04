@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Mapper for the entity Setting and its DTO SettingDTO.
  */
-@Mapper(componentModel = "spring", uses = {})
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SettingMapper {
 
     SettingDTO settingToSettingDTO(Setting setting);
