@@ -236,6 +236,12 @@ task wrapper(type: Wrapper) {
 task stage(dependsOn: 'bootRepackage') {
 }
 
+task exportVersion(dependsOn: 'cleanResources') {
+    def output = file("version.txt")
+    output.write "version = '${version}'\n"
+}
+
 compileJava.dependsOn processResources
 processResources.dependsOn cleanResources,bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources
+bootBuildInfo.mustRunAfter exportVersion

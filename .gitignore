@@ -4,6 +4,7 @@
 /build/www/**
 /application*.yml
 /logs
+/version.txt
 
 ######################
 # Node
