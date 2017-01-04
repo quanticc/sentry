@@ -23,7 +23,7 @@ public class DiscordAdapter implements ApiAdapter<Discord> {
     public void setConnectionValues(Discord api, ConnectionValues values) {
         DiscordUser profile = api.userOperations().getUser();
         values.setProviderUserId(String.valueOf(profile.getId()));
-        values.setDisplayName(api.userOperations().getNickname());
+        values.setDisplayName(profile.getUsername());
         values.setProfileUrl("https://discordapp.com/channels/@me");
         values.setImageUrl(api.userOperations().getAvatarUrl());
     }
@@ -33,8 +33,7 @@ public class DiscordAdapter implements ApiAdapter<Discord> {
         DiscordUser profile = api.userOperations().getUser();
         return new UserProfileBuilder()
             .setId(profile.getId())
-            .setFirstName(profile.getUsername())
-            .setLastName("#" + profile.getDiscriminator())
+            .setName(profile.getUsername() + " " + profile.getDiscriminator())
             .setUsername(api.userOperations().getNickname())
             .setEmail(profile.getEmail())
             .build();
