@@ -15,6 +15,7 @@
         vm.reverse = pagingParams.ascending;
         vm.transition = transition;
         vm.itemsPerPage = paginationConstants.itemsPerPage;
+        vm.permLabel = permLabel;
 
         loadAll();
 
@@ -54,6 +55,14 @@
                 sort: vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc'),
                 search: vm.currentSearch
             });
+        }
+
+        function permLabel(type) {
+            if (type === 'ALLOW') {
+                return 'label-success';
+            } else {
+                return 'label-danger';
+            }
         }
     }
 })();

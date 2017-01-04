@@ -13,6 +13,7 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Constants;
+import top.quantic.sentry.config.Operations;
 import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandContext;
 import top.quantic.sentry.discord.command.CommandRegistry;
@@ -77,7 +78,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                 boolean allowed = true;
                 if (command.get().isSecured()) {
                     allowed = permissionService.hasPermission(getRoles(message.getAuthor()),
-                        Constants.BOT_COMMAND_EXECUTE, command.get().getName());
+                        Operations.BOT_COMMAND_EXECUTE, command.get().getName());
                 }
                 boolean hasPermissions = event.getMessage().getChannel()
                     .getModifiedPermissions(event.getMessage().getAuthor())

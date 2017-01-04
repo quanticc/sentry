@@ -9,7 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import top.quantic.sentry.config.Constants;
+import top.quantic.sentry.config.Operations;
 import top.quantic.sentry.domain.Permission;
 import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.repository.PermissionRepository;
@@ -46,12 +46,12 @@ public class PermissionService {
     public Set<PermissionType> checkPermissions(Set<String> roles, String operation, String resource) {
         String[] steps = operation.split("\\.");
         List<Permission> permissions = new ArrayList<>();
-        permissions.addAll(getPermissions(roles, Constants.ALL_PERMISSIONS, resource));
+        permissions.addAll(getPermissions(roles, Operations.ALL, resource));
         for (int i = 0; i < steps.length; i++) {
             String op = StringUtils.join(Arrays.copyOfRange(steps, 0, i + 1), '.') + (i + 1 == steps.length ? "" : ".*");
             permissions.addAll(getPermissions(roles, op, resource));
         }
-        permissions.forEach(p -> log.debug("[{}] Attempt to '{}' on '{}' by {}", p.getType(), p.getOperation(), p.getResource(), p.getRole()));
+        //permissions.forEach(p -> log.debug("[{}] Attempt to '{}' on '{}' by {}", p.getType(), p.getOperation(), p.getResource(), p.getRole()));
         return permissions.stream().map(Permission::getType).collect(Collectors.toSet());
     }
 

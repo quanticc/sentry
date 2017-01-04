@@ -29,7 +29,11 @@
             <tbody>
                 <tr ng-repeat="permission in vm.permissions track by permission.id">
                     <td><a ui-sref="permission-detail({id:permission.id})">{{permission.id}}</a></td>
-                    <td>{{permission.type}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.permLabel(permission.type)">
+                            {{permission.type}}
+                        </span>
+                    </td>
                     <td>{{permission.role}}</td>
                     <td>{{permission.operation}}</td>
                     <td>{{permission.resource}}</td>
