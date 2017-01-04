@@ -22,6 +22,7 @@ import top.quantic.sentry.service.dto.BotDTO;
 import top.quantic.sentry.service.mapper.BotMapper;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -134,6 +135,14 @@ public class BotService implements InitializingBean, DisposableBean {
     public BotDTO save(BotDTO botDTO) {
         log.debug("Request to save Bot : {}", botDTO);
         Bot bot = botMapper.botDTOToBot(botDTO);
+        if (bot.isPrimary()) {
+            Optional<Bot> primary = botRepository.findByPrimaryIsTrue();
+            if (primary.isPresent() && !primary.get().equals(bot)) {
+                Bot primaryBot = primary.get();
+                primaryBot.setPrimary(false);
+                botRepository.save(primaryBot);
+            }
+        }
         bot = botRepository.save(bot);
         BotDTO result = botMapper.botToBotDTO(bot);
         return result;
