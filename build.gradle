@@ -237,8 +237,8 @@ task stage(dependsOn: 'bootRepackage') {
 }
 
 task exportVersion(dependsOn: 'cleanResources') {
-    def output = file("version.txt")
-    output.write "version = '${version}'\n"
+    def output = file("version.properties")
+    output.write "version = ${version}\n"
 }
 
 compileJava.dependsOn processResources

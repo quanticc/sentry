@@ -14,8 +14,8 @@ function endsWith(str, suffix) {
 
 // Returns the second occurrence of the version number from `build.gradle` file
 function parseVersion() {
-    var versionRegex = /^version\s*=\s*[',"]([^',"]*)[',"]/gm; // Match and group the version number
-    var buildGradle = fs.readFileSync('version.txt', 'utf8');
+    var versionRegex = /^version\s*=\s*(.*)/gm; // Match and group the version number
+    var buildGradle = fs.readFileSync('version.properties', 'utf8');
     return versionRegex.exec(buildGradle)[1];
 }
 
