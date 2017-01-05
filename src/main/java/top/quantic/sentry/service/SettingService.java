@@ -1,5 +1,6 @@
 package top.quantic.sentry.service;
 
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sx.blah.discord.handle.obj.IMessage;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.config.SentryProperties;
 import top.quantic.sentry.domain.Setting;
@@ -16,6 +18,7 @@ import top.quantic.sentry.service.dto.SettingDTO;
 import top.quantic.sentry.service.mapper.SettingMapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,13 +41,21 @@ public class SettingService {
         this.sentryProperties = sentryProperties;
     }
 
+    public Set<String> getPrefixes(IMessage message) {
+        if (message.getChannel().isPrivate()) {
+            return getPrefixes("*");
+        } else {
+            return getPrefixes(message.getGuild().getID());
+        }
+    }
+
     @Cacheable("prefixes")
-    public List<String> getPrefixes(String guild) {
+    public Set<String> getPrefixes(String guild) {
         List<Setting> settings = settingRepository.findByGuildAndKey(guild, Constants.KEY_PREFIX);
         if (settings.isEmpty()) {
             settings = settingRepository.findByGuildAndKey(Constants.ANY, Constants.KEY_PREFIX);
             if (settings.isEmpty()) {
-                return sentryProperties.getDiscord().getDefaultPrefixes();
+                return Sets.newHashSet(sentryProperties.getDiscord().getDefaultPrefixes());
             }
         }
         return extractValues(settings);
@@ -101,7 +112,7 @@ public class SettingService {
         settingRepository.delete(id);
     }
 
-    private List<String> extractValues(List<Setting> settingList) {
-        return settingList.stream().map(Setting::getValue).collect(Collectors.toList());
+    private Set<String> extractValues(List<Setting> settingList) {
+        return settingList.stream().map(Setting::getValue).collect(Collectors.toSet());
     }
 }
