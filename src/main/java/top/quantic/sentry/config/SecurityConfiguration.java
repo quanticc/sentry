@@ -1,8 +1,5 @@
 package top.quantic.sentry.config;
 
-import top.quantic.sentry.security.*;
-import top.quantic.sentry.config.JHipsterProperties;
-
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,11 +11,12 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import top.quantic.sentry.security.*;
 
 import javax.inject.Inject;
 
@@ -105,7 +103,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .and()
             .headers()
             .frameOptions()
-            .disable()
+            .sameOrigin()
         .and()
             .authorizeRequests()
             .antMatchers("/api/register").permitAll()
