@@ -7,7 +7,6 @@ import sx.blah.discord.handle.obj.Permissions;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -95,7 +94,7 @@ public class CommandBuilder {
      */
     public CommandBuilder parsedBy(OptionParser parser) {
         this.parser = parser;
-        this.parser.acceptsAll(asList("?", "h", "help"), "Display the help").forHelp();
+        this.parser.accepts("help", "Display the help").forHelp();
         this.parser.allowsUnrecognizedOptions();
         parameterAliases = new HashMap<>();
         parser.recognizedOptions().keySet().stream()
