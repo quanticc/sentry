@@ -248,3 +248,4 @@ compileJava.dependsOn processResources
 processResources.dependsOn cleanResources,bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources
 bootBuildInfo.mustRunAfter exportVersion
+tasks.release.dependsOn stage
