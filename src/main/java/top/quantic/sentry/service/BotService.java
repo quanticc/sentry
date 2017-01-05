@@ -102,12 +102,14 @@ public class BotService implements InitializingBean, DisposableBean {
         }
 
         IDiscordClient client = discordService.getClients().get(bot);
-        if (client.isLoggedIn()) {
-            client.logout();
-        } else {
-            log.warn("Bot {} is not logged in", bot.getName());
+        if (client != null) {
+            if (client.isLoggedIn()) {
+                client.logout();
+            } else {
+                log.warn("Bot {} is not logged in", bot.getName());
+            }
+            discordService.getClients().remove(bot);
         }
-        discordService.getClients().remove(bot);
 
         return client;
     }
@@ -135,7 +137,7 @@ public class BotService implements InitializingBean, DisposableBean {
     public BotDTO save(BotDTO botDTO) {
         log.debug("Request to save Bot : {}", botDTO);
         Bot bot = botMapper.botDTOToBot(botDTO);
-        if (bot.isPrimary()) {
+        if (bot.isPrimary() != null && bot.isPrimary()) {
             Optional<Bot> primary = botRepository.findByPrimaryIsTrue();
             if (primary.isPresent() && !primary.get().equals(bot)) {
                 Bot primaryBot = primary.get();
