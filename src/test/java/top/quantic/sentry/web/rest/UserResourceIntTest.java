@@ -49,11 +49,11 @@ public class UserResourceIntTest {
 
     @Test
     public void testGetExistingUser() throws Exception {
-        restUserMockMvc.perform(get("/api/users/admin")
+        restUserMockMvc.perform(get("/api/users/system")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$.lastName").value("Administrator"));
+                .andExpect(jsonPath("$.lastName").value("System"));
     }
 
     @Test
