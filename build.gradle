@@ -24,6 +24,7 @@ buildscript {
 plugins {
     id 'org.ajoberstar.grgit' version '1.6.0'
     id 'org.ajoberstar.release-opinion' version '1.6.0'
+    id 'com.gorylenko.gradle-git-properties' version '1.4.17'
 }
 
 apply plugin: 'java'
