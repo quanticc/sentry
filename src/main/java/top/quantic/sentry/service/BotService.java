@@ -15,6 +15,7 @@ import sx.blah.discord.util.DiscordException;
 import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
+import top.quantic.sentry.discord.module.DiscordSubscriber;
 import top.quantic.sentry.discord.module.ListenerSupplier;
 import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.repository.BotRepository;
@@ -39,17 +40,19 @@ public class BotService implements InitializingBean, DisposableBean {
     private final CommandRegistry commandRegistry;
     private final List<CommandSupplier> commandSuppliers;
     private final List<ListenerSupplier> listenerSuppliers;
+    private final List<DiscordSubscriber> discordSubscribers;
 
     @Autowired
     public BotService(BotMapper botMapper, BotRepository botRepository, DiscordService discordService,
                       CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
-                      List<ListenerSupplier> listenerSuppliers) {
+                      List<ListenerSupplier> listenerSuppliers, List<DiscordSubscriber> discordSubscribers) {
         this.botMapper = botMapper;
         this.botRepository = botRepository;
         this.discordService = discordService;
         this.commandRegistry = commandRegistry;
         this.commandSuppliers = commandSuppliers;
         this.listenerSuppliers = listenerSuppliers;
+        this.discordSubscribers = discordSubscribers;
     }
 
     public void login(BotDTO dto) throws DiscordException {
@@ -76,6 +79,11 @@ public class BotService implements InitializingBean, DisposableBean {
             .setMaxReconnectAttempts(bot.getMaxReconnectAttempts())
             .login();
         discordService.getClients().put(bot, client);
+
+        for (DiscordSubscriber subscriber : discordSubscribers) {
+            log.debug("[{}] Registering subscriber: {}", bot.getName(), subscriber.getClass().getSimpleName());
+            client.getDispatcher().registerListener(subscriber);
+        }
 
         for (ListenerSupplier supplier : listenerSuppliers) {
             List<IListener<?>> listeners = supplier.getListeners();
