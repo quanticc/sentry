@@ -1,8 +1,6 @@
 package top.quantic.sentry.discord;
 
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.InfoEndpoint;
 import org.springframework.stereotype.Component;
@@ -11,7 +9,6 @@ import sx.blah.discord.handle.obj.IMessage;
 import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
-import top.quantic.sentry.service.SettingService;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -19,7 +16,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
@@ -27,14 +23,10 @@ import static top.quantic.sentry.service.util.DateUtil.humanize;
 @Component
 public class Info implements CommandSupplier {
 
-    private static final Logger log = LoggerFactory.getLogger(Info.class);
-
-    private final SettingService settingService;
     private final InfoEndpoint infoEndpoint;
 
     @Autowired
-    public Info(SettingService settingService, InfoEndpoint infoEndpoint) {
-        this.settingService = settingService;
+    public Info(InfoEndpoint infoEndpoint) {
         this.infoEndpoint = infoEndpoint;
     }
 
@@ -55,12 +47,10 @@ public class Info implements CommandSupplier {
                 version = (version == null ? "snapshot" : version);
                 RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
                 long uptime = rb.getUptime();
-                Set<String> prefixes = settingService.getPrefixes(message);
                 String content = "Hey! I'm here to help with **UGC support**.\n\n" +
                     "**Version:** " + version + '\n' +
                     "**Discord4J:** " + Discord4J.VERSION + '\n' +
-                    "**Uptime:** " + humanize(Duration.ofMillis(uptime)) +'\n' +
-                    "Check the available commands with `" + prefixes.stream().findAny().orElse("") + "help`";
+                    "**Uptime:** " + humanize(Duration.ofMillis(uptime)) +'\n';
                 answer(message, content);
             }).build();
     }
