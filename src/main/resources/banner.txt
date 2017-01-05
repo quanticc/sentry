@@ -1,8 +1,3 @@
 
-${AnsiColor.RED}   ██████  ███████  ███     ██  ████████  ███████   ██    ██
-${AnsiColor.RED}  ██       ██       ████    ██     ██     ██    ██   ██  ██
-${AnsiColor.RED}   █████   █████    ██  ██  ██     ██     ███████     ████
-${AnsiColor.RED}       ██  ██       ██    ████     ██     ██   ██      ██
-${AnsiColor.RED}  ██████   ███████  ██     ███     ██     ██    ██     ██
-
-${AnsiColor.GREEN}:: Sentry 🍆 :: ${AnsiColor.BLUE}Running Spring Boot ${spring-boot.version} ::${AnsiColor.DEFAULT}
+${AnsiColor.GREEN}:: Sentry 🍆 ${application.version} ::
+${AnsiColor.BLUE}Running Spring Boot ${spring-boot.version}${AnsiColor.DEFAULT}
