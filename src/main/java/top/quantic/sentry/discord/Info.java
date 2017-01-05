@@ -2,7 +2,7 @@ package top.quantic.sentry.discord;
 
 import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.InfoEndpoint;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.Discord4J;
 import sx.blah.discord.handle.obj.IMessage;
@@ -23,11 +23,11 @@ import static top.quantic.sentry.service.util.DateUtil.humanize;
 @Component
 public class Info implements CommandSupplier {
 
-    private final InfoEndpoint infoEndpoint;
+    private final BuildProperties buildProperties;
 
     @Autowired
-    public Info(InfoEndpoint infoEndpoint) {
-        this.infoEndpoint = infoEndpoint;
+    public Info(BuildProperties buildProperties) {
+        this.buildProperties = buildProperties;
     }
 
     @Override
@@ -42,8 +42,7 @@ public class Info implements CommandSupplier {
             .nonParsed()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
-                Map<String, Object> info = infoEndpoint.invoke();
-                String version = (String) getNestedMap(info, "build").get("version");
+                String version = buildProperties.getVersion();
                 version = (version == null ? "snapshot" : version);
                 RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
                 long uptime = rb.getUptime();
