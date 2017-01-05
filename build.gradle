@@ -42,7 +42,7 @@ release {
     grgit = Grgit.open(project.rootDir)
 }
 
-tasks.release.dependsOn 'compileJava'
+tasks.release.dependsOn 'build'
 
 bootRepackage {
     mainClass = 'top.quantic.sentry.SentryApp'
