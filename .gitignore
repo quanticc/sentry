@@ -5,6 +5,7 @@
 /application*.yml
 /logs
 /version.properties
+app.constants.js
 
 ######################
 # Node
