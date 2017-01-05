@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
@@ -53,16 +52,15 @@ public class Info implements CommandSupplier {
                 IMessage message = context.getMessage();
                 Map<String, Object> info = infoEndpoint.invoke();
                 String version = (String) getNestedMap(info, "build").get("version");
+                version = (version == null ? "snapshot" : version);
                 RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
                 long uptime = rb.getUptime();
-                version = (version == null ? "" : " `v" + version + "`");
                 Set<String> prefixes = settingService.getPrefixes(message);
-                String content = "Hey! I'm here to help with **UGC support**.\n" +
-                    "Version: " + version + "\n" +
-                    "Discord4J: " + Discord4J.VERSION + "\n" +
-                    "Uptime: " + humanize(Duration.ofMillis(uptime)) +
-                    "Prefixes: " + prefixes.stream().collect(Collectors.joining(" ")) + '\n' +
-                    "Check the available commands with " + prefixes.stream().findAny().orElse("") + "help";
+                String content = "Hey! I'm here to help with **UGC support**.\n\n" +
+                    "**Version:** " + version + '\n' +
+                    "**Discord4J:** " + Discord4J.VERSION + '\n' +
+                    "**Uptime:** " + humanize(Duration.ofMillis(uptime)) +'\n' +
+                    "Check the available commands with `" + prefixes.stream().findAny().orElse("") + "help`";
                 answer(message, content);
             }).build();
     }

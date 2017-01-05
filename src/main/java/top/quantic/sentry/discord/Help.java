@@ -20,6 +20,7 @@ import top.quantic.sentry.discord.command.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordHelpFormatter;
 import top.quantic.sentry.service.PermissionService;
+import top.quantic.sentry.service.SettingService;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Comparator;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.rightPad;
-import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.discord.util.DiscordUtil.answerPrivately;
 
 @Component
 public class Help implements CommandSupplier {
@@ -36,11 +37,13 @@ public class Help implements CommandSupplier {
 
     private final CommandRegistry commandRegistry;
     private final PermissionService permissionService;
+    private final SettingService settingService;
 
     @Autowired
-    public Help(CommandRegistry commandRegistry, PermissionService permissionService) {
+    public Help(CommandRegistry commandRegistry, PermissionService permissionService, SettingService settingService) {
         this.commandRegistry = commandRegistry;
         this.permissionService = permissionService;
+        this.settingService = settingService;
     }
 
     @Override
@@ -71,11 +74,12 @@ public class Help implements CommandSupplier {
                             .map(c -> rightPad("**" + c.getName() + "**", 20) + "\t\t" + c.getDescription())
                             .collect(Collectors.joining("\n"));
                     } else {
+                        String prefix = settingService.getPrefixes(message).stream().findAny().orElse("");
                         response = "*Commands available to you*: " + commandList.stream()
                             .filter(c -> canExecute(c, message))
                             .sorted(Comparator.naturalOrder())
                             .map(Command::getName)
-                            .collect(Collectors.joining(", ")) + " (more with `.help full`)";
+                            .collect(Collectors.joining(", ")) + " (more with `" + prefix + "help full`)";
                     }
                 } else {
                     List<Command> requested = commandList.stream()
