@@ -64,7 +64,8 @@ public class WebsocketConfiguration extends AbstractWebSocketMessageBrokerConfig
             public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
                 if (request instanceof ServletServerHttpRequest) {
                     ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-                    attributes.put(IP_ADDRESS, servletRequest.getRemoteAddress());
+                    String forwardedFor = servletRequest.getServletRequest().getHeader("X-Forwarded-For");
+                    attributes.put(IP_ADDRESS, forwardedFor != null ? forwardedFor : servletRequest.getRemoteAddress());
                 }
                 return true;
             }
