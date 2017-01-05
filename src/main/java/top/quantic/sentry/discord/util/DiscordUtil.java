@@ -7,25 +7,44 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
+import top.quantic.sentry.discord.command.Command;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static top.quantic.sentry.discord.util.DiscordLimiter.acquire;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 
 public class DiscordUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DiscordUtil.class);
 
     public static Set<String> getRoles(IUser user) {
-        return getRoles(user, null);
+        return getRolesWithGuild(user, null);
     }
 
-    public static Set<String> getRoles(IUser user, IGuild guild) {
+    public static Set<String> getRolesFromMessage(IMessage message) {
+        return getRolesWithChannel(message.getAuthor(), message.getChannel());
+    }
+
+    public static Set<String> getRolesWithChannel(IUser user, IChannel channel) {
+        if (user == null) {
+            return Collections.emptySet();
+        } else if (channel == null || channel.isPrivate()) {
+            return Collections.singleton(user.getID());
+        } else {
+            Set<String> roleSet = getRolesWithGuild(user, channel.getGuild());
+            roleSet.add(channel.getID());
+            return roleSet;
+        }
+    }
+
+    public static Set<String> getRolesWithGuild(IUser user, IGuild guild) {
         if (user == null) {
             return Collections.emptySet();
         } else if (guild == null) {
@@ -36,6 +55,14 @@ public class DiscordUtil {
                 .map(IDiscordObject::getID)
                 .collect(Collectors.toList()));
             return roleSet;
+        }
+    }
+
+    public static List<String> getResourcesFromCommand(Command command) {
+        if (isBlank(command.getCategory())) {
+            return Collections.singletonList(command.getName());
+        } else {
+            return Arrays.asList(command.getName(), command.getCategory());
         }
     }
 
@@ -63,6 +90,17 @@ public class DiscordUtil {
         return String.format("%s/%s (%s)", role.getGuild().getName(), role.getName().replace("@", "@\u200B"), role.getID());
     }
 
+    public static void deleteMessage(IMessage message) {
+        RequestBuffer.request(() -> {
+            try {
+                acquireDelete();
+                message.delete();
+            } catch (MissingPermissionsException | DiscordException e) {
+                log.warn("Could not delete message", e);
+            }
+        });
+    }
+
     public static void deleteInBatch(IChannel channel, List<IMessage> toDelete) {
         if (toDelete.isEmpty()) {
             log.info("No messages to delete");
@@ -72,7 +110,7 @@ public class DiscordUtil {
                 List<IMessage> subList = toDelete.subList(x * 100, Math.min(toDelete.size(), (x + 1) * 100));
                 RequestBuffer.request(() -> {
                     try {
-                        DiscordLimiter.acquireDelete();
+                        acquireDelete();
                         channel.getMessages().bulkDelete(subList);
                     } catch (MissingPermissionsException | DiscordException e) {
                         log.warn("Failed to delete message", e);

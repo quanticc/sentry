@@ -9,7 +9,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sx.blah.discord.handle.obj.IMessage;
 import top.quantic.sentry.config.Operations;
+import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.domain.Permission;
 import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.repository.PermissionRepository;
@@ -17,6 +19,9 @@ import top.quantic.sentry.repository.PermissionRepository;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static top.quantic.sentry.discord.util.DiscordUtil.getResourcesFromCommand;
+import static top.quantic.sentry.discord.util.DiscordUtil.getRolesFromMessage;
 
 /**
  * Service Implementation for managing Permission.
@@ -34,8 +39,27 @@ public class PermissionService {
         return hasPermission(Collections.singleton(role), operation, resource);
     }
 
+    public boolean hasPermission(IMessage message, String operation, Command command) {
+        return hasPermission(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
+    }
+
     public boolean hasPermission(Set<String> roles, String operation, String resource) {
         Set<PermissionType> typeSet = checkPermissions(roles, operation, resource);
+        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
+    }
+
+    public boolean hasPermission(Set<String> roles, String operation, List<String> resources) {
+        Set<PermissionType> typeSet;
+        if (resources.isEmpty()) {
+            typeSet = Collections.emptySet();
+        } else if (resources.size() == 1) {
+            typeSet = checkPermissions(roles, operation, resources.get(0));
+        } else {
+            typeSet = resources.stream()
+                .map(resource -> checkPermissions(roles, operation, resource))
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+        }
         return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
     }
 
