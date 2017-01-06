@@ -1,9 +1,11 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.security.access.annotation.Secured;
 import top.quantic.sentry.domain.Privilege;
 
 import top.quantic.sentry.repository.PrivilegeRepository;
+import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
 
@@ -32,7 +34,7 @@ import java.util.Optional;
 public class PrivilegeResource {
 
     private final Logger log = LoggerFactory.getLogger(PrivilegeResource.class);
-        
+
     @Inject
     private PrivilegeRepository privilegeRepository;
 
@@ -45,6 +47,7 @@ public class PrivilegeResource {
      */
     @PostMapping("/privileges")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Privilege> createPrivilege(@Valid @RequestBody Privilege privilege) throws URISyntaxException {
         log.debug("REST request to save Privilege : {}", privilege);
         if (privilege.getId() != null) {
@@ -67,6 +70,7 @@ public class PrivilegeResource {
      */
     @PutMapping("/privileges")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Privilege> updatePrivilege(@Valid @RequestBody Privilege privilege) throws URISyntaxException {
         log.debug("REST request to update Privilege : {}", privilege);
         if (privilege.getId() == null) {
@@ -87,6 +91,7 @@ public class PrivilegeResource {
      */
     @GetMapping("/privileges")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<List<Privilege>> getAllPrivileges(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Privileges");
@@ -103,6 +108,7 @@ public class PrivilegeResource {
      */
     @GetMapping("/privileges/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Privilege> getPrivilege(@PathVariable String id) {
         log.debug("REST request to get Privilege : {}", id);
         Privilege privilege = privilegeRepository.findOne(id);
@@ -121,6 +127,7 @@ public class PrivilegeResource {
      */
     @DeleteMapping("/privileges/{id}")
     @Timed
+    @Secured(AuthoritiesConstants.ADMIN)
     public ResponseEntity<Void> deletePrivilege(@PathVariable String id) {
         log.debug("REST request to delete Privilege : {}", id);
         privilegeRepository.delete(id);

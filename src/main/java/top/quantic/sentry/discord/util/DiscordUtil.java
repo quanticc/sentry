@@ -28,11 +28,17 @@ public class DiscordUtil {
         return getRolesWithGuild(user, null);
     }
 
+    /**
+     * Get all the role-ids assignable to a user from a Message.
+     *
+     * @param message the Message to get the ids from
+     * @return a Set of role-ids assignable from the Message's author
+     */
     public static Set<String> getRolesFromMessage(IMessage message) {
         return getRolesWithChannel(message.getAuthor(), message.getChannel());
     }
 
-    public static Set<String> getRolesWithChannel(IUser user, IChannel channel) {
+    private static Set<String> getRolesWithChannel(IUser user, IChannel channel) {
         if (user == null) {
             return Collections.emptySet();
         } else if (channel == null || channel.isPrivate()) {
@@ -44,7 +50,7 @@ public class DiscordUtil {
         }
     }
 
-    public static Set<String> getRolesWithGuild(IUser user, IGuild guild) {
+    private static Set<String> getRolesWithGuild(IUser user, IGuild guild) {
         if (user == null) {
             return Collections.emptySet();
         } else if (guild == null) {
@@ -58,11 +64,17 @@ public class DiscordUtil {
         }
     }
 
+    /**
+     * Get all resource-ids assignable to this Command. This includes the wildcard "*" resource.
+     *
+     * @param command the Command to get the ids from
+     * @return a List of resource-ids assignable to the Command
+     */
     public static List<String> getResourcesFromCommand(Command command) {
         if (isBlank(command.getCategory())) {
             return Collections.singletonList(command.getName());
         } else {
-            return Arrays.asList(command.getName(), command.getCategory());
+            return Arrays.asList("*", command.getName(), command.getCategory());
         }
     }
 

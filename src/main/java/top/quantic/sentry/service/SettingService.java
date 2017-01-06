@@ -4,8 +4,6 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,7 +47,6 @@ public class SettingService {
         }
     }
 
-    @Cacheable("prefixes")
     public Set<String> getPrefixes(String guild) {
         List<Setting> settings = settingRepository.findByGuildAndKey(guild, Constants.KEY_PREFIX);
         if (settings.isEmpty()) {
@@ -67,7 +64,6 @@ public class SettingService {
      * @param settingDTO the entity to save
      * @return the persisted entity
      */
-    @CacheEvict(cacheNames = "prefixes", allEntries = true)
     public SettingDTO save(SettingDTO settingDTO) {
         log.debug("Request to save Setting : {}", settingDTO);
         Setting setting = settingMapper.settingDTOToSetting(settingDTO);
@@ -106,7 +102,6 @@ public class SettingService {
      *
      * @param id the id of the entity
      */
-    @CacheEvict(cacheNames = "prefixes", allEntries = true)
     public void delete(String id) {
         log.debug("Request to delete Setting : {}", id);
         settingRepository.delete(id);
