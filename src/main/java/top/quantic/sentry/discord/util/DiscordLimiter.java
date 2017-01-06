@@ -13,6 +13,7 @@ public class DiscordLimiter {
     private static final Map<String, RateLimiter> SERVER = new ConcurrentHashMap<>();
     private static final RateLimiter DM = RateLimiter.create(1);
     private static final RateLimiter DELETE = RateLimiter.create(1);
+    private static final RateLimiter WEBHOOK = RateLimiter.create(1);
 
     public static void acquire(IChannel channel) {
         if (channel.isPrivate()) {
@@ -41,6 +42,10 @@ public class DiscordLimiter {
 
     public static void acquireDelete() {
         DELETE.acquire();
+    }
+
+    public static void acquireWebhook() {
+        WEBHOOK.acquire();
     }
 
     private DiscordLimiter() {
