@@ -13,7 +13,7 @@ import java.util.Objects;
  */
 
 @Document(collection = "privilege")
-public class Privilege implements Serializable {
+public class Privilege extends AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
