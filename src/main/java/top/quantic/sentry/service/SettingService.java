@@ -58,6 +58,18 @@ public class SettingService {
         return extractValues(settings);
     }
 
+    public List<Setting> findByKey(String key) {
+        return settingRepository.findByKey(key);
+    }
+
+    public List<Setting> findByGuildAndKey(String guild, String key) {
+        return settingRepository.findByGuildAndKey(guild, key);
+    }
+
+    public List<Setting> findByGlobalKey(String key) {
+        return settingRepository.findByGuildAndKey(Constants.ANY, key);
+    }
+
     /**
      * Save a setting.
      *

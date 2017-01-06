@@ -13,4 +13,6 @@ import java.util.List;
 public interface SettingRepository extends MongoRepository<Setting,String> {
 
     List<Setting> findByGuildAndKey(String guild, String key);
+
+    List<Setting> findByKey(String key);
 }
