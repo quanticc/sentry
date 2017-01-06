@@ -1,11 +1,10 @@
-import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'org.springframework.boot'
 apply plugin: 'com.moowork.node'
 apply plugin: 'com.moowork.gulp'
 
 
 ext {
-    logbackLoglevel = "INFO"
+    logbackLoglevel = "DEBUG"
 }
 
 dependencies {
