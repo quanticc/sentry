@@ -7,6 +7,7 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
+import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.command.Command;
 
 import java.io.File;
@@ -74,7 +75,7 @@ public class DiscordUtil {
         if (isBlank(command.getCategory())) {
             return Collections.singletonList(command.getName());
         } else {
-            return Arrays.asList("*", command.getName(), command.getCategory());
+            return Arrays.asList(Constants.ANY, command.getName(), command.getCategory());
         }
     }
 
