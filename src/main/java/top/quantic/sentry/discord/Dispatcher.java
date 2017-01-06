@@ -19,6 +19,7 @@ import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandContext;
 import top.quantic.sentry.discord.command.CommandRegistry;
 import top.quantic.sentry.discord.module.ListenerSupplier;
+import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.service.SettingService;
 
@@ -75,10 +76,15 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                 context.setPrefix(prefix.get());
 
                 // check permissions to execute the command
-                boolean canExecute =
-                    (!command.get().isSecured() || permissionService.hasPermission(message, Operations.BOT_COMMAND_EXECUTE, command.get()))
-                        && message.getChannel().getModifiedPermissions(message.getAuthor()).containsAll(command.get().getRequiredPermissions());
-                if (canExecute) {
+                // will check for "execute" permission on "*", "command" and "command category" resources
+                Set<PermissionType> perms = permissionService.check(message, Operations.EXECUTE, command.get());
+                boolean isAllowed = perms.contains(PermissionType.ALLOW);
+                boolean isDenied = perms.contains(PermissionType.DENY);
+                boolean isSecured = command.get().isSecured();
+                boolean hasPermission = message.getChannel().getModifiedPermissions(message.getAuthor())
+                    .containsAll(command.get().getRequiredPermissions());
+                boolean canExecute = (isSecured && isAllowed && !isDenied) || (!isSecured && !isDenied);
+                if (canExecute && hasPermission) {
                     // clean up and parse arguments
                     String args = content.substring(content.indexOf(command.get().getName()) + command.get().getName().length());
                     args = args.startsWith(" ") ? args.split(" ", 2)[1] : null; // nullify if ran with no args

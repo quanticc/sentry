@@ -49,30 +49,49 @@ public class PermissionService {
     }
 
     public boolean hasPermission(Set<String> roles, String operation, String resource) {
-        Set<PermissionType> typeSet = checkPermissions(roles, operation, resource);
+        Set<PermissionType> typeSet = check(roles, operation, resource);
         return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
     }
 
     public boolean hasPermission(Set<String> roles, String operation, List<String> resources) {
+        Set<PermissionType> typeSet = check(roles, operation, resources);
+        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
+    }
+
+    public Set<PermissionType> check(Set<String> roles, String operation, List<String> resources) {
         Set<PermissionType> typeSet;
         if (resources.isEmpty()) {
             typeSet = Collections.emptySet();
         } else if (resources.size() == 1) {
-            typeSet = checkPermissions(roles, operation, resources.get(0));
+            typeSet = check(roles, operation, resources.get(0));
         } else {
             typeSet = resources.stream()
-                .map(resource -> checkPermissions(roles, operation, resource))
+                .map(resource -> check(roles, operation, resource))
                 .flatMap(Set::stream)
                 .collect(Collectors.toSet());
         }
-        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
+        return typeSet;
     }
 
-    public Set<PermissionType> checkPermissions(String role, String operation, String resource) {
-        return checkPermissions(Collections.singleton(role), operation, resource);
+    /**
+     * Get the types of permissions assigned to the given roles, operation and resources.
+     * The roles will be extracted from a Discord message's author and the resources from
+     * a Command, taking wildcard resource ("*") and categories into account.
+     *
+     * @param message   the Discord message to extract roles from
+     * @param operation the permissible operation
+     * @param command   the Command to extract resources from
+     * @return a Set of types of Permission, like ALLOW or DENY. Can also contain both or none.
+     */
+    public Set<PermissionType> check(IMessage message, String operation, Command command) {
+        return check(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
     }
 
-    public Set<PermissionType> checkPermissions(Set<String> roles, String operation, String resource) {
+    public Set<PermissionType> check(String role, String operation, String resource) {
+        return check(Collections.singleton(role), operation, resource);
+    }
+
+    public Set<PermissionType> check(Set<String> roles, String operation, String resource) {
         // incoming roles will be discord object ids like user, role, channel, guild
         Set<String> translated = roles.stream()
             .map(privilegeRepository::findByKey)

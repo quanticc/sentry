@@ -64,7 +64,7 @@ public class DiscordSocialService {
         Set<String> roles = RoleBuilder.of(c.orElse(null)).addGuilds().build();
         return c.map(conn -> conn.getApi().userOperations().getGuilds().stream()
             .filter(g -> hasDiscordPermission(Permissions.MANAGE_SERVER, g.getPermissions())
-                || permissionService.hasPermission(roles, "sentry.dashboard.view", g.getId()))
+                || permissionService.hasPermission(roles, "viewDashboard", g.getId()))
             .collect(Collectors.toList()))
             .orElseGet(ArrayList::new);
     }
@@ -72,7 +72,7 @@ public class DiscordSocialService {
     public boolean canCurrentUserReadDashboard(String dashboardId) {
         Optional<Connection<Discord>> connection = getCurrentUserConnection();
         Set<String> roles = Collections.singleton(connection.map(c -> c.getApi().userOperations().getProfileId()).orElse("0"));
-        Set<PermissionType> perms = permissionService.checkPermissions(roles, "sentry.dashboard.view", dashboardId);
+        Set<PermissionType> perms = permissionService.check(roles, "viewDashboard", dashboardId);
         boolean isManager = connection.map(c -> c.getApi().userOperations().getGuilds().stream()
             .anyMatch(g -> g.getId().equals(dashboardId) && hasDiscordPermission(Permissions.MANAGE_SERVER, g.getPermissions())))
             .orElse(false);

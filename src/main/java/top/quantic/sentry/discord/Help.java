@@ -103,7 +103,7 @@ public class Help implements CommandSupplier {
     }
 
     private boolean canExecute(Command command, IMessage message) {
-        return (!command.isSecured() || permissionService.hasPermission(message, Operations.BOT_COMMAND_EXECUTE, command))
+        return (!command.isSecured() || permissionService.hasPermission(message, Operations.EXECUTE, command))
             && message.getChannel().getModifiedPermissions(message.getAuthor()).containsAll(command.getRequiredPermissions());
     }
 
