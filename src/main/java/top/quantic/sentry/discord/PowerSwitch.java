@@ -38,7 +38,6 @@ public class PowerSwitch implements CommandSupplier {
                 String[] args = context.getArgs();
                 if (args.length >= 1) {
                     if (!args[0].equals(Operations.COORDINATOR_KEY)) {
-                        log.info("Shutting down by coordinated command");
                         doLogout(context);
                     }
                 } else {
@@ -50,6 +49,7 @@ public class PowerSwitch implements CommandSupplier {
 
     private void doLogout(CommandContext context) {
         IDiscordClient client = context.getMessage().getClient();
+        log.info("[{}] Logging out via command", client.getOurUser().getName());
         if (client.isLoggedIn()) {
             try {
                 client.logout();
