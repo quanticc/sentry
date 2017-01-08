@@ -10,9 +10,14 @@ import java.util.List;
 public class SentryProperties {
 
     private final Discord discord = new Discord();
+    private final Metrics metrics = new Metrics();
 
     public Discord getDiscord() {
         return discord;
+    }
+
+    public Metrics getMetrics() {
+        return metrics;
     }
 
     public static class Discord {
@@ -73,6 +78,73 @@ public class SentryProperties {
 
             public void setAvatarUrl(String avatarUrl) {
                 this.avatarUrl = avatarUrl;
+            }
+        }
+    }
+
+    public static class Metrics {
+
+        private final Datadog datadog = new Datadog();
+
+        public Datadog getDatadog() {
+            return datadog;
+        }
+
+        public static class Datadog {
+
+            private String apiKey;
+            private String host;
+            private int period = 10;
+            private boolean enabled = false;
+            private String prefix;
+            private List<String> tags = new ArrayList<>();
+
+            public String getApiKey() {
+                return apiKey;
+            }
+
+            public void setApiKey(String apiKey) {
+                this.apiKey = apiKey;
+            }
+
+            public String getHost() {
+                return host;
+            }
+
+            public void setHost(String host) {
+                this.host = host;
+            }
+
+            public int getPeriod() {
+                return period;
+            }
+
+            public void setPeriod(int period) {
+                this.period = period;
+            }
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getPrefix() {
+                return prefix;
+            }
+
+            public void setPrefix(String prefix) {
+                this.prefix = prefix;
+            }
+
+            public List<String> getTags() {
+                return tags;
+            }
+
+            public void setTags(List<String> tags) {
+                this.tags = tags;
             }
         }
     }

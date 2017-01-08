@@ -151,6 +151,7 @@ dependencies {
     compile "net.sf.jopt-simple:jopt-simple:6.0-alpha-1"
     compile "org.ocpsoft.prettytime:prettytime:4.0.1.Final"
     compile "org.ocpsoft.prettytime:prettytime-nlp:4.0.0.Final"
+    compile "org.coursera:dropwizard-metrics-datadog:1.1.6"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"
