@@ -48,6 +48,10 @@ public class PermissionService {
         return hasPermission(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
     }
 
+    public boolean hasPermission(IMessage message, String operation, String resource) {
+        return hasPermission(getRolesFromMessage(message), operation, resource);
+    }
+
     public boolean hasPermission(Set<String> roles, String operation, String resource) {
         Set<PermissionType> typeSet = check(roles, operation, resource);
         return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
@@ -85,6 +89,10 @@ public class PermissionService {
      */
     public Set<PermissionType> check(IMessage message, String operation, Command command) {
         return check(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
+    }
+
+    public Set<PermissionType> check(IMessage message, String operation, String resource) {
+        return check(getRolesFromMessage(message), operation, resource);
     }
 
     public Set<PermissionType> check(String role, String operation, String resource) {
@@ -157,5 +165,9 @@ public class PermissionService {
     public void delete(String id) {
         log.debug("Request to delete Permission : {}", id);
         permissionRepository.delete(id);
+    }
+
+    public static boolean isAllowed(Set<PermissionType> typeSet) {
+        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
     }
 }
