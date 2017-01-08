@@ -221,6 +221,9 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
+        if (content.isEmpty()) {
+            return null;
+        }
         DiscordLimiter.acquire(channel);
         return RequestBuffer.request(() -> {
             try {
@@ -237,18 +240,20 @@ public class DiscordUtil {
     }
 
     private static void innerReply(IMessage message, String content) {
-        DiscordLimiter.acquire(message);
-        RequestBuffer.request(() -> {
-            try {
-                message.reply(content);
-            } catch (MissingPermissionsException e) {
-                log.warn("[{}] Missing permissions in {}: {}", message.getClient().getOurUser().getName(),
-                    humanize(message.getChannel()), e);
-            } catch (DiscordException e) {
-                log.warn("[{}] Failed to send message to {}: {}", message.getClient().getOurUser().getName(),
-                    humanize(message.getChannel()), e);
-            }
-        });
+        if (!content.isEmpty()) {
+            DiscordLimiter.acquire(message);
+            RequestBuffer.request(() -> {
+                try {
+                    message.reply(content);
+                } catch (MissingPermissionsException e) {
+                    log.warn("[{}] Missing permissions in {}: {}", message.getClient().getOurUser().getName(),
+                        humanize(message.getChannel()), e);
+                } catch (DiscordException e) {
+                    log.warn("[{}] Failed to send message to {}: {}", message.getClient().getOurUser().getName(),
+                        humanize(message.getChannel()), e);
+                }
+            });
+        }
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, File file) {
