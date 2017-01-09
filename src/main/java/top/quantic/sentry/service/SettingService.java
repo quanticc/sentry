@@ -1,6 +1,5 @@
 package top.quantic.sentry.service;
 
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +14,12 @@ import top.quantic.sentry.repository.SettingRepository;
 import top.quantic.sentry.service.dto.SettingDTO;
 import top.quantic.sentry.service.mapper.SettingMapper;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static top.quantic.sentry.config.Constants.KEY_PREFIX;
 
 /**
  * Service Implementation for managing Setting.
@@ -48,14 +50,48 @@ public class SettingService {
     }
 
     public Set<String> getPrefixes(String guild) {
-        List<Setting> settings = settingRepository.findByGuildAndKey(guild, Constants.KEY_PREFIX);
+        List<Setting> settings = settingRepository.findByGuildAndKey(guild, KEY_PREFIX);
         if (settings.isEmpty()) {
-            settings = settingRepository.findByGuildAndKey(Constants.ANY, Constants.KEY_PREFIX);
+            settings = settingRepository.findByGuildAndKey(Constants.ANY, KEY_PREFIX);
             if (settings.isEmpty()) {
-                return Sets.newHashSet(sentryProperties.getDiscord().getDefaultPrefixes());
+                return new HashSet<>(sentryProperties.getDiscord().getDefaultPrefixes());
             }
         }
         return extractValues(settings);
+    }
+
+    public void setPrefixes(IMessage message, Set<String> prefixes, boolean append) {
+        if (message.getChannel().isPrivate()) {
+            setPrefixes("*", prefixes, append);
+        } else {
+            setPrefixes(message.getGuild().getID(), prefixes, append);
+        }
+    }
+
+    public void setPrefixes(String guild, Set<String> prefixes, boolean append) {
+        List<Setting> current = settingRepository.findByGuildAndKey(guild, KEY_PREFIX);
+        if (append) {
+            log.info("<{}> Appending prefixes {} to: {}", guild, prefixes, current.stream()
+                .map(Setting::getValue).collect(Collectors.joining(" ")));
+        } else {
+            log.info("<{}> Setting new prefixes: {}", guild, prefixes, current.stream()
+                .map(Setting::getValue).collect(Collectors.joining(" ")));
+            current.stream()
+                .filter(setting -> !prefixes.contains(setting.getValue()))
+                .forEach(settingRepository::delete);
+        }
+        prefixes.stream()
+            .filter(prefix -> current.stream().noneMatch(setting -> setting.getValue().equals(prefix)))
+            .map(prefix -> prefixToSetting(guild, prefix))
+            .forEach(settingRepository::save);
+    }
+
+    private Setting prefixToSetting(String guild, String prefix) {
+        Setting setting = new Setting();
+        setting.setGuild(guild);
+        setting.setKey(KEY_PREFIX);
+        setting.setValue(prefix);
+        return setting;
     }
 
     public List<Setting> findByKey(String key) {
