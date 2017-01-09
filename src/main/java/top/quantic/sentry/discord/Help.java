@@ -22,9 +22,7 @@ import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.service.SettingService;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.rightPad;
@@ -68,11 +66,19 @@ public class Help implements CommandSupplier {
                 String response;
                 if (keys.isEmpty()) {
                     if (full) {
-                        response = "*Commands available to you*\n" + commandList.stream()
+                        response = "*Commands available to you*\n";
+                        List<Command> executable = commandList.stream()
                             .filter(c -> canExecute(c, message))
-                            .sorted(Comparator.naturalOrder())
-                            .map(c -> rightPad("**" + c.getName() + "**", 20) + "\t\t" + c.getDescription())
-                            .collect(Collectors.joining("\n"));
+                            .collect(Collectors.toList());
+                        Map<String, List<Command>> categories = new HashMap<>();
+                        executable.forEach(cmd -> categories.computeIfAbsent(cmd.getCategory(), k -> new ArrayList<>()).add(cmd));
+                        response += categories.entrySet().stream()
+                            .map(e -> "__" + e.getKey() + "__\n" +
+                                e.getValue().stream()
+                                    .sorted(Comparator.naturalOrder())
+                                    .map(c -> rightPad("**" + c.getName() + "**", 20) + "\t\t" + c.getDescription())
+                                    .collect(Collectors.joining("\n")))
+                            .collect(Collectors.joining("\n\n"));
                     } else {
                         String prefix = settingService.getPrefixes(message).stream().findAny().orElse("");
                         response = "*Commands available to you*: " + commandList.stream()
