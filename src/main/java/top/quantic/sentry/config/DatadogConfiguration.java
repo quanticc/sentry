@@ -1,5 +1,6 @@
 package top.quantic.sentry.config;
 
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import org.coursera.metrics.datadog.DatadogReporter;
 import org.coursera.metrics.datadog.transport.HttpTransport;
@@ -14,9 +15,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import static org.coursera.metrics.datadog.DatadogReporter.Expansion.*;
+import java.util.stream.Collectors;
 
 @Configuration
 @AutoConfigureAfter(MetricsConfiguration.class)
@@ -44,7 +45,6 @@ public class DatadogConfiguration {
 
     private DatadogReporter enableDatadogMetrics(MetricRegistry registry) {
         log.info("Initializing Datadog reporter on host: {} with period: {} seconds", getHost(), getPeriod());
-        EnumSet<DatadogReporter.Expansion> expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99);
         Transport transport;
         if (getApiKey() == null) {
             // use UDP transport
@@ -57,13 +57,34 @@ public class DatadogConfiguration {
         DatadogReporter reporter = DatadogReporter.forRegistry(registry)
             .withHost(getHost())
             .withTransport(transport)
-            .withExpansions(expansions)
+            .withExpansions(expansions())
             .withTags(getTags())
             .withPrefix(getPrefix())
+            .filter(metricFilter())
             .build();
         reporter.start(getPeriod(), TimeUnit.SECONDS);
         log.info("Datadog reporter successfully initialized");
         return reporter;
+    }
+
+    private EnumSet<DatadogReporter.Expansion> expansions() {
+        List<String> expansions = getExpansions();
+        if (expansions.isEmpty() || expansions.contains("ALL")) {
+            log.debug("Datadog reporter - Using all expansions");
+            return DatadogReporter.Expansion.ALL;
+        } else {
+            EnumSet<DatadogReporter.Expansion> set = EnumSet.copyOf(
+                expansions.stream()
+                    .map(DatadogReporter.Expansion::valueOf)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+            log.debug("Datadog reporter - Using expansions: {}", set);
+            return set;
+        }
+    }
+
+    private MetricFilter metricFilter() {
+        return (name, metric) -> getInclude().stream().anyMatch(name::matches) && getExclude().stream().noneMatch(name::matches);
     }
 
     private boolean isEnabled() {
@@ -88,5 +109,17 @@ public class DatadogConfiguration {
 
     private List<String> getTags() {
         return sentryProperties.getMetrics().getDatadog().getTags();
+    }
+
+    private List<String> getExpansions() {
+        return sentryProperties.getMetrics().getDatadog().getExpansions();
+    }
+
+    private List<String> getInclude() {
+        return sentryProperties.getMetrics().getDatadog().getInclude();
+    }
+
+    private List<String> getExclude() {
+        return sentryProperties.getMetrics().getDatadog().getExclude();
     }
 }

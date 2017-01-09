@@ -98,6 +98,9 @@ public class SentryProperties {
             private boolean enabled = false;
             private String prefix;
             private List<String> tags = new ArrayList<>();
+            private List<String> expansions = new ArrayList<>();
+            private List<String> include = new ArrayList<>();
+            private List<String> exclude = new ArrayList<>();
 
             public String getApiKey() {
                 return apiKey;
@@ -145,6 +148,30 @@ public class SentryProperties {
 
             public void setTags(List<String> tags) {
                 this.tags = tags;
+            }
+
+            public List<String> getExpansions() {
+                return expansions;
+            }
+
+            public void setExpansions(List<String> expansions) {
+                this.expansions = expansions;
+            }
+
+            public List<String> getInclude() {
+                return include;
+            }
+
+            public void setInclude(List<String> include) {
+                this.include = include;
+            }
+
+            public List<String> getExclude() {
+                return exclude;
+            }
+
+            public void setExclude(List<String> exclude) {
+                this.exclude = exclude;
             }
         }
     }
