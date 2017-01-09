@@ -127,17 +127,16 @@ public class Help implements CommandSupplier {
     }
 
     private StringBuilder appendHelp(StringBuilder builder, Command command) {
+        builder.append("• Help for **").append(command.getName()).append("**: ")
+            .append(command.getDescription()).append('\n');
         if (command.getParser() == null) {
-            return new StringBuilder(command.getDescription());
-        }
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            command.getParser().formatHelpWith(new DiscordHelpFormatter(140, 5));
-            command.getParser().printHelpOn(stream);
-            builder.append("• Help for **").append(command.getName()).append("**: ").append(command.getDescription()).append('\n')
-                .append(new String(stream.toByteArray(), "UTF-8")).append('\n');
-        } catch (Exception e) {
-            builder.append("Could not show help for **").append(command.getName()).append("**\n");
-            log.warn("Could not show help", e);
+            try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+                command.getParser().formatHelpWith(new DiscordHelpFormatter(140, 5));
+                command.getParser().printHelpOn(stream);
+                builder.append(new String(stream.toByteArray(), "UTF-8")).append('\n');
+            } catch (Exception e) {
+                log.warn("Could not show help", e);
+            }
         }
         return builder;
     }

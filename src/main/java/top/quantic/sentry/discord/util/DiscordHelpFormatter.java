@@ -4,6 +4,9 @@ import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionDescriptor;
 
 import java.util.Collection;
+import java.util.Iterator;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class DiscordHelpFormatter extends BuiltinHelpFormatter {
     /**
@@ -18,10 +21,11 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
 
     @Override
     protected void addHeaders(Collection<? extends OptionDescriptor> options) {
+        addOptionRow("Arguments");
         if (hasRequiredOption(options)) {
-            addOptionRow("Parameters:\n*Option* (* = required)", "*Description*");
+            addOptionRow("__Option__ (\\* = required)", "__Description__");
         } else {
-            addOptionRow("Parameters:\n*Option*", "*Description*");
+            addOptionRow("__Option__", "__Description__");
         }
     }
 
@@ -37,5 +41,30 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
     @Override
     protected String optionLeader(String option) {
         return option.length() > 1 ? "" : "-";
+    }
+
+    @Override
+    protected String createOptionDisplay(OptionDescriptor descriptor) {
+        StringBuilder buffer = new StringBuilder(descriptor.isRequired() ? "\\* " : "");
+        for (Iterator<String> i = descriptor.options().iterator(); i.hasNext(); ) {
+            String option = i.next();
+            buffer.append(optionLeader(option));
+            buffer.append(option);
+            if (i.hasNext()) {
+                buffer.append(", ");
+            }
+        }
+        maybeAppendOptionInfo(buffer, descriptor);
+        return buffer.toString();
+    }
+
+    @Override
+    protected void appendTypeIndicator(StringBuilder buffer, String typeIndicator, String description,
+                                       char start, char end) {
+        buffer.append(' ').append(start);
+        if (!isBlank(description)) {
+            buffer.append(description);
+        }
+        buffer.append(end);
     }
 }
