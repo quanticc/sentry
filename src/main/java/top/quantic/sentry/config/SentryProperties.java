@@ -99,6 +99,7 @@ public class SentryProperties {
             private String prefix;
             private List<String> tags = new ArrayList<>();
             private List<String> expansions = new ArrayList<>();
+            private boolean defaultInclude = true;
             private List<String> include = new ArrayList<>();
             private List<String> exclude = new ArrayList<>();
 
@@ -156,6 +157,14 @@ public class SentryProperties {
 
             public void setExpansions(List<String> expansions) {
                 this.expansions = expansions;
+            }
+
+            public boolean isDefaultInclude() {
+                return defaultInclude;
+            }
+
+            public void setDefaultInclude(boolean defaultInclude) {
+                this.defaultInclude = defaultInclude;
             }
 
             public List<String> getInclude() {

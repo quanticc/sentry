@@ -84,7 +84,8 @@ public class DatadogConfiguration {
     }
 
     private MetricFilter metricFilter() {
-        return (name, metric) -> getInclude().stream().anyMatch(name::matches) && getExclude().stream().noneMatch(name::matches);
+        return (name, metric) -> (isDefaultInclude() && getExclude().stream().noneMatch(name::matches))
+            || (!isDefaultInclude() && getInclude().stream().anyMatch(name::matches) && getExclude().stream().noneMatch(name::matches));
     }
 
     private boolean isEnabled() {
@@ -113,6 +114,10 @@ public class DatadogConfiguration {
 
     private List<String> getExpansions() {
         return sentryProperties.getMetrics().getDatadog().getExpansions();
+    }
+
+    private boolean isDefaultInclude() {
+        return sentryProperties.getMetrics().getDatadog().isDefaultInclude();
     }
 
     private List<String> getInclude() {
