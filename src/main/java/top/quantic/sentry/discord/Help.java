@@ -1,6 +1,5 @@
 package top.quantic.sentry.discord;
 
-import com.google.common.collect.Lists;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -23,6 +22,7 @@ import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.service.SettingService;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,7 +48,7 @@ public class Help implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Lists.newArrayList(help());
+        return Collections.singletonList(help());
     }
 
     private Command help() {

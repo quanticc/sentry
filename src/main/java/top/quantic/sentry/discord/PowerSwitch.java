@@ -1,6 +1,6 @@
 package top.quantic.sentry.discord;
 
-import com.google.common.collect.Lists;
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,7 @@ public class PowerSwitch implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Lists.newArrayList(logout());
+        return Collections.singletonList(logout());
     }
 
     private Command logout() {

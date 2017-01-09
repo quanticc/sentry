@@ -1,6 +1,5 @@
 package top.quantic.sentry.discord;
 
-import com.google.common.collect.Lists;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import org.slf4j.Logger;
@@ -53,7 +52,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
 
     @Override
     public List<IListener<?>> getListeners() {
-        return Lists.newArrayList(this);
+        return Collections.singletonList(this);
     }
 
     @Override

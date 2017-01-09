@@ -1,6 +1,5 @@
 package top.quantic.sentry.discord;
 
-import com.google.common.collect.Lists;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -31,7 +30,7 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Lists.newArrayList(delete());
+        return Collections.singletonList(delete());
     }
 
     private Command delete() {
