@@ -30,6 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static top.quantic.sentry.config.Operations.QUERY_ALL_GUILDS;
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
+import static top.quantic.sentry.discord.util.DiscordUtil.equalsAnyName;
 import static top.quantic.sentry.service.util.DateUtil.dateToInstant;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
 
@@ -96,8 +97,7 @@ public class Info implements CommandSupplier {
                     }
                     List<IUser> matching = users.stream()
                         .filter(u -> !matched.contains(u))
-                        .filter(u -> u.getID().equals(id)
-                            || equalsNameOrNickname(u, query, channel.getGuild()))
+                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
                         .distinct()
                         .peek(matched::add)
                         .collect(Collectors.toList());
@@ -116,11 +116,6 @@ public class Info implements CommandSupplier {
                 }
                 answer(message, builder.toString());
             }).build();
-    }
-
-    private boolean equalsNameOrNickname(IUser user, String name, IGuild guild) {
-        String nickname = user.getNicknameForGuild(guild).orElse(null);
-        return name.equals(nickname) || name.equalsIgnoreCase(user.getName());
     }
 
     private String getUserInfo(IUser user, CommandContext context) {

@@ -12,10 +12,7 @@ import top.quantic.sentry.discord.command.Command;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -101,6 +98,21 @@ public class DiscordUtil {
 
     public static String humanize(IRole role) {
         return String.format("%s/%s (%s)", role.getGuild().getName(), role.getName().replace("@", "@\u200B"), role.getID());
+    }
+
+    public static boolean equalsAnyName(IUser user, String name, IGuild guild) {
+        Objects.requireNonNull(user, "User must not be null");
+        if (name == null) {
+            return false;
+        }
+        boolean equalsNickname = false;
+        if (guild != null) {
+            String nickname = user.getNicknameForGuild(guild).orElse(null);
+            equalsNickname = name.equalsIgnoreCase(nickname);
+        }
+        return equalsNickname
+            || name.equalsIgnoreCase(user.getName())
+            || name.equalsIgnoreCase(user.getName() + "#" + user.getDiscriminator());
     }
 
     public static void deleteMessage(IMessage message) {

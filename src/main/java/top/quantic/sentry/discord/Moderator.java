@@ -18,9 +18,7 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -38,16 +36,18 @@ public class Moderator implements CommandSupplier {
 
     private Command delete() {
         OptionParser parser = new OptionParser();
-        OptionSpec<Integer> deleteLastSpec = parser.accepts("last", "Limit deletion to the latest N messages").withRequiredArg().ofType(Integer.class).describedAs("N").defaultsTo(100);
-        OptionSpec<String> deleteMatchingSpec = parser.accepts("matching", "Delete messages matching this regex").withRequiredArg().describedAs("regex");
-        OptionSpec<String> deleteLikeSpec = parser.accepts("like", "Delete messages containing this string").withRequiredArg().describedAs("string");
-        OptionSpec<String> deleteFromSpec = parser.accepts("from", "Delete messages from this user (@mention, name or ID)").withRequiredArg().describedAs("user");
-        OptionSpec<String> deleteBeforeSpec = parser.acceptsAll(asList("before", "until"), "Delete messages before this temporal expression").withRequiredArg().describedAs("timex");
-        OptionSpec<String> deleteAfterSpec = parser.acceptsAll(asList("after", "since"), "Delete messages after this temporal expression").withRequiredArg().describedAs("timex");
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Series of users to delete messages from: accepts IDs, mentions and names").ofType(String.class);
+        OptionSpec<Integer> lastSpec = parser.accepts("last", "Limit deletion to the latest N messages").withRequiredArg().ofType(Integer.class).describedAs("N").defaultsTo(100);
+        OptionSpec<String> matchingSpec = parser.accepts("matching", "Delete messages matching this regex").withRequiredArg().describedAs("regex");
+        OptionSpec<String> likeSpec = parser.accepts("like", "Delete messages containing this string").withRequiredArg().describedAs("string");
+        OptionSpec<String> fromSpec = parser.accepts("from", "Delete messages from this user (@mention, name or ID)").withRequiredArg().describedAs("user");
+        OptionSpec<String> beforeSpec = parser.acceptsAll(asList("before", "until"), "Delete messages before this temporal expression").withRequiredArg().describedAs("timex");
+        OptionSpec<String> afterSpec = parser.acceptsAll(asList("after", "since"), "Delete messages after this temporal expression").withRequiredArg().describedAs("timex");
         return CommandBuilder.of("delete")
             .describedAs("Delete messages on this channel")
             .in("Moderation")
             .parsedBy(parser)
+            .secured()
             .onExecute(context -> {
                 OptionSet o = context.getOptionSet();
                 IMessage message = context.getMessage();
@@ -55,12 +55,13 @@ public class Moderator implements CommandSupplier {
                 if (channel.isPrivate()) {
                     answerPrivately(message, "This command does not work for private messages, use `unsay`");
                 }
-                if (!o.has(deleteLastSpec)
-                    && !o.has(deleteMatchingSpec)
-                    && !o.has(deleteLikeSpec)
-                    && !o.has(deleteFromSpec)
-                    && !o.has(deleteBeforeSpec)
-                    && !o.has(deleteAfterSpec)) {
+                if (!o.has(lastSpec)
+                    && !o.has(matchingSpec)
+                    && !o.has(likeSpec)
+                    && !o.has(fromSpec)
+                    && !o.has(beforeSpec)
+                    && !o.has(afterSpec)
+                    && o.valuesOf(nonOptSpec).isEmpty()) {
                     answerPrivately(message, "Please specify at least one deletion criteria: last, matching, like, from, before, after");
                 }
                 MessageList messages = channel.getMessages();
@@ -68,35 +69,35 @@ public class Moderator implements CommandSupplier {
                 messages.setCacheCapacity(MessageList.UNLIMITED_CAPACITY);
                 ZonedDateTime before = null;
                 ZonedDateTime after = null;
-                if (o.has(deleteBeforeSpec)) {
-                    before = parseTimeDate(o.valueOf(deleteBeforeSpec));
+                if (o.has(beforeSpec)) {
+                    before = parseTimeDate(o.valueOf(beforeSpec));
                 }
-                if (o.has(deleteAfterSpec)) {
-                    after = parseTimeDate(o.valueOf(deleteAfterSpec));
+                if (o.has(afterSpec)) {
+                    after = parseTimeDate(o.valueOf(afterSpec));
                 }
-                // TODO: allow matching multiple authors
-                IUser authorToMatch = null;
-                if (o.has(deleteFromSpec)) {
-                    String key = o.valueOf(deleteFromSpec).replaceAll("<@!?([0-9]+)>", "$1");
-                    List<IUser> matching = channel.getGuild().getUsers().stream()
-                        .filter(u -> u.getName().equalsIgnoreCase(key) || u.getID().equals(key) || key.equals(u.getName() + u.getDiscriminator()))
-                        .distinct().collect(Collectors.toList());
-                    if (matching.size() > 1) {
-                        StringBuilder builder = new StringBuilder("Multiple users matched, please narrow down search or use ID\n");
-                        for (IUser user : matching) {
-                            builder.append(user.getName()).append(" has id `").append(user.getID()).append("`\n");
+                Set<IUser> authorsToMatch = new HashSet<>();
+                List<String> keys = new ArrayList<>(o.valuesOf(nonOptSpec));
+                if (o.has(fromSpec)) {
+                    keys.add(o.valueOf(fromSpec));
+                }
+                if (!keys.isEmpty()) {
+                    for (String key : keys) {
+                        String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+                        List<IUser> matching = channel.getGuild().getUsers().stream()
+                            .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
+                            .distinct().collect(Collectors.toList());
+                        if (!matching.isEmpty()) {
+                            authorsToMatch.addAll(matching);
+                        } else {
+                            answerPrivately(message, "No users matching " + key);
                         }
-                        answerPrivately(message, builder.toString());
-                    } else if (matching.isEmpty()) {
-                        answerPrivately(message, "User " + key + " not found in cache");
-                    } else {
-                        authorToMatch = matching.get(0);
                     }
                 }
+
                 // collect all offending messages
                 List<IMessage> toDelete = new ArrayList<>();
                 int i = 0;
-                int max = !o.has(deleteLastSpec) ? 100 : Math.max(1, o.valueOf(deleteLastSpec));
+                int max = !o.has(lastSpec) ? 100 : Math.max(1, o.valueOf(lastSpec));
                 log.debug("Searching for up to {} messages from {}", max, humanize(channel));
                 while (i < max) {
                     try {
@@ -111,17 +112,17 @@ public class Moderator implements CommandSupplier {
                             break;
                         }
                         // exclude by content (.matches)
-                        if (o.has(deleteMatchingSpec) &&
-                            !msg.getContent().matches(o.valueOf(deleteMatchingSpec))) {
+                        if (o.has(matchingSpec) &&
+                            !msg.getContent().matches(o.valueOf(matchingSpec))) {
                             continue;
                         }
                         // exclude by content (.contains)
-                        if (o.has(deleteLikeSpec) &&
-                            !msg.getContent().contains(o.valueOf(deleteLikeSpec))) {
+                        if (o.has(likeSpec) &&
+                            !msg.getContent().contains(o.valueOf(likeSpec))) {
                             continue;
                         }
                         // exclude by author
-                        if (authorToMatch != null && !msg.getAuthor().equals(authorToMatch)) {
+                        if (!authorsToMatch.isEmpty() && !authorsToMatch.contains(msg.getAuthor())) {
                             continue;
                         }
                         toDelete.add(msg);
