@@ -14,7 +14,7 @@ public class Operations {
     /**
      * Receive information about guilds only the bot is part of.
      */
-    public static final String GUILD_AWARE = "guildAware";
+    public static final String QUERY_ALL_GUILDS = "queryAllGuilds";
 
     private Operations() {
 

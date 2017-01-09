@@ -1,6 +1,6 @@
 package top.quantic.sentry.discord;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.CaseFormat;
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,14 +16,21 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.MessageSplitter;
 import top.quantic.sentry.service.PermissionService;
 
+import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.time.Duration;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static top.quantic.sentry.config.Operations.GUILD_AWARE;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.leftPad;
+import static top.quantic.sentry.config.Operations.QUERY_ALL_GUILDS;
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
+import static top.quantic.sentry.service.util.DateUtil.dateToInstant;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
 
 @Component
@@ -40,279 +47,307 @@ public class Info implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Lists.newArrayList(info());
+        return asList(info(), user(), role(), channel());
     }
 
     private Command info() {
-        OptionParser parser = new OptionParser();
-        OptionSpec<String> infoNonOptSpec = parser.nonOptions("Objects like users, roles, channels, guilds. " +
-            "Leave empty to get bot information").ofType(String.class);
         return CommandBuilder.of("info")
-            .describedAs("Get information about a Discord object")
+            .describedAs("Get Discord information about the bot")
             .in("General")
-            .parsedBy(parser)
+            .nonParsed()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
-                List<String> args = new ArrayList<>(context.getOptionSet().valuesOf(infoNonOptSpec));
-                if (args.isEmpty()) {
-                    answerWithBotInfo(context);
-                } else {
-                    StringBuilder builder = new StringBuilder();
-                    Set<String> retrievedIds = new HashSet<>();
-                    for (IUser user : message.getMentions()) {
-                        args.removeIf(arg -> user.mention().equals(arg) ||
-                            user.mention(false).equals(arg));
-                        builder = appendOrAnswer(message, builder, getUserInfo(user));
-                        retrievedIds.add(user.getID());
-                    }
-                    for (IRole role : message.getRoleMentions()) {
-                        args.removeIf(arg -> role.mention().equals(arg));
-                        builder = appendOrAnswer(message, builder, getRoleInfo(role));
-                        retrievedIds.add(role.getID());
-                    }
-                    for (IChannel channel : message.getChannelMentions()) {
-                        args.removeIf(arg -> channel.mention().equals(arg));
-                        builder = appendOrAnswer(message, builder, getChannelInfo(channel));
-                        retrievedIds.add(channel.getID());
-                    }
-                    for (String arg : args) {
-                        // check by id
-                        if (arg.matches("[0-9]+")) {
-                            String content = getInfoById(context, arg, retrievedIds);
-                            if (content != null) {
-                                builder = appendOrAnswer(message, builder, content);
-                                continue;
-                            }
-                        }
-                        // then by name
-                        builder = appendOrAnswer(message, builder, getInfoByName(context, arg, retrievedIds));
-                    }
-                    answer(message, builder.toString());
-                }
+                String version = buildProperties.getVersion();
+                version = (version == null ? "snapshot" : version);
+                RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+                long uptime = rb.getUptime();
+                String content = "Hey! I'm here to help with **UGC support**.\n\n" +
+                    "**Version:** " + version + '\n' +
+                    "**Discord4J:** " + Discord4J.VERSION + '\n' +
+                    "**Uptime:** " + humanize(Duration.ofMillis(uptime)) + '\n';
+                answer(message, content);
             }).build();
     }
 
-    private String getInfoByName(CommandContext context, String name, Set<String> retrievedIds) {
-        IMessage message = context.getMessage();
-        IChannel channel = message.getChannel();
-        IGuild guild = channel.getGuild();
-        IDiscordClient client = message.getClient();
-        // information obtained should be scoped within the source guild
-        // unless the user has permissions to see all guilds
-        boolean isGuildAware = permissionService.hasPermission(message, GUILD_AWARE, "*");
-        // matching by name: 0..*
-        ////////////////////////////////////
-        // if its a user
-        List<IUser> candidateUsers = Lists.newArrayList(message.getAuthor());
-        if (isGuildAware) {
-            candidateUsers.addAll(client.getUsers());
-        } else if (!channel.isPrivate()) {
-            candidateUsers.addAll(guild.getUsers());
-        }
-        List<IUser> usersByName = candidateUsers.stream()
-            .filter(u -> matchesName(name, u, guild))
-            .collect(Collectors.toList());
-        if (usersByName.size() == 1) {
-            return getUserInfo(nullIfDuplicate(usersByName.get(0), retrievedIds));
-        } else if (usersByName.size() > 1) {
-            String result = "**Multiple users matching '" + name +
-                "'**\n*Refine your search using IDs or mentions to get more details*\n\n";
-            for (IUser user : usersByName) {
-                if (!isDuplicate(user, retrievedIds)) {
-                    result += "• " + user.getDisplayName(guild) + " <" + user.getID() + ">\n";
-                }
-            }
-            return result;
-        }
-        ////////////////////////////////////
-        // if its a channel
-        List<IChannel> candidateChannels = Lists.newArrayList(channel);
-        if (isGuildAware) {
-            candidateChannels.addAll(client.getChannels());
-        } else if (!channel.isPrivate()) {
-            candidateChannels.addAll(guild.getChannels());
-        }
-        List<IChannel> channelsByName = candidateChannels.stream()
-            .filter(c -> c.getName().equalsIgnoreCase(name))
-            .collect(Collectors.toList());
-        if (channelsByName.size() == 1) {
-            return getChannelInfo(channelsByName.get(0));
-        } else if (channelsByName.size() > 1) {
-            String result = "**Multiple channels matching '" + name +
-                "'**\n*Refine your search using IDs or mentions to get more details*\n\n";
-            for (IChannel ch : channelsByName) {
-                if (!isDuplicate(ch, retrievedIds)) {
-                    result += "• " + ch.getName() + " <" + ch.getID() + ">\n";
-                }
-            }
-            return result;
-        }
-        ////////////////////////////////////
-        // if its a role
-        List<IRole> candidateRoles = null;
-        if (isGuildAware) {
-            candidateRoles = client.getRoles();
-        } else if (!channel.isPrivate()) {
-            candidateRoles = guild.getRoles();
-        }
-        if (candidateRoles != null) {
-            List<IRole> rolesByName = candidateRoles.stream()
-                .filter(r -> r.getName().equalsIgnoreCase(name))
-                .collect(Collectors.toList());
-            if (rolesByName.size() == 1) {
-                return getRoleInfo(rolesByName.get(0));
-            } else if (rolesByName.size() > 1) {
-                String result = "**Multiple roles matching '" + name +
-                    "'**\n*Refine your search using IDs or mentions to get more details*\n\n";
-                for (IRole role : rolesByName) {
-                    if (!isDuplicate(role, retrievedIds)) {
-                        result += "• " + role.getName() + " <" + role.getID() + ">\n";
+    private Command user() {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> nonOptSpec = parser.nonOptions("User IDs, names or mentions").ofType(String.class);
+        return CommandBuilder.of("user")
+            .describedAs("Get Discord information about the given users")
+            .in("General")
+            .parsedBy(parser)
+            .onExecute(context -> {
+                List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+                IDiscordClient client = message.getClient();
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                StringBuilder builder = new StringBuilder();
+                Set<IUser> matched = new HashSet<>();
+                for (String query : queries) {
+                    String id = query.replaceAll("<@!?(\\d+)>", "$1");
+                    List<IUser> users;
+                    if (aware) {
+                        users = client.getUsers();
+                    } else if (!channel.isPrivate()) {
+                        users = channel.getGuild().getUsers();
+                    } else {
+                        users = asList(message.getAuthor(), client.getOurUser());
                     }
-                }
-                return result;
-            }
-        }
-        ////////////////////////////////////
-        // if its a voice channel
-        List<IVoiceChannel> candidateVoiceChannels = null;
-        if (isGuildAware) {
-            candidateVoiceChannels = client.getVoiceChannels();
-        } else if (!channel.isPrivate()) {
-            candidateVoiceChannels = guild.getVoiceChannels();
-        }
-        if (candidateVoiceChannels != null) {
-            List<IVoiceChannel> voiceChannelsByName = candidateVoiceChannels.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(name))
-                .collect(Collectors.toList());
-            if (voiceChannelsByName.size() == 1) {
-                return getChannelInfo(voiceChannelsByName.get(0));
-            } else if (voiceChannelsByName.size() > 1) {
-                String result = "**Multiple voice channels matching '" + name +
-                    "'**\n*Refine your search using IDs or mentions to get more details*\n\n";
-                for (IVoiceChannel voiceChannel : voiceChannelsByName) {
-                    if (!isDuplicate(voiceChannel, retrievedIds)) {
-                        result += "• " + voiceChannel.getName() + " <" + voiceChannel.getID() + ">\n";
+                    List<IUser> matching = users.stream()
+                        .filter(u -> !matched.contains(u))
+                        .filter(u -> u.getID().equals(id)
+                            || equalsNameOrNickname(u, query, channel.getGuild()))
+                        .distinct()
+                        .peek(matched::add)
+                        .collect(Collectors.toList());
+                    if (matching.size() == 1) {
+                        IUser user = matching.get(0);
+                        builder.append(getUserInfo(user, context));
+                    } else if (matching.size() > 1) {
+                        builder.append("Multiple matches for ").append(query).append("\n")
+                            .append(matching.stream()
+                                .map(this::getShortUserInfo)
+                                .collect(Collectors.joining("\n")));
+                    } else {
+                        builder.append("No users matching ").append(id).append("\n");
                     }
+                    builder = appendOrAnswer(message, builder, "\n");
                 }
-                return result;
-            }
-        }
-        return null;
+                answer(message, builder.toString());
+            }).build();
     }
 
-    private <T extends IDiscordObject> T nullIfDuplicate(T item, Set<String> retrievedIds) {
-        if (retrievedIds.contains(item.getID())) {
-            return null;
+    private boolean equalsNameOrNickname(IUser user, String name, IGuild guild) {
+        String nickname = user.getNicknameForGuild(guild).orElse(null);
+        return name.equals(nickname) || name.equalsIgnoreCase(user.getName());
+    }
+
+    private String getUserInfo(IUser user, CommandContext context) {
+        if (user == null) {
+            return "";
+        }
+        IGuild guild = context.getMessage().getChannel().getGuild();
+        int pad = 10;
+        String result = "```http\n" + leftPad("User: ", pad) + user.getName() + '#' + user.getDiscriminator() + (user.isBot() ? " [BOT]\n" : '\n');
+        if (guild != null && !user.getName().equals(user.getNicknameForGuild(guild).orElse(user.getName()))) {
+            result += leftPad("Nickname: ", pad) + user.getDisplayName(guild) + '\n';
+        }
+        result += leftPad("ID: ", pad) + '<' + user.getID() + ">\n"
+            + leftPad("Joined: ", pad) + dateToInstant(user.getCreationDate()).toString() + '\n'
+            + leftPad("Status: ", pad) + user.getPresence().name().toLowerCase() + '\n';
+        if (guild != null) {
+            result += leftPad("Roles: ", pad) + formatRoles(user.getRolesForGuild(guild)) + '\n';
+        }
+        result += "\n```" + user.getAvatarURL() + '\n';
+        return result;
+    }
+
+    private String formatRoles(List<IRole> roles) {
+        String names = roles.stream()
+            .map(IRole::getName)
+            .filter(s -> !s.equals("@everyone"))
+            .collect(Collectors.joining(", "));
+        if (names.isEmpty()) {
+            return "<none>";
         } else {
-            retrievedIds.add(item.getID());
-            return item;
+            return names;
         }
     }
 
-    private <T extends IDiscordObject> boolean isDuplicate(T item, Set<String> retrievedIds) {
-        if (retrievedIds.contains(item.getID())) {
-            return true;
-        } else {
-            retrievedIds.add(item.getID());
-            return false;
-        }
-    }
-
-    private boolean matchesName(String name, IUser user, IGuild guild) {
-        Optional<String> nickname = user.getNicknameForGuild(guild);
-        if (nickname.isPresent()) {
-            return nickname.get().equalsIgnoreCase(name) || user.getName().equalsIgnoreCase(name);
-        } else {
-            return user.getName().equalsIgnoreCase(name);
-        }
-    }
-
-    private String getInfoById(CommandContext context, String id, Set<String> retrievedIds) {
-        IMessage message = context.getMessage();
-        IChannel channel = message.getChannel();
-        IDiscordClient client = message.getClient();
-        // information obtained should be scoped within the source guild
-        // unless the user has permissions to see all guilds
-        boolean isGuildAware = permissionService.hasPermission(message, GUILD_AWARE, "*");
-        // matching by id: 0..1
-        ////////////////////////////////////
-        // if its a user
-        IUser userById = null;
-        if (isGuildAware) {
-            userById = client.getUserByID(id);
-        } else if (!channel.isPrivate()) {
-            userById = channel.getGuild().getUserByID(id);
-        } else if (message.getAuthor().getID().equals(id)) {
-            userById = message.getAuthor();
-        }
-        if (userById != null) {
-            return getUserInfo(nullIfDuplicate(userById, retrievedIds));
-        }
-        ////////////////////////////////////
-        // if its a channel
-        IChannel channelById = null;
-        if (isGuildAware) {
-            channelById = client.getChannelByID(id);
-        } else if (!channel.isPrivate()) {
-            channelById = channel.getGuild().getChannelByID(id);
-        } else if (channel.getID().equals(id)) {
-            channelById = channel;
-        }
-        if (channelById != null) {
-            return getChannelInfo(nullIfDuplicate(channelById, retrievedIds));
-        }
-        ////////////////////////////////////
-        // if its a role
-        IRole roleById = null;
-        if (isGuildAware) {
-            roleById = client.getRoleByID(id);
-        } else if (!channel.isPrivate()) {
-            roleById = channel.getGuild().getRoleByID(id);
-        }
-        if (roleById != null) {
-            return getRoleInfo(nullIfDuplicate(roleById, retrievedIds));
-        }
-        ////////////////////////////////////
-        // if its a voice channel
-        IVoiceChannel voiceChannelById = null;
-        if (isGuildAware) {
-            voiceChannelById = client.getVoiceChannelByID(id);
-        } else if (!channel.isPrivate()) {
-            voiceChannelById = channel.getGuild().getVoiceChannelByID(id);
-        }
-        if (voiceChannelById != null) {
-            return getVoiceChannelInfo(nullIfDuplicate(voiceChannelById, retrievedIds));
-        }
-        // TODO: info for emoji, guild
-        return null;
-    }
-
-    private String getUserInfo(IUser user) {
+    private String getShortUserInfo(IUser user) {
         if (user == null) {
             return "";
         }
         return "• " + user.getName() + " <" + user.getID() + ">\n";
     }
 
+    private Command role() {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Role IDs, names or mentions").ofType(String.class);
+        return CommandBuilder.of("role")
+            .describedAs("Get Discord information about a role")
+            .in("General")
+            .parsedBy(parser)
+            .onExecute(context -> {
+                List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+                IDiscordClient client = message.getClient();
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                StringBuilder builder = new StringBuilder();
+                Set<IRole> matched = new HashSet<>();
+                for (String query : queries) {
+                    String id = query.replaceAll("<@&(\\d+)>", "$1");
+                    List<IRole> roles;
+                    if (aware) {
+                        roles = client.getRoles();
+                    } else if (!channel.isPrivate()) {
+                        roles = channel.getGuild().getRoles();
+                    } else {
+                        roles = Collections.emptyList();
+                    }
+                    List<IRole> matching = roles.stream()
+                        .filter(r -> !matched.contains(r))
+                        .filter(r -> r.getID().equals(id)
+                            || r.getName().equalsIgnoreCase(query))
+                        .distinct()
+                        .peek(matched::add)
+                        .collect(Collectors.toList());
+                    if (matching.size() == 1) {
+                        IRole role = matching.get(0);
+                        builder.append(getRoleInfo(role));
+                    } else if (matching.size() > 1) {
+                        builder.append("Multiple matches for ").append(query).append("\n")
+                            .append(matching.stream()
+                                .map(this::getShortRoleInfo)
+                                .collect(Collectors.joining("\n")));
+                    } else {
+                        builder.append("No roles matching ").append(id).append("\n");
+                    }
+                    builder = appendOrAnswer(message, builder, "\n");
+                }
+                answer(message, builder.toString());
+            }).build();
+    }
+
     private String getRoleInfo(IRole role) {
         if (role == null) {
             return "";
         }
-        return "• " + role.getName() + " <" + role.getID() + ">\n";
+        int pad = 13;
+        String created = dateToInstant(role.getCreationDate()).toString();
+        Color color = role.getColor();
+        String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        String perms = role.getPermissions().stream()
+            .map(Enum::toString)
+            .map(p -> CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, p))
+            .collect(Collectors.joining(", "));
+        boolean hoisted = role.isHoisted();
+        boolean mentionable = role.isMentionable();
+        boolean managed = role.isManaged();
+        boolean isEveryone = role.isEveryoneRole();
+        String result = "```http\n" + leftPad("Role: ", pad) + mentionBuster(role.getName()) + '\n'
+            + leftPad("ID: ", pad) + '<' + role.getID() + ">\n"
+            + leftPad("Color: ", pad) + hex + '\n'
+            + leftPad("Position: ", pad) + role.getPosition() + '\n'
+            + leftPad("Created: ", pad) + created + '\n';
+        if (!isEveryone && (hoisted || mentionable || managed)) {
+            result += leftPad("Tags: ", pad) +
+                Stream.of((hoisted ? "hoisted" : ""), (mentionable ? "mentionable" : ""), (managed ? "managed" : ""))
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(", "));
+        }
+        result += leftPad("Permissions: ", pad) + perms + "\n```";
+        if (isEveryone) {
+            result += "\n" + getGuildInfo(role.getGuild());
+        }
+        return result;
+    }
+
+    private String getGuildInfo(IGuild guild) {
+        if (guild == null) {
+            return "";
+        }
+        int pad = 9;
+        return "```http\n" + leftPad("Guild: ", pad) + guild.getName() + " <" + guild.getID() + ">\n"
+            + leftPad("Owner: ", pad) + guild.getOwner().getName() + " <" + guild.getOwnerID() + ">\n"
+            + leftPad("Members: ", pad) + guild.getTotalMemberCount() + '\n'
+            + "\n```" + guild.getIconURL() + "\n";
+    }
+
+    private String getShortRoleInfo(IRole role) {
+        if (role == null) {
+            return "";
+        }
+        return "• " + mentionBuster(role.getName()) + " <" + role.getID() + ">";
+    }
+
+    private String mentionBuster(String name) {
+        return name.replace("@", "@\u200B");
+    }
+
+    private Command channel() {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Channel IDs, names or mentions").ofType(String.class);
+        return CommandBuilder.of("channel")
+            .describedAs("Get Discord information about a channel")
+            .in("General")
+            .parsedBy(parser)
+            .onExecute(context -> {
+                List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+                IDiscordClient client = message.getClient();
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                StringBuilder builder = new StringBuilder();
+                Set<IChannel> matched = new HashSet<>();
+                for (String query : queries) {
+                    String id = query.replaceAll("<#(\\d+)>", "$1");
+                    List<IChannel> channels = new ArrayList<>();
+                    if (aware) {
+                        channels.addAll(client.getChannels());
+                        channels.addAll(client.getVoiceChannels());
+                    } else if (!channel.isPrivate()) {
+                        channels.addAll(channel.getGuild().getChannels());
+                        channels.addAll(channel.getGuild().getVoiceChannels());
+                    }
+                    List<IChannel> matching = channels.stream()
+                        .filter(r -> !matched.contains(r))
+                        .filter(r -> r.getID().equals(id) || r.getName().equalsIgnoreCase(query))
+                        .distinct()
+                        .peek(matched::add)
+                        .collect(Collectors.toList());
+                    if (matching.size() == 1) {
+                        builder.append(getChannelInfo(matching.get(0)));
+                    } else if (matching.size() > 1) {
+                        builder.append("Multiple matches for ").append(query).append("\n")
+                            .append(matching.stream()
+                                .map(this::getShortChannelInfo)
+                                .collect(Collectors.joining("\n")));
+                    } else {
+                        builder.append("No channels matching ").append(id).append("\n");
+                    }
+                    builder = appendOrAnswer(message, builder, "\n");
+                }
+                answer(message, builder.toString());
+            }).build();
     }
 
     private String getChannelInfo(IChannel channel) {
         if (channel == null) {
             return "";
         }
-        return "• " + channel.getName() + " <" + channel.getID() + ">\n";
+        int pad = 10;
+        String created = dateToInstant(channel.getCreationDate()).toString();
+        String result = "```http\n" + leftPad("Channel: ", pad) + channel.getName() + '\n'
+            + leftPad("ID: ", pad) + '<' + channel.getID() + ">\n"
+            + leftPad("Position: ", pad) + channel.getPosition() + '\n'
+            + leftPad("Created: ", pad) + created + '\n';
+        if (!isBlank(channel.getTopic())) {
+            result += leftPad("Topic: ", pad) + channel.getTopic() + '\n';
+        }
+        if (channel instanceof IVoiceChannel) {
+            IVoiceChannel voice = (IVoiceChannel) channel;
+            int connected = voice.getConnectedUsers().size();
+            int capacity = voice.getUserLimit();
+            result += leftPad("Bitrate: ", pad) + voice.getBitrate() + '\n';
+            if (connected > 0) {
+                result += leftPad("Users: ", pad) + connected + (capacity > 0 ? "/" + capacity : "") + '\n';
+            }
+        }
+        result += "```\n";
+        if (!channel.isPrivate() && channel.getGuild().getID().equals(channel.getID())) {
+            result += getGuildInfo(channel.getGuild());
+        }
+        return result;
     }
 
-    private String getVoiceChannelInfo(IVoiceChannel voiceChannel) {
-        if (voiceChannel == null) {
+    private String getShortChannelInfo(IChannel channel) {
+        if (channel == null) {
             return "";
         }
-        return "• " + voiceChannel.getName() + " <" + voiceChannel.getID() + ">\n";
+        return "• " + channel.getName() + " <" + channel.getID() + ">";
     }
 
     private StringBuilder appendOrAnswer(IMessage message, StringBuilder builder, String content) {
@@ -328,27 +363,5 @@ public class Info implements CommandSupplier {
 
     private boolean shouldSplit(StringBuilder builder, String content) {
         return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
-    }
-
-    private void answerWithBotInfo(CommandContext context) {
-        IMessage message = context.getMessage();
-        String version = buildProperties.getVersion();
-        version = (version == null ? "snapshot" : version);
-        RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        long uptime = rb.getUptime();
-        String content = "Hey! I'm here to help with **UGC support**.\n\n" +
-            "**Version:** " + version + '\n' +
-            "**Discord4J:** " + Discord4J.VERSION + '\n' +
-            "**Uptime:** " + humanize(Duration.ofMillis(uptime)) + '\n';
-        answer(message, content);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getNestedMap(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            return Collections.emptyMap();
-        }
-        return (Map<String, Object>) value;
     }
 }

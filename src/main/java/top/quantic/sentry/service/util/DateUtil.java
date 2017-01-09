@@ -1,6 +1,9 @@
 package top.quantic.sentry.service.util;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +37,10 @@ public class DateUtil {
 
     private static String inflect(long value, String singular) {
         return (value == 1 ? "1 " + singular : (value > 1 ? value + " " + singular + "s" : ""));
+    }
+
+    public static Instant dateToInstant(LocalDateTime localDateTime) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant();
     }
 
     private DateUtil() {
