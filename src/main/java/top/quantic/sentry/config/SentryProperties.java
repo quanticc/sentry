@@ -24,7 +24,7 @@ public class SentryProperties {
 
         private List<String> administrators = new ArrayList<>();
         private List<String> defaultPrefixes = Lists.newArrayList("!");
-        private Coordinator coordinator = new Coordinator();
+        private String coordinatorChannelId;
 
         public List<String> getAdministrators() {
             return administrators;
@@ -42,43 +42,12 @@ public class SentryProperties {
             this.defaultPrefixes = defaultPrefixes;
         }
 
-        public Coordinator getCoordinator() {
-            return coordinator;
+        public String getCoordinatorChannelId() {
+            return coordinatorChannelId;
         }
 
-        public void setCoordinator(Coordinator coordinator) {
-            this.coordinator = coordinator;
-        }
-
-        public static class Coordinator {
-
-            private String webhookUrl;
-            private String username;
-            private String avatarUrl;
-
-            public String getWebhookUrl() {
-                return webhookUrl;
-            }
-
-            public void setWebhookUrl(String webhookUrl) {
-                this.webhookUrl = webhookUrl;
-            }
-
-            public String getUsername() {
-                return username;
-            }
-
-            public void setUsername(String username) {
-                this.username = username;
-            }
-
-            public String getAvatarUrl() {
-                return avatarUrl;
-            }
-
-            public void setAvatarUrl(String avatarUrl) {
-                this.avatarUrl = avatarUrl;
-            }
+        public void setCoordinatorChannelId(String coordinatorChannelId) {
+            this.coordinatorChannelId = coordinatorChannelId;
         }
     }
 

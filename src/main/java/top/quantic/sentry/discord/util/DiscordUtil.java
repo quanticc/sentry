@@ -3,6 +3,7 @@ package top.quantic.sentry.discord.util;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -147,6 +148,10 @@ public class DiscordUtil {
         }
     }
 
+    public static String ourBotHash(IDiscordClient client) {
+        return Integer.toHexString(client.getOurUser().getID().hashCode());
+    }
+
     public static void answer(IMessage to, String content) {
         answer(to, content, false);
     }
@@ -257,7 +262,7 @@ public class DiscordUtil {
         }
     }
 
-    private static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
         if (content.isEmpty()) {
             return null;
         }

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.DiscordException;
-import top.quantic.sentry.config.Operations;
 import top.quantic.sentry.discord.command.Command;
 import top.quantic.sentry.discord.command.CommandBuilder;
 import top.quantic.sentry.discord.command.CommandContext;
@@ -16,6 +15,7 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import java.util.List;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
+import static top.quantic.sentry.discord.util.DiscordUtil.ourBotHash;
 
 @Component
 public class PowerSwitch implements CommandSupplier {
@@ -37,7 +37,8 @@ public class PowerSwitch implements CommandSupplier {
                 IMessage message = context.getMessage();
                 String[] args = context.getArgs();
                 if (args.length >= 1) {
-                    if (!args[0].equals(Operations.COORDINATOR_KEY)) {
+                    String hash = ourBotHash(message.getClient());
+                    if (args[1].equals(hash)) {
                         doLogout(context);
                     }
                 } else {
