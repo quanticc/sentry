@@ -15,6 +15,7 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import java.util.List;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
+import static top.quantic.sentry.discord.util.DiscordUtil.deleteMessage;
 import static top.quantic.sentry.discord.util.DiscordUtil.ourBotHash;
 
 @Component
@@ -39,9 +40,11 @@ public class PowerSwitch implements CommandSupplier {
                 if (args.length >= 1) {
                     String hash = ourBotHash(message.getClient());
                     if (args[1].equals(hash)) {
+                        deleteMessage(message);
                         doLogout(context);
                     }
                 } else {
+                    deleteMessage(message);
                     answer(message, ":wave:");
                     doLogout(context);
                 }
