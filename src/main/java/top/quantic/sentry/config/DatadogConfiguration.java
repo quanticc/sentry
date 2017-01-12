@@ -44,7 +44,8 @@ public class DatadogConfiguration {
     }
 
     private DatadogReporter enableDatadogMetrics(MetricRegistry registry) {
-        log.info("Initializing Datadog reporter on host: {} with period: {} seconds", getHost(), getPeriod());
+        log.info("Initializing Datadog reporter on host: {} with period: {} seconds",
+            getHost() == null ? "localhost" : getHost(), getPeriod());
         Transport transport;
         if (getApiKey() == null) {
             // use UDP transport
