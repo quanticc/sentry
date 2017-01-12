@@ -144,6 +144,7 @@ repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/releases' }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'http://repo.maven.apache.org/maven2' }
+    maven { url 'https://dl.bintray.com/michaelklishin/maven' }
 }
 
 dependencies {
@@ -152,6 +153,9 @@ dependencies {
     compile "org.ocpsoft.prettytime:prettytime:4.0.1.Final"
     compile "org.ocpsoft.prettytime:prettytime-nlp:4.0.0.Final"
     compile "org.coursera:dropwizard-metrics-datadog:1.1.6"
+    compile "org.quartz-scheduler:quartz:2.2.3"
+    compile "org.quartz-scheduler:quartz-jobs:2.2.3"
+    compile "com.novemberain:quartz-mongodb:2.0.0"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"
