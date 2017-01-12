@@ -79,4 +79,17 @@ public class DatadogEvent {
     public void setOrg(Map<String, Object> org) {
         this.org = org;
     }
+
+    @Override
+    public String toString() {
+        return "DatadogEvent{" +
+            "id='" + id + '\'' +
+            ", title='" + title + '\'' +
+            ", lastUpdated='" + lastUpdated + '\'' +
+            ", date='" + date + '\'' +
+            ", eventType='" + eventType + '\'' +
+            ", body='" + body + '\'' +
+            ", org=" + org +
+            '}';
+    }
 }

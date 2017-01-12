@@ -41,7 +41,7 @@ public class FlowService {
 
     public void executeWebhookFlowByKey(String key, String body) {
         flowRepository.findByEnabledIsTrueAndInput("inboundWebhook").stream()
-            .filter(flow -> flow.getVariables().containsKey(key))
+            .filter(flow -> key.equals(flow.getVariables().get("key")))
             .forEach(flow -> {
                 try {
                     executeWebhookFlow(flow, body);
@@ -62,6 +62,7 @@ public class FlowService {
     }
 
     private void executeDatadogFlow(Flow flow, DatadogEvent event) {
+        log.debug("Transforming {} for {}", event, flow);
         String translatorType = flow.getTranslator();
         Map<String, Object> variables = flow.getVariables();
         if (translatorType.startsWith("DiscordWebhook")) {
