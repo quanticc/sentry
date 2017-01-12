@@ -5,6 +5,7 @@
 /application*.yml
 /logs
 /version.properties
+/quartz.properties
 app.constants.js
 
 ######################
@@ -58,6 +59,7 @@ local.properties
 *.ipr
 *.ids
 *.orig
+/out
 
 ######################
 # Visual Studio Code
