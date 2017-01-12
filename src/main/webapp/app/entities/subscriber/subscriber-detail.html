@@ -1,0 +1,35 @@
+
+<div>
+    <h2><span>Subscriber</span> {{vm.subscriber.id}}</h2>
+    <hr>
+    <jhi-alert-error></jhi-alert-error>
+    <dl class="dl-horizontal jh-entity-details">
+        <dt><span>Name</span></dt>
+        <dd>
+            <span>{{vm.subscriber.name}}</span>
+        </dd>
+        <dt><span>Channel</span></dt>
+        <dd>
+            <span>{{vm.subscriber.channel}}</span>
+        </dd>
+        <dt><span>Type</span></dt>
+        <dd>
+            <span>{{vm.subscriber.type}}</span>
+        </dd>
+        <dt><span>Type Parameters</span></dt>
+        <dd>
+            <span>{{vm.subscriber.typeParameters}}</span>
+        </dd>
+    </dl>
+
+    <button type="submit"
+            ui-sref="{{ vm.previousState }}"
+            class="btn btn-info">
+        <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;<span> Back</span>
+    </button>
+
+    <button type="button" ui-sref="subscriber-detail.edit({id:vm.subscriber.id})" class="btn btn-primary">
+        <span class="glyphicon glyphicon-pencil"></span>
+        <span class="hidden-xs hidden-sm"> Edit</span>
+    </button>
+</div>

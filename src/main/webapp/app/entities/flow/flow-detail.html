@@ -1,0 +1,47 @@
+
+<div>
+    <h2><span>Flow</span> {{vm.flow.id}}</h2>
+    <hr>
+    <jhi-alert-error></jhi-alert-error>
+    <dl class="dl-horizontal jh-entity-details">
+        <dt><span>Name</span></dt>
+        <dd>
+            <span>{{vm.flow.name}}</span>
+        </dd>
+        <dt><span>Input</span></dt>
+        <dd>
+            <span>{{vm.flow.input}}</span>
+        </dd>
+        <dt><span>Input Parameters</span></dt>
+        <dd>
+            <span>{{vm.flow.inputParameters}}</span>
+        </dd>
+        <dt><span>Message</span></dt>
+        <dd>
+            <span>{{vm.flow.message}}</span>
+        </dd>
+        <dt><span>Translator</span></dt>
+        <dd>
+            <span>{{vm.flow.translator}}</span>
+        </dd>
+        <dt><span>Output</span></dt>
+        <dd>
+            <span>{{vm.flow.output}}</span>
+        </dd>
+        <dt><span>Enabled</span></dt>
+        <dd>
+            <span>{{vm.flow.enabled}}</span>
+        </dd>
+    </dl>
+
+    <button type="submit"
+            ui-sref="{{ vm.previousState }}"
+            class="btn btn-info">
+        <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;<span> Back</span>
+    </button>
+
+    <button type="button" ui-sref="flow-detail.edit({id:vm.flow.id})" class="btn btn-primary">
+        <span class="glyphicon glyphicon-pencil"></span>
+        <span class="hidden-xs hidden-sm"> Edit</span>
+    </button>
+</div>

@@ -1,0 +1,92 @@
+
+<form name="editForm" role="form" novalidate ng-submit="vm.save()" show-validation>
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                ng-click="vm.clear()">&times;</button>
+        <h4 class="modal-title" id="myFlowLabel">Create or edit a Flow</h4>
+    </div>
+    <div class="modal-body">
+        <jhi-alert-error></jhi-alert-error>
+        <div class="form-group" ng-show="vm.flow.id">
+            <label for="id">ID</label>
+            <input type="text" class="form-control" id="id" name="id"
+                    ng-model="vm.flow.id" readonly />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_name">Name</label>
+            <input type="text" class="form-control" name="name" id="field_name"
+                    ng-model="vm.flow.name"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_input">Input</label>
+            <input type="text" class="form-control" name="input" id="field_input"
+                    ng-model="vm.flow.input"
+                    required />
+            <div ng-show="editForm.input.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.input.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_inputParameters">Input Parameters</label>
+            <input type="text" class="form-control" name="inputParameters" id="field_inputParameters"
+                    ng-model="vm.flow.inputParameters"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_message">Message</label>
+            <input type="text" class="form-control" name="message" id="field_message"
+                    ng-model="vm.flow.message"
+                    required />
+            <div ng-show="editForm.message.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.message.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_translator">Translator</label>
+            <input type="text" class="form-control" name="translator" id="field_translator"
+                    ng-model="vm.flow.translator"
+                    required />
+            <div ng-show="editForm.translator.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.translator.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_output">Output</label>
+            <input type="text" class="form-control" name="output" id="field_output"
+                    ng-model="vm.flow.output"
+                    required />
+            <div ng-show="editForm.output.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.output.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_enabled">Enabled</label>
+            <input type="checkbox" class="form-control" name="enabled" id="field_enabled"
+                    ng-model="vm.flow.enabled"
+                     />
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="vm.clear()">
+            <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;<span>Cancel</span>
+        </button>
+        <button type="submit" ng-disabled="editForm.$invalid || vm.isSaving" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span>&nbsp;<span>Save</span>
+        </button>
+    </div>
+</form>
