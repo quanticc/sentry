@@ -2,7 +2,6 @@ package top.quantic.sentry.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
  * Service Implementation for managing Bot.
  */
 @Service
-public class BotService implements InitializingBean, DisposableBean {
+public class BotService implements InitializingBean {
 
     private final Logger log = LoggerFactory.getLogger(BotService.class);
 
@@ -218,18 +217,5 @@ public class BotService implements InitializingBean, DisposableBean {
         } catch (DiscordException e) {
             log.warn("Could not auto-login : " + bot.toString(), e);
         }
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        discordService.getClients().entrySet().forEach(entry -> {
-            if (entry.getValue().isLoggedIn()) {
-                try {
-                    logout(entry.getKey());
-                } catch (DiscordException e) {
-                    log.warn("Could not logout: {}", entry.getKey(), e);
-                }
-            }
-        });
     }
 }
