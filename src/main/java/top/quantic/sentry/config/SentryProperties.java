@@ -68,9 +68,9 @@ public class SentryProperties {
             private String prefix;
             private List<String> tags = new ArrayList<>();
             private List<String> expansions = new ArrayList<>();
-            private boolean defaultInclude = true;
-            private List<String> include = new ArrayList<>();
-            private List<String> exclude = new ArrayList<>();
+            private boolean useRegexFilters = false;
+            private List<String> includes = new ArrayList<>();
+            private List<String> excludes = new ArrayList<>();
 
             public String getApiKey() {
                 return apiKey;
@@ -128,28 +128,28 @@ public class SentryProperties {
                 this.expansions = expansions;
             }
 
-            public boolean isDefaultInclude() {
-                return defaultInclude;
+            public boolean isUseRegexFilters() {
+                return useRegexFilters;
             }
 
-            public void setDefaultInclude(boolean defaultInclude) {
-                this.defaultInclude = defaultInclude;
+            public void setUseRegexFilters(boolean useRegexFilters) {
+                this.useRegexFilters = useRegexFilters;
             }
 
-            public List<String> getInclude() {
-                return include;
+            public List<String> getIncludes() {
+                return includes;
             }
 
-            public void setInclude(List<String> include) {
-                this.include = include;
+            public void setIncludes(List<String> includes) {
+                this.includes = includes;
             }
 
-            public List<String> getExclude() {
-                return exclude;
+            public List<String> getExcludes() {
+                return excludes;
             }
 
-            public void setExclude(List<String> exclude) {
-                this.exclude = exclude;
+            public void setExcludes(List<String> excludes) {
+                this.excludes = excludes;
             }
         }
     }
