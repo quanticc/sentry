@@ -19,7 +19,6 @@
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
                     <th><span>Status</span></th>
-                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="autoLogin"><span>Auto Login</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="daemon"><span>Daemon</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -38,8 +37,7 @@
                             {{vm.statusText(bot)}}
                         </span>
                     </td>
-                    <td><a ui-sref="bot-detail({id:bot.id})">{{bot.id}}</a></td>
-                    <td>{{bot.name}}</td>
+                    <td><a ui-sref="bot-detail({id:bot.id})">{{bot.name}}</a></td>
                     <td>
                         <span class="label" ng-class="vm.prettyBoolClass(bot.autoLogin)">
                             {{vm.prettyBoolText(bot.autoLogin)}}
@@ -84,18 +82,21 @@
                                     class="btn btn-success btn-sm">
                                 <span class="glyphicon glyphicon-log-in"></span>
                                 <span class="hidden-xs hidden-sm"></span>
+                                Login
                             </button>
                             <button type="submit"
                                     ui-sref="bot.action({id:bot.id, action:'logout'})"
                                     class="btn btn-warning btn-sm">
                                 <span class="glyphicon glyphicon-log-out"></span>
                                 <span class="hidden-xs hidden-sm"></span>
+                                Logout
                             </button>
                             <button type="submit"
                                     ui-sref="bot.action({id:bot.id, action:'reset'})"
                                     class="btn btn-info btn-sm">
                                 <span class="glyphicon glyphicon-repeat"></span>
                                 <span class="hidden-xs hidden-sm"></span>
+                                Reset
                             </button>
                         </div>
                     </td>
