@@ -5,6 +5,12 @@ body {
     color: #333;
 }
 
+@media screen and (min-width: 1600px) {
+    .container {
+        width: 1570px;
+    }
+}
+
 /* ==========================================================================
 Hide ng-cloak on page load, https://docs.angularjs.org/api/ng/directive/ngCloak
 ========================================================================== */
