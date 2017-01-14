@@ -25,7 +25,8 @@ public final class Constants {
     // Settings
     public static final String ANY = "*";
     public static final String KEY_PREFIX = "prefix";
-    public static final String FUZZY_THRESHOLD = "fuzzyThreshold";
+
+    public static final String JOBS_PACKAGE = "top.quantic.sentry.job";
 
     private Constants() {
     }
