@@ -39,7 +39,7 @@ public class Supervisor implements DiscordSubscriber {
     private void signalReady(IDiscordClient client) {
         IChannel channel = client.getChannelByID(sentryProperties.getDiscord().getCoordinatorChannelId());
         if (channel != null) {
-            sendMessage(channel, ".logout " + ourBotHash(client), false);
+            sendMessage(channel, ".logout " + ourBotHash(client));
         }
     }
 

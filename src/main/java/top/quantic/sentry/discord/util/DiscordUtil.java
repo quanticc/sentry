@@ -262,6 +262,10 @@ public class DiscordUtil {
         }
     }
 
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content) {
+        return sendMessage(channel, content, false);
+    }
+
     public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
         if (content.isEmpty()) {
             return null;

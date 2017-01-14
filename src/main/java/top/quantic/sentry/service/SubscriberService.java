@@ -108,7 +108,7 @@ public class SubscriberService {
             .forEach(entry -> {
                 IChannel channel = entry.getValue().getChannelByID(channelId);
                 if (channel != null) {
-                    sendMessage(channel, message, false);
+                    sendMessage(channel, message);
                 } else {
                     log.warn("Did not found a channel with id {} in bot {}", channelId, clientId);
                 }
