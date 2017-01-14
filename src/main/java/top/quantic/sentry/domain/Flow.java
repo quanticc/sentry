@@ -171,7 +171,7 @@ public class Flow extends AbstractAuditingEntity implements Serializable {
             ", translator='" + translator + "'" +
             ", output='" + output + "'" +
             ", enabled='" + enabled + "'" +
-            ", variables='" + variables + "'" +
+            ", variables=" + variables +
             '}';
     }
 }
