@@ -43,6 +43,10 @@ public class DateUtil {
         return localDateTime.atZone(ZoneId.systemDefault()).toInstant();
     }
 
+    public static LocalDateTime instantToDate(Instant instant) {
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
     private DateUtil() {
 
     }
