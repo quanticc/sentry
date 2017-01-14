@@ -33,7 +33,11 @@
                     <td>{{timeFrame.subscriber}}</td>
                     <td>{{timeFrame.start | date:'medium'}}</td>
                     <td>{{timeFrame.end | date:'medium'}}</td>
-                    <td>{{timeFrame.inclusive}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(timeFrame.inclusive)">
+                            {{vm.prettyBoolText(timeFrame.inclusive)}}
+                        </span>
+                    </td>
                     <td>{{timeFrame.recurrenceValue}}</td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">

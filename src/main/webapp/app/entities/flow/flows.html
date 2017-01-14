@@ -38,7 +38,11 @@
                     <td>{{flow.message}}</td>
                     <td>{{flow.translator}}</td>
                     <td>{{flow.output}}</td>
-                    <td>{{flow.enabled}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(flow.enabled)">
+                            {{vm.prettyBoolText(flow.enabled)}}
+                        </span>
+                    </td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
                             <button type="submit"
