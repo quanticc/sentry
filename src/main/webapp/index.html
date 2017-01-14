@@ -11,11 +11,13 @@
     <!-- build:css content/css/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css">
     <link rel="stylesheet" href="bower_components/angular-loading-bar/build/loading-bar.css">
     <!-- endinject -->
     <!-- endbuild -->
     <!-- build:css content/css/main.css -->
     <link rel="stylesheet" href="content/css/main.css">
+    <link rel="stylesheet" href="content/css/fontello.css">
     <!-- endbuild -->
     <link href="https://fonts.googleapis.com/css?family=Oxygen:300,400,700" rel="stylesheet" type="text/css">
 </head>
@@ -30,10 +32,33 @@
             <!-- Angular views -->
         </div>
 
-        <div class="footer" ng-cloak>
-            <a href="https://github.com/quanticc/sentry" target="_blank"><span class="navbar-version">v{{VERSION}}</span></a>
-        </div>
+
     </div>
+
+
+    <footer class="footer">
+        <div class="container" ng-cloak>
+            <p class="pull-left">
+                <span class="version">v{{VERSION}}</span>
+            </p>
+            <div class="pull-right">
+                <ul class="nav nav-pills">
+                    <li>
+                        <a href="https://github.com/quanticc/sentry" target="_blank" style="padding: 5px;" class="white">
+                            <i class="fa fa-fw fa-github"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://discordapp.com/invite/0k9foINfSfP2WyXY" target="_blank" style="padding: 5px;" class="white">
+                            <i class="icon-discord"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+
 
     <!-- Google Analytics -->
     <script>
