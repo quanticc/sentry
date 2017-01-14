@@ -41,6 +41,12 @@ public final class HeaderUtil {
         return headers;
     }
 
+    public static HttpHeaders createErrorAlert(String message) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-sentryApp-error", message);
+        return headers;
+    }
+
     public static HttpHeaders createErrorAlert(String message, String param) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-sentryApp-error", message);
