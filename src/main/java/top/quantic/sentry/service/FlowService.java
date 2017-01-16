@@ -1,23 +1,22 @@
 package top.quantic.sentry.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.Flow;
+import top.quantic.sentry.event.ContentSupplier;
+import top.quantic.sentry.event.SentryEvent;
 import top.quantic.sentry.repository.FlowRepository;
 import top.quantic.sentry.service.dto.FlowDTO;
 import top.quantic.sentry.service.mapper.FlowMapper;
 import top.quantic.sentry.web.rest.vm.DatadogEvent;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
 
-import java.io.IOException;
 import java.util.Map;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Service Implementation for managing Flow.
@@ -25,12 +24,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Service
 public class FlowService {
 
-    private final Logger log = LoggerFactory.getLogger(FlowService.class);
+    private static final Logger log = LoggerFactory.getLogger(FlowService.class);
+    private static final String SENTRY_EVENT = "sentryEvent";
+    private static final String INBOUND_WEBHOOK = "inboundWebhook";
 
     private final FlowRepository flowRepository;
     private final FlowMapper flowMapper;
     private final SubscriberService subscriberService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     public FlowService(FlowRepository flowRepository, FlowMapper flowMapper, SubscriberService subscriberService) {
@@ -39,30 +39,22 @@ public class FlowService {
         this.subscriberService = subscriberService;
     }
 
-    public void executeWebhookFlowByKey(String key, String body) {
-        flowRepository.findByEnabledIsTrueAndInput("inboundWebhook").stream()
+    @EventListener
+    public void onSentryEvent(SentryEvent event) {
+        String className = event.getClass().getSimpleName();
+        log.debug("[{}] {}", className, event.asContent());
+        flowRepository.findByEnabledIsTrueAndInputAndMessage(SENTRY_EVENT, className)
+            .forEach(flow -> executeEventFlow(flow, event));
+    }
+
+    public void executeDatadogFlowsByKey(String key, DatadogEvent event) {
+        flowRepository.findByEnabledIsTrueAndInput(INBOUND_WEBHOOK).stream()
             .filter(flow -> key.equals(flow.getVariables().get("key")))
-            .forEach(flow -> {
-                try {
-                    executeWebhookFlow(flow, body);
-                } catch (Exception e) {
-                    log.warn("Could not execute flow", e);
-                }
-            });
+            .forEach(flow -> executeEventFlow(flow, event));
     }
 
-    private void executeWebhookFlow(Flow flow, String body) throws IOException {
-        log.info("Executing flow {}", isBlank(flow.getName()) ? flow.getId() : flow.getName());
-        String messageType = flow.getMessage();
-        if (messageType.equals("DatadogEvent")) {
-            executeDatadogFlow(flow, toDatadogEvent(body));
-        } else {
-            log.warn("Unknown message type for this flow: {}", messageType);
-        }
-    }
-
-    private void executeDatadogFlow(Flow flow, DatadogEvent event) {
-        log.debug("Transforming {} for {}", event, flow);
+    private void executeEventFlow(Flow flow, ContentSupplier supplier) {
+        log.info("Executing {} flow: {}", supplier.getClass().getSimpleName(), flow);
         String translatorType = flow.getTranslator();
         Map<String, Object> variables = flow.getVariables();
         if (translatorType.startsWith("DiscordWebhook")) {
@@ -75,46 +67,21 @@ public class FlowService {
             if (avatarUrl != null) {
                 webhook.setAvatarUrl((String) avatarUrl);
             }
-            if (translatorType.contains("Simple")) {
-                webhook.setContent("**" + event.getTitle() + "**\n" + extract(event.getBody()));
-            } else {
-                webhook.setContent("**" + event.getTitle() + "**\n" + event.getBody());
-            }
-            sendWebhook(flow, webhook);
+            webhook.setContent(supplier.asContent());
+            publish(flow, supplier.getContentId(), webhook);
         } else if (translatorType.startsWith("DiscordMessage")) {
-            String content;
-            if (translatorType.contains("Simple")) {
-                content = "**" + event.getTitle() + "**\n" + extract(event.getBody());
-            } else {
-                content = "**" + event.getTitle() + "**\n" + event.getBody();
-            }
-            sendMessage(flow, content);
+            publish(flow, supplier.getContentId(), supplier.asContent());
         } else {
             log.warn("Unknown translator type for this flow: {}", translatorType);
         }
     }
 
-    private void sendMessage(Flow flow, String content) {
-        subscriberService.send(flow.getOutput(), content);
+    private void publish(Flow flow, String id, String content) {
+        subscriberService.publish(flow.getOutput(), id, content);
     }
 
-    private void sendWebhook(Flow flow, DiscordWebhook webhook) {
-        subscriberService.send(flow.getOutput(), webhook);
-    }
-
-    private String extract(String body) {
-        String[] splits = body.split("===", 3);
-        if (splits.length >= 2) {
-            return splits[1];
-        } else if (splits.length == 1) {
-            return splits[0];
-        } else {
-            return body;
-        }
-    }
-
-    private DatadogEvent toDatadogEvent(String body) throws IOException {
-        return objectMapper.readValue(body, DatadogEvent.class);
+    private void publish(Flow flow, String id, DiscordWebhook webhook) {
+        subscriberService.publish(flow.getOutput(), id, webhook);
     }
 
     /**
@@ -132,10 +99,10 @@ public class FlowService {
     }
 
     /**
-     *  Get all the flows.
+     * Get all the flows.
      *
-     *  @param pageable the pagination information
-     *  @return the list of entities
+     * @param pageable the pagination information
+     * @return the list of entities
      */
     public Page<FlowDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Flows");
@@ -144,10 +111,10 @@ public class FlowService {
     }
 
     /**
-     *  Get one flow by id.
+     * Get one flow by id.
      *
-     *  @param id the id of the entity
-     *  @return the entity
+     * @param id the id of the entity
+     * @return the entity
      */
     public FlowDTO findOne(String id) {
         log.debug("Request to get Flow : {}", id);
@@ -157,9 +124,9 @@ public class FlowService {
     }
 
     /**
-     *  Delete the  flow by id.
+     * Delete the  flow by id.
      *
-     *  @param id the id of the entity
+     * @param id the id of the entity
      */
     public void delete(String id) {
         log.debug("Request to delete Flow : {}", id);

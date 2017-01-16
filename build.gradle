@@ -155,6 +155,8 @@ dependencies {
     compile "org.coursera:dropwizard-metrics-datadog:1.1.6"
     compile "org.quartz-scheduler:quartz:2.2.3"
     compile "com.novemberain:quartz-mongodb:2.0.0"
+    compile "com.rometools:rome-fetcher:1.7.1"
+    compile "org.apache.httpcomponents:httpclient-cache:4.5.2"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"

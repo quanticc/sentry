@@ -12,4 +12,6 @@ import java.util.List;
 public interface FlowRepository extends MongoRepository<Flow, String> {
 
     List<Flow> findByEnabledIsTrueAndInput(String input);
+
+    List<Flow> findByEnabledIsTrueAndInputAndMessage(String input, String message);
 }

@@ -16,6 +16,7 @@ import top.quantic.sentry.service.FlowService;
 import top.quantic.sentry.service.dto.FlowDTO;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
+import top.quantic.sentry.web.rest.vm.DatadogEvent;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -36,11 +37,11 @@ public class FlowResource {
     @Inject
     private FlowService flowService;
 
-    @PostMapping("/webhooks/{key}")
+    @PostMapping("/webhooks/{key}/datadog")
     @Timed
-    public ResponseEntity<Void> executeFlow(@PathVariable String key, @RequestBody String body) {
-        log.debug("REST request to execute a webhook-triggered flow with key : {}", key);
-        flowService.executeWebhookFlowByKey(key, body);
+    public ResponseEntity<Void> executeFlow(@PathVariable String key, @RequestBody DatadogEvent event) {
+        log.debug("REST request to execute a Datadog flow with key : {}", key);
+        flowService.executeDatadogFlowsByKey(key, event);
         return ResponseEntity.ok().build();
     }
 

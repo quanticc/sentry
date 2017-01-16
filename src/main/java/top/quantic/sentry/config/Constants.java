@@ -27,6 +27,7 @@ public final class Constants {
     public static final String KEY_PREFIX = "prefix";
 
     public static final String JOBS_PACKAGE = "top.quantic.sentry.job";
+    public static final String EVENTS_PACKAGE = "top.quantic.sentry.event";
 
     private Constants() {
     }
