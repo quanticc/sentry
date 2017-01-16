@@ -14,6 +14,7 @@ import sx.blah.discord.handle.impl.events.ReconnectSuccessEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import top.quantic.sentry.config.SentryProperties;
 import top.quantic.sentry.discord.module.DiscordSubscriber;
+import top.quantic.sentry.service.SettingService;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.ourBotHash;
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
@@ -24,10 +25,12 @@ public class Supervisor implements DiscordSubscriber {
     private static final Logger log = LoggerFactory.getLogger(Supervisor.class);
 
     private final SentryProperties sentryProperties;
+    private final SettingService settingService;
 
     @Autowired
-    public Supervisor(SentryProperties sentryProperties) {
+    public Supervisor(SentryProperties sentryProperties, SettingService settingService) {
         this.sentryProperties = sentryProperties;
+        this.settingService = settingService;
     }
 
     @EventSubscriber
@@ -37,9 +40,13 @@ public class Supervisor implements DiscordSubscriber {
     }
 
     private void signalReady(IDiscordClient client) {
-        IChannel channel = client.getChannelByID(sentryProperties.getDiscord().getCoordinatorChannelId());
-        if (channel != null) {
-            sendMessage(channel, ".logout " + ourBotHash(client));
+        if (sentryProperties.getDiscord().isAnnounceReady()) {
+            IChannel channel = client.getChannelByID(sentryProperties.getDiscord().getCoordinatorChannelId());
+            if (channel != null) {
+            settingService.getPrefixes(channel.getGuild().getID()).stream()
+                .findAny()
+                .ifPresent(pre -> sendMessage(channel, pre + "logout " + ourBotHash(client)));
+            }
         }
     }
 
