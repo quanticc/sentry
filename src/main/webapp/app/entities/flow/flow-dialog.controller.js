@@ -10,6 +10,7 @@
     function FlowDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Flow) {
         var vm = this;
 
+        vm.inputTypes = ['sentryEvent', 'inboundWebhook'];
         vm.flow = entity;
         vm.clear = clear;
         vm.save = save;

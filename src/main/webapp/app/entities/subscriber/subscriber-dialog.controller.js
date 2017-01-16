@@ -10,6 +10,7 @@
     function SubscriberDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Subscriber) {
         var vm = this;
 
+        vm.outputTypes = ['DiscordMessage', 'DiscordWebhook'];
         vm.subscriber = entity;
         vm.clear = clear;
         vm.save = save;
