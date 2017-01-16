@@ -8,8 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-import static top.quantic.sentry.service.util.DateUtil.humanize;
-import static top.quantic.sentry.service.util.DateUtil.instantToDate;
+import static top.quantic.sentry.service.util.DateUtil.*;
 
 public class LoggingTriggerListener implements TriggerListener {
 
@@ -21,21 +20,22 @@ public class LoggingTriggerListener implements TriggerListener {
     }
 
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        log.info("[{}] Firing job {}.{}", trigger.getKey().getName(),
-            context.getJobDetail().getKey().getGroup(), context.getJobDetail().getKey().getName());
+        log.info("[{}] Trigger '{}' is firing job",
+            context.getJobDetail().getKey(), trigger.getKey().getName());
     }
 
     public void triggerMisfired(Trigger trigger) {
-        log.info("[{}] Misfiring job {}.{} - Should have fired at {}", trigger.getKey().getName(),
-            trigger.getJobKey().getGroup(), trigger.getJobKey().getName(),
-            instantToDate(trigger.getNextFireTime().toInstant()));
+        log.info("[{}] Trigger '{}' misfired job - Should have fired at {} ({})",
+            trigger.getJobKey(), trigger.getKey().getName(),
+            instantToSystem(trigger.getNextFireTime().toInstant()),
+            formatRelative(trigger.getNextFireTime().toInstant()));
     }
 
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
                                 Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        log.info("[{}] Completed job {}.{} in {}{}",
-            trigger.getKey().getName(), context.getJobDetail().getKey().getGroup(),
-            context.getJobDetail().getKey().getName(), humanize(Duration.ofMillis(context.getJobRunTime())),
+        log.info("[{}] Trigger '{}' completed job in {}{}",
+            context.getJobDetail().getKey(), trigger.getKey().getName(),
+            humanize(Duration.ofMillis(context.getJobRunTime())),
             (context.getResult() != null ? " with result: " + context.getResult() : ""));
     }
 
