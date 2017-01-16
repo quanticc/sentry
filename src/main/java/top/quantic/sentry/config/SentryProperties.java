@@ -11,6 +11,7 @@ public class SentryProperties {
 
     private final Discord discord = new Discord();
     private final Metrics metrics = new Metrics();
+    private final Http http = new Http();
 
     public Discord getDiscord() {
         return discord;
@@ -20,10 +21,15 @@ public class SentryProperties {
         return metrics;
     }
 
+    public Http getHttp() {
+        return http;
+    }
+
     public static class Discord {
 
         private List<String> administrators = new ArrayList<>();
         private List<String> defaultPrefixes = Lists.newArrayList("!");
+        private boolean announceReady = true;
         private String coordinatorChannelId;
 
         public List<String> getAdministrators() {
@@ -48,6 +54,14 @@ public class SentryProperties {
 
         public void setCoordinatorChannelId(String coordinatorChannelId) {
             this.coordinatorChannelId = coordinatorChannelId;
+        }
+
+        public boolean isAnnounceReady() {
+            return announceReady;
+        }
+
+        public void setAnnounceReady(boolean announceReady) {
+            this.announceReady = announceReady;
         }
     }
 
@@ -151,6 +165,73 @@ public class SentryProperties {
             public void setExcludes(List<String> excludes) {
                 this.excludes = excludes;
             }
+        }
+    }
+
+    public static class Http {
+
+        private int maxTotalConnections = 100;
+        private int maxConnectionsPerRoute = 5;
+        private int readTimeout = 30000;
+        private int socketTimeout = 30000;
+        private int maxCacheEntries = 1000;
+        private long maxObjectSize = 104857600;
+        private String cacheDir = "tmp/cache";
+
+        public int getMaxTotalConnections() {
+            return maxTotalConnections;
+        }
+
+        public void setMaxTotalConnections(int maxTotalConnections) {
+            this.maxTotalConnections = maxTotalConnections;
+        }
+
+        public int getMaxConnectionsPerRoute() {
+            return maxConnectionsPerRoute;
+        }
+
+        public void setMaxConnectionsPerRoute(int maxConnectionsPerRoute) {
+            this.maxConnectionsPerRoute = maxConnectionsPerRoute;
+        }
+
+        public int getReadTimeout() {
+            return readTimeout;
+        }
+
+        public void setReadTimeout(int readTimeout) {
+            this.readTimeout = readTimeout;
+        }
+
+        public int getSocketTimeout() {
+            return socketTimeout;
+        }
+
+        public void setSocketTimeout(int socketTimeout) {
+            this.socketTimeout = socketTimeout;
+        }
+
+        public int getMaxCacheEntries() {
+            return maxCacheEntries;
+        }
+
+        public void setMaxCacheEntries(int maxCacheEntries) {
+            this.maxCacheEntries = maxCacheEntries;
+        }
+
+        public long getMaxObjectSize() {
+            return maxObjectSize;
+        }
+
+        public void setMaxObjectSize(long maxObjectSize) {
+            this.maxObjectSize = maxObjectSize;
+        }
+
+        public String getCacheDir() {
+            return cacheDir;
+        }
+
+        public void setCacheDir(String cacheDir) {
+            this.cacheDir = cacheDir;
         }
     }
 
