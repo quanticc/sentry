@@ -1,5 +1,6 @@
 package top.quantic.sentry.service;
 
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static top.quantic.sentry.config.Constants.ANY;
 import static top.quantic.sentry.config.Constants.KEY_PREFIX;
 
 /**
@@ -50,9 +52,10 @@ public class SettingService {
     }
 
     public Set<String> getPrefixes(String guild) {
-        List<Setting> settings = settingRepository.findByGuildAndKey(guild, KEY_PREFIX);
+        List<Setting> settings = (guild == null ? Collections.emptyList() :
+            settingRepository.findByGuildAndKey(guild, KEY_PREFIX));
         if (settings.isEmpty()) {
-            settings = settingRepository.findByGuildAndKey(Constants.ANY, KEY_PREFIX);
+            settings = settingRepository.findByGuildAndKey(ANY, KEY_PREFIX);
             if (settings.isEmpty()) {
                 return new HashSet<>(sentryProperties.getDiscord().getDefaultPrefixes());
             }
@@ -157,5 +160,24 @@ public class SettingService {
 
     private Set<String> extractValues(List<Setting> settingList) {
         return settingList.stream().map(Setting::getValue).collect(Collectors.toSet());
+    }
+
+    public void updateSetting(Setting setting, String group, String key, String value) {
+        log.debug("Request to update Setting : {} with ({}, {}, {})", setting, group, key, value);
+        setting.setGuild(group);
+        setting.setKey(key);
+        setting.setValue(value);
+        settingRepository.save(setting);
+    }
+
+    public void updateValue(Setting setting, String value) {
+        log.debug("Request to update Setting : {} with value: {}", setting, value);
+        setting.setValue(value);
+        settingRepository.save(setting);
+    }
+
+    public void createSetting(String group, String key, String value) {
+        log.debug("Request to create Setting with ({}, {}, {})", group, key, value);
+        updateSetting(new Setting(), group, key, value);
     }
 }
