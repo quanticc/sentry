@@ -2,7 +2,6 @@ package top.quantic.sentry.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sx.blah.discord.api.IDiscordClient;
@@ -13,7 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class DiscordService implements InitializingBean {
+public class DiscordService {
 
     private static final Logger log = LoggerFactory.getLogger(DiscordService.class);
 
@@ -26,15 +25,6 @@ public class DiscordService implements InitializingBean {
     public DiscordService(UserService userService, SentryProperties sentryProperties) {
         this.userService = userService;
         this.sentryProperties = sentryProperties;
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        userService.deleteUser("admin");
-        userService.deleteUser("user");
-        if (sentryProperties.getDiscord().getAdministrators().isEmpty() && userService.getAdminCount() == 0) {
-            log.info("*** No administrators set - Define some under 'sentry.discord.administrators' property");
-        }
     }
 
     public Map<Bot, IDiscordClient> getClients() {
