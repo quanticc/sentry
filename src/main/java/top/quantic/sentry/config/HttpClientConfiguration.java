@@ -50,7 +50,6 @@ public class HttpClientConfiguration {
         return CachingHttpClients.custom()
             .setCacheConfig(cacheConfig)
             .setCacheDir(new File(properties().getCacheDir()))
-            .setDeleteCache(false) // important!
             .setDefaultRequestConfig(requestConfig)
             .setConnectionManager(connectionManager)
             .build();
