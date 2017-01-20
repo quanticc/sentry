@@ -439,7 +439,7 @@ public class GameServerService implements InitializingBean {
             server.setTvPort(tvPort);
         } catch (Exception e) {
             if (e.getCause() instanceof ReadTimeoutException) {
-                log.info("[{}] Status check timed out");
+                log.info("[{}] Status check timed out", server);
             } else {
                 log.warn("[{}] Failed to refresh status: {}", server, e.toString());
             }
