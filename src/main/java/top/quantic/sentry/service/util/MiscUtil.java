@@ -14,7 +14,7 @@ public class MiscUtil {
     }
 
     public static String inflect(long value, String word) {
-        return value == 1 ? singularize(word) : pluralize(word);
+        return value + " " + (value == 1 ? singularize(word) : pluralize(word));
     }
 
     private MiscUtil() {}
