@@ -13,8 +13,8 @@ public class MiscUtil {
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), "kMGTPE".charAt(exp - 1));
     }
 
-    public static String inflect(long value, String word) {
-        return value + " " + (value == 1 ? singularize(word) : pluralize(word));
+    public static String inflect(long value, String label) {
+        return value + " " + (value == 1 ? singularize(label) : pluralize(label));
     }
 
     private MiscUtil() {}

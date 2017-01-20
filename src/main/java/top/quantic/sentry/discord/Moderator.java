@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
 public class Moderator implements CommandSupplier {
@@ -138,8 +139,8 @@ public class Moderator implements CommandSupplier {
                     deleteInBatch(channel, toDelete);
                 }
                 messages.setCacheCapacity(capacity);
-                answerPrivately(message, (toDelete.size() == 0 ? "No messages were deleted" : "Deleting "
-                    + toDelete.size() + " message" + (toDelete.size() == 1 ? "" : "s")));
+                answerPrivately(message, (toDelete.size() == 0 ? "No messages were deleted" :
+                    "Deleting " + inflect(toDelete.size(), "message")));
             }).build();
     }
 

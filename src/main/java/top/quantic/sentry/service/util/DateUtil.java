@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
+
 public class DateUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DateUtil.class);
@@ -28,7 +30,11 @@ public class DateUtil {
         Duration abs = duration.abs();
         long totalSeconds = abs.getSeconds();
         if (totalSeconds == 0) {
-            return abs.toMillis() + (minimal ? "ms" : " milliseconds");
+            if (minimal) {
+                return abs.toMillis() + "ms";
+            } else {
+                return inflect(abs.toMillis(), "millisecond");
+            }
         }
         long d = totalSeconds / (3600 * 24);
         long h = (totalSeconds % (3600 * 24)) / 3600;
@@ -44,10 +50,6 @@ public class DateUtil {
 
     private static String compact(long value, String suffix) {
         return (value == 0 ? "" : value + suffix);
-    }
-
-    private static String inflect(long value, String singular) {
-        return (value == 1 ? "1 " + singular : (value > 1 ? value + " " + singular + "s" : ""));
     }
 
     public static Instant systemToInstant(LocalDateTime localDateTime) {
