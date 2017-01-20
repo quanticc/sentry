@@ -1,5 +1,8 @@
 package top.quantic.sentry.service.util;
 
+import static top.quantic.sentry.service.util.Inflection.pluralize;
+import static top.quantic.sentry.service.util.Inflection.singularize;
+
 public class MiscUtil {
 
     public static String humanizeBytes(long bytes) {
@@ -8,6 +11,10 @@ public class MiscUtil {
             return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), "kMGTPE".charAt(exp - 1));
+    }
+
+    public static String inflect(long value, String word) {
+        return value == 1 ? singularize(word) : pluralize(word);
     }
 
     private MiscUtil() {}
