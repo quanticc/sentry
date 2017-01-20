@@ -15,6 +15,8 @@ public class Key<T> {
     public static final Key<Integer> UPDATE_ATTEMPTS_ALERT_THRESHOLD = key("gameServer", "updateAttemptsAlertThreshold", 5);
     public static final Key<Integer> UPDATE_ATTEMPTS_INTERVAL_MINUTES = key("gameServer", "updateAttemptIntervalMinutes", 5);
     public static final Key<Integer> PING_ALERT_THRESHOLD = key("gameServer", "pingAlertThreshold", 1000);
+    public static final Key<Integer> CONSECUTIVE_FAILURES_TO_TRIGGER = key("gameServer", "consecutiveFailuresToTrigger", 2);
+    public static final Key<Integer> CONSECUTIVE_SUCCESSES_TO_RECOVER = key("gameServer", "consecutiveSuccessesToRecover", 2);
 
     // GameQuery
     public static final Key<Integer> CACHE_REFRESH_INTERVAL_MINUTES = key("sourceQuery", "cacheRefreshIntervalMinutes", 10);

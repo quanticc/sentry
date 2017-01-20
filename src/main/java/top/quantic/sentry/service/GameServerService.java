@@ -22,9 +22,9 @@ import top.quantic.sentry.event.RconRefreshFailedEvent;
 import top.quantic.sentry.repository.GameServerRepository;
 import top.quantic.sentry.service.dto.GameServerDTO;
 import top.quantic.sentry.service.mapper.GameServerMapper;
-import top.quantic.sentry.service.util.Detector;
 import top.quantic.sentry.service.util.Key;
-import top.quantic.sentry.service.util.LoggingDetectorListener;
+import top.quantic.sentry.service.util.LoggingMonitorListener;
+import top.quantic.sentry.service.util.Monitor;
 import top.quantic.sentry.service.util.Result;
 
 import java.io.IOException;
@@ -61,13 +61,15 @@ public class GameServerService implements InitializingBean {
     private final MetricRegistry metricRegistry;
     private final SettingService settingService;
 
-    private final Map<GameServer, Detector<Integer>> serverStatusMap = new ConcurrentHashMap<>();
-    private final LoggingDetectorListener detectorListener = new LoggingDetectorListener();
+    private final Map<GameServer, Monitor<Integer>> serverStatusMap = new ConcurrentHashMap<>();
+    private final LoggingMonitorListener monitorListener = new LoggingMonitorListener();
 
     private int rconSayIntervalMinutes = Key.RCON_SAY_INTERVAL_MINUTES.getDefaultValue();
     private int updateAttemptsThreshold = Key.UPDATE_ATTEMPTS_ALERT_THRESHOLD.getDefaultValue();
     private int updateAttemptIntervalMinutes = Key.UPDATE_ATTEMPTS_INTERVAL_MINUTES.getDefaultValue();
     private int pingThreshold = Key.PING_ALERT_THRESHOLD.getDefaultValue();
+    private int consecutiveFailuresToTrigger = Key.CONSECUTIVE_FAILURES_TO_TRIGGER.getDefaultValue();
+    private int consecutiveSuccessesToRecover = Key.CONSECUTIVE_SUCCESSES_TO_RECOVER.getDefaultValue();
 
     @Autowired
     public GameServerService(GameServerRepository gameServerRepository, GameServerMapper gameServerMapper,
@@ -85,7 +87,7 @@ public class GameServerService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        gameServerRepository.findAll().parallelStream().forEach(this::initServerMetrics);
+        gameServerRepository.findAll().forEach(this::initServerMetrics);
     }
 
     //////////
@@ -154,12 +156,23 @@ public class GameServerService implements InitializingBean {
     }
 
     private void refreshFromGameAdminData(String address, Map<String, String> data) {
+        String subId = data.get("SUBID");
+        String name = data.get("name");
+
         GameServer server = gameServerRepository.findByAddress(address).orElseGet(this::newGameServer);
-        server.setId(data.get("SUBID"));
+
+        boolean changed = !server.getId().equals(subId)
+            || !server.getName().equals(name)
+            || !server.getAddress().equals(address);
+
+        server.setId(subId);
         server.setAddress(address);
-        server.setName(data.get("name"));
+        server.setName(name);
         try {
-            initServerMetrics(gameServerRepository.save(server));
+            server = gameServerRepository.save(server);
+            if (changed) {
+                initServerMetrics(server);
+            }
         } catch (DataIntegrityViolationException e) {
             log.warn("Unable to update server data", e);
         }
@@ -175,6 +188,8 @@ public class GameServerService implements InitializingBean {
         server.setLastRconDate(epoch);
         server.setStatusCheckDate(epoch);
         server.setLastValidPing(epoch);
+        server.setLastUpdateStart(epoch);
+        server.setLastRconAnnounce(epoch);
         return server;
     }
 
@@ -427,7 +442,7 @@ public class GameServerService implements InitializingBean {
         }
 
         server.setPing(delay);
-        if (getStatusTracker(server).check(delay) != Detector.State.BAD) {
+        if (getStatusMonitor(server).check(delay) != Monitor.State.BAD) {
             server.setLastValidPing(ZonedDateTime.now());
         }
         return server;
@@ -476,10 +491,10 @@ public class GameServerService implements InitializingBean {
                     server.setLastRconAnnounce(ZonedDateTime.now());
                 }
             }
-        } else if (getStatusTracker(server).getState() != Detector.State.GOOD) {
+        } else if (getStatusMonitor(server).getState() != Monitor.State.GOOD) {
             // hold servers that are offline - install in progress or a dead server?
             // TODO: consider upgrading anyway after a certain attempt # threshold
-            log.info("[{}] Server update is on hold. Current state: {}", server, getStatusTracker(server).getState());
+            log.info("[{}] Server update is on hold. Current state: {}", server, getStatusMonitor(server).getState());
         } else {
             log.debug("[{}] Starting update attempt {}", server.getUpdateAttempts() + 1);
             try {
@@ -505,7 +520,7 @@ public class GameServerService implements InitializingBean {
 
     public List<GameServer> findUnhealthyServers() {
         return gameServerRepository.findAll().parallelStream()
-            .filter(server -> getStatusTracker(server).getState() != Detector.State.GOOD)
+            .filter(server -> getStatusMonitor(server).getState() != Monitor.State.GOOD)
             .collect(Collectors.toList());
     }
 
@@ -531,30 +546,29 @@ public class GameServerService implements InitializingBean {
     }
 
     private void initServerMetrics(GameServer server) {
-        initStatusGauge(server);
-        initPlayerGauge(server);
+        registerStatusGauge(server);
+        registerPlayerCountGauge(server);
     }
 
-    private void initStatusGauge(GameServer server) {
+    private void registerStatusGauge(GameServer server) {
         String key = "UGC.GameServer.status." + server.getShortName();
-        if (!metricRegistry.getGauges().containsKey(key)) {
-            metricRegistry.register(key, (Gauge<Integer>) () -> getStatusTracker(server).getState().ordinal());
-        }
+        metricRegistry.remove(key);
+        metricRegistry.register(key, (Gauge<Integer>) () -> getStatusMonitor(server).getState().ordinal());
     }
 
-    private void initPlayerGauge(GameServer server) {
+    private void registerPlayerCountGauge(GameServer server) {
         String key = "UGC.GameServer.player_count." + server.getShortName();
-        if (!metricRegistry.getGauges().containsKey(key)) {
-            metricRegistry.register(key, (Gauge<Integer>) server::getPlayers);
-        }
+        metricRegistry.remove(key);
+        metricRegistry.register(key, (Gauge<Integer>) server::getPlayers);
     }
 
-    private Detector<Integer> getStatusTracker(GameServer server) {
+    private Monitor<Integer> getStatusMonitor(GameServer server) {
         return serverStatusMap.computeIfAbsent(server,
             key -> {
-                Detector<Integer> detector = new Detector<>(key.getShortNameAndAddress(), getStatusCheckFunction());
-                detector.addListener(detectorListener);
-                return detector;
+                Monitor<Integer> monitor = new Monitor<>(key.getShortNameAndAddress(),
+                    consecutiveFailuresToTrigger, consecutiveSuccessesToRecover, getStatusCheckFunction());
+                monitor.addListener(monitorListener);
+                return monitor;
             });
     }
 
@@ -709,10 +723,24 @@ public class GameServerService implements InitializingBean {
         rconSayIntervalMinutes = settingService.getValueFromKey(Key.RCON_SAY_INTERVAL_MINUTES);
         updateAttemptsThreshold = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_ALERT_THRESHOLD);
         updateAttemptIntervalMinutes = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_INTERVAL_MINUTES);
+
+        int oldFailuresToTrigger = consecutiveFailuresToTrigger;
+        int oldSuccessesToRecover = consecutiveSuccessesToRecover;
+
+        consecutiveFailuresToTrigger = settingService.getValueFromKey(Key.CONSECUTIVE_FAILURES_TO_TRIGGER);
+        consecutiveSuccessesToRecover = settingService.getValueFromKey(Key.CONSECUTIVE_SUCCESSES_TO_RECOVER);
+
+        if (oldFailuresToTrigger != consecutiveFailuresToTrigger
+            || oldSuccessesToRecover != consecutiveSuccessesToRecover) {
+            log.debug("Monitor parameters were changed, resetting all monitors");
+            serverStatusMap.clear();
+            gameServerRepository.findAll().forEach(this::registerStatusGauge);
+        }
+
         int oldPingThreshold = pingThreshold;
         pingThreshold = settingService.getValueFromKey(Key.PING_ALERT_THRESHOLD);
         if (oldPingThreshold != pingThreshold) {
-            log.debug("Ping threshold was changed, resetting all flapping detectors");
+            log.debug("Ping threshold was changed, updating all monitors");
             serverStatusMap.values().forEach(d -> d.setHealthCheck(getStatusCheckFunction()));
         }
     }
