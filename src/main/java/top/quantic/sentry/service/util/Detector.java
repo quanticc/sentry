@@ -1,7 +1,6 @@
 package top.quantic.sentry.service.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.text.WordUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,14 +11,14 @@ import java.util.function.Function;
  * Simple implementation of a flapping detection algorithm.
  * Ported from https://github.com/dclowd9901/FlappingDetection/blob/master/FlappingDetection.js
  */
-public class FlappingDetector<T> {
+public class Detector<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(FlappingDetector.class);
     private static final int DEFAULT_CAPACITY = 100;
 
+    private final String name;
     private final ArrayBlockingQueue<T> states;
     private final int capacity;
-    private final Function<T, Boolean> healthCheck;
+    private Function<T, Boolean> healthCheck;
     private final List<FlappingListener> listenerList = new ArrayList<>();
 
     private volatile State state = State.GOOD;
@@ -30,11 +29,12 @@ public class FlappingDetector<T> {
     private volatile boolean settled = false;
     private volatile double recoveryThreshold;
 
-    public FlappingDetector(Function<T, Boolean> healthCheck) {
-        this(healthCheck, DEFAULT_CAPACITY);
+    public Detector(String name, Function<T, Boolean> healthCheck) {
+        this(name, healthCheck, DEFAULT_CAPACITY);
     }
 
-    public FlappingDetector(Function<T, Boolean> healthCheck, int maxStates) {
+    public Detector(String name, Function<T, Boolean> healthCheck, int maxStates) {
+        this.name = name;
         this.healthCheck = healthCheck;
         this.capacity = maxStates;
         this.states = new ArrayBlockingQueue<>(capacity, true);
@@ -44,7 +44,11 @@ public class FlappingDetector<T> {
         return ((double) states.stream().mapToInt(s -> healthCheck.apply(s) ? 1 : 0).sum()) / states.size();
     }
 
-    public void check(T value) {
+    public String getName() {
+        return name;
+    }
+
+    public State check(T value) {
         states.offer(value);
         double ratio = determineRatio();
         double ratioLow = lastRatio - windowMargin;
@@ -101,7 +105,7 @@ public class FlappingDetector<T> {
         }
 
         lastRatio = ratio;
-        log.debug("{}", toString());
+        return state;
     }
 
     private void tryPoll() {
@@ -111,18 +115,21 @@ public class FlappingDetector<T> {
     }
 
     private void toBadState() {
+        State previous = state;
         state = State.BAD;
-        notifyChange();
+        notifyChange(previous);
     }
 
     private void toRecoveryState() {
+        State previous = state;
         state = State.RECOVERY;
-        notifyChange();
+        notifyChange(previous);
     }
 
     private void toGoodState() {
+        State previous = state;
         state = State.GOOD;
-        notifyChange();
+        notifyChange(previous);
     }
 
     public void addListener(FlappingListener listener) {
@@ -137,8 +144,8 @@ public class FlappingDetector<T> {
         listenerList.clear();
     }
 
-    private void notifyChange() {
-        listenerList.forEach(listener -> listener.onStateChange(new Snapshot(state, settled, lastRatio, averageRatio)));
+    private void notifyChange(State previous) {
+        listenerList.forEach(listener -> listener.onStateChange(new Snapshot(name, previous, state, settled, lastRatio, averageRatio)));
     }
 
     public State getState() {
@@ -177,6 +184,14 @@ public class FlappingDetector<T> {
         this.nominalRatio = nominalRatio;
     }
 
+    public Function<T, Boolean> getHealthCheck() {
+        return healthCheck;
+    }
+
+    public void setHealthCheck(Function<T, Boolean> healthCheck) {
+        this.healthCheck = healthCheck;
+    }
+
     @Override
     public String toString() {
         return "FlappingDetector{" +
@@ -189,7 +204,12 @@ public class FlappingDetector<T> {
     }
 
     public enum State {
-        GOOD, BAD, RECOVERY
+        GOOD, BAD, RECOVERY;
+
+        @Override
+        public String toString() {
+            return WordUtils.capitalizeFully(name());
+        }
     }
 
     public interface FlappingListener {
@@ -197,16 +217,28 @@ public class FlappingDetector<T> {
     }
 
     public static final class Snapshot {
+        private final String name;
+        private final State previousState;
         private final State state;
         private final boolean settled;
         private final double lastRatio;
         private final double averageRatio;
 
-        private Snapshot(State state, boolean settled, double lastRatio, double averageRatio) {
+        private Snapshot(String name, State previousState, State state, boolean settled, double lastRatio, double averageRatio) {
+            this.name = name;
             this.state = state;
             this.settled = settled;
             this.lastRatio = lastRatio;
             this.averageRatio = averageRatio;
+            this.previousState = previousState;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public State getPreviousState() {
+            return previousState;
         }
 
         public State getState() {
@@ -228,7 +260,9 @@ public class FlappingDetector<T> {
         @Override
         public String toString() {
             return "Result{" +
-                "state=" + state +
+                "name=" + name +
+                ", previousState=" + previousState +
+                ", state=" + state +
                 ", settled=" + settled +
                 ", lastRatio=" + lastRatio +
                 ", averageRatio=" + averageRatio +
