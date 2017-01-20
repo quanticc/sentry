@@ -14,9 +14,11 @@ import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.repository.SettingRepository;
 import top.quantic.sentry.service.dto.SettingDTO;
 import top.quantic.sentry.service.mapper.SettingMapper;
+import top.quantic.sentry.service.util.Key;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +43,17 @@ public class SettingService {
         this.settingRepository = settingRepository;
         this.settingMapper = settingMapper;
         this.sentryProperties = sentryProperties;
+    }
+
+    public Setting getSettingFromKey(Key<?> key) {
+        return findOneByGuildAndKey(key.getGroup(), key.getName())
+            .orElse(null);
+    }
+
+    public <T> T getValueFromKey(Key<T> key) {
+        return findOneByGuildAndKey(key.getGroup(), key.getName())
+            .map(key::fromSetting)
+            .orElse(key.getDefaultValue());
     }
 
     public Set<String> getPrefixes(IMessage message) {
@@ -107,6 +120,14 @@ public class SettingService {
 
     public List<Setting> findByGlobalKey(String key) {
         return settingRepository.findByGuildAndKey(Constants.ANY, key);
+    }
+
+    public Optional<Setting> findOneByGuildAndKey(String guild, String key) {
+        return settingRepository.findByGuildAndKey(guild, key).stream().findAny();
+    }
+
+    public Optional<Setting> findOneByGlobalKey(String key) {
+        return settingRepository.findByGuildAndKey(Constants.ANY, key).stream().findAny();
     }
 
     /**
