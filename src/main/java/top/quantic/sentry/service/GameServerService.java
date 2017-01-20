@@ -4,6 +4,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.ibasco.agql.core.exceptions.ReadTimeoutException;
 import com.ibasco.agql.protocols.valve.source.query.pojos.SourceServer;
 import com.ibasco.agql.protocols.valve.steam.webapi.pojos.ServerUpdateStatus;
 import org.slf4j.Logger;
@@ -437,7 +438,11 @@ public class GameServerService implements InitializingBean {
             server.setVersion(checkedParseInt(versionString));
             server.setTvPort(tvPort);
         } catch (Exception e) {
-            log.warn("[{}] Failed to refresh status: {}", server, e.toString());
+            if (e.getCause() instanceof ReadTimeoutException) {
+                log.info("[{}] Status check timed out");
+            } else {
+                log.warn("[{}] Failed to refresh status: {}", server, e.toString());
+            }
             delay = Long.valueOf(nanosToMillis(context.stop())).intValue();
         }
 
