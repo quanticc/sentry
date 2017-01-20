@@ -44,16 +44,18 @@ public class SubscriberService {
     private final TimeFrameService timeFrameService;
     private final DiscordService discordService;
     private final SettingService settingService;
+    private final RestTemplate restTemplate;
 
     @Autowired
     public SubscriberService(SubscriberRepository subscriberRepository, SubscriberMapper subscriberMapper,
                              TimeFrameService timeFrameService, DiscordService discordService,
-                             SettingService settingService) {
+                             SettingService settingService, RestTemplate restTemplate) {
         this.subscriberRepository = subscriberRepository;
         this.subscriberMapper = subscriberMapper;
         this.timeFrameService = timeFrameService;
         this.discordService = discordService;
         this.settingService = settingService;
+        this.restTemplate = restTemplate;
     }
 
     public void publish(String outputChannel, String id, DiscordWebhook message) {
@@ -84,7 +86,6 @@ public class SubscriberService {
     }
 
     private ResponseEntity<Map<String, ?>> execute(DiscordWebhook webhook, String webhookUrl) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         headers.add("User-Agent", "curl"); // cloudflare!
