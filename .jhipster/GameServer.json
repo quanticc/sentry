@@ -1,0 +1,107 @@
+{
+    "fluentMethods": true,
+    "relationships": [],
+    "fields": [
+        {
+            "fieldName": "address",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "name",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "ping",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "players",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "maxPlayers",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "map",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "version",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "rconPassword",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "svPassword",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "tvPassword",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "tvPort",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "expires",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "expirationDate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "expirationCheckDate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "statusCheckDate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "lastValidPing",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "lastRconDate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "lastGameUpdate",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "updating",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "updateAttempts",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "lastUpdateStart",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "lastRconAnnounce",
+            "fieldType": "ZonedDateTime"
+        }
+    ],
+    "dto": "mapstruct",
+    "service": "serviceClass",
+    "entityTableName": "game_server",
+    "pagination": "infinite-scroll"
+}

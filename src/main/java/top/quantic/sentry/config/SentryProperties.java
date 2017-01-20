@@ -12,6 +12,8 @@ public class SentryProperties {
     private final Discord discord = new Discord();
     private final Metrics metrics = new Metrics();
     private final Http http = new Http();
+    private final GameAdmin gameAdmin = new GameAdmin();
+    private final GameQuery gameQuery = new GameQuery();
 
     public Discord getDiscord() {
         return discord;
@@ -23,6 +25,14 @@ public class SentryProperties {
 
     public Http getHttp() {
         return http;
+    }
+
+    public GameAdmin getGameAdmin() {
+        return gameAdmin;
+    }
+
+    public GameQuery getGameQuery() {
+        return gameQuery;
     }
 
     public static class Discord {
@@ -232,6 +242,41 @@ public class SentryProperties {
 
         public void setCacheDir(String cacheDir) {
             this.cacheDir = cacheDir;
+        }
+    }
+
+    public static class GameAdmin {
+
+        private String username;
+        private String password;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
+    public static class GameQuery {
+
+        private String steamApiKey;
+
+        public String getSteamApiKey() {
+            return steamApiKey;
+        }
+
+        public void setSteamApiKey(String steamApiKey) {
+            this.steamApiKey = steamApiKey;
         }
     }
 

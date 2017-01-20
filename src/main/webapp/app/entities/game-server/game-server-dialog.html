@@ -1,0 +1,208 @@
+
+<form name="editForm" role="form" novalidate ng-submit="vm.save()" show-validation>
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                ng-click="vm.clear()">&times;</button>
+        <h4 class="modal-title" id="myGameServerLabel">Create or edit a Game Server</h4>
+    </div>
+    <div class="modal-body">
+        <jhi-alert-error></jhi-alert-error>
+        <div class="form-group" ng-show="vm.gameServer.id">
+            <label for="id">ID</label>
+            <input type="text" class="form-control" id="id" name="id"
+                    ng-model="vm.gameServer.id" readonly />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_address">Address</label>
+            <input type="text" class="form-control" name="address" id="field_address"
+                    ng-model="vm.gameServer.address"
+                    required />
+            <div ng-show="editForm.address.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.address.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_name">Name</label>
+            <input type="text" class="form-control" name="name" id="field_name"
+                    ng-model="vm.gameServer.name"
+                    required />
+            <div ng-show="editForm.name.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.name.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_ping">Ping</label>
+            <input type="number" class="form-control" name="ping" id="field_ping"
+                    ng-model="vm.gameServer.ping"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_players">Players</label>
+            <input type="number" class="form-control" name="players" id="field_players"
+                    ng-model="vm.gameServer.players"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_maxPlayers">Max Players</label>
+            <input type="number" class="form-control" name="maxPlayers" id="field_maxPlayers"
+                    ng-model="vm.gameServer.maxPlayers"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_map">Map</label>
+            <input type="text" class="form-control" name="map" id="field_map"
+                    ng-model="vm.gameServer.map"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_version">Version</label>
+            <input type="number" class="form-control" name="version" id="field_version"
+                    ng-model="vm.gameServer.version"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_rconPassword">Rcon Password</label>
+            <input type="text" class="form-control" name="rconPassword" id="field_rconPassword"
+                    ng-model="vm.gameServer.rconPassword"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_svPassword">Sv Password</label>
+            <input type="text" class="form-control" name="svPassword" id="field_svPassword"
+                    ng-model="vm.gameServer.svPassword"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_tvPassword">Tv Password</label>
+            <input type="text" class="form-control" name="tvPassword" id="field_tvPassword"
+                    ng-model="vm.gameServer.tvPassword"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_tvPort">Tv Port</label>
+            <input type="number" class="form-control" name="tvPort" id="field_tvPort"
+                    ng-model="vm.gameServer.tvPort"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_expires">Expires</label>
+            <input type="checkbox" class="form-control" name="expires" id="field_expires"
+                    ng-model="vm.gameServer.expires"
+                     />
+            <div ng-show="editForm.expires.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.expires.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_expirationDate">Expiration Date</label>
+                <div class="input-group">
+                    <input id="field_expirationDate" type="text" class="form-control" name="expirationDate" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.expirationDate" is-open="vm.datePickerOpenStatus.expirationDate"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('expirationDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_expirationCheckDate">Expiration Check Date</label>
+                <div class="input-group">
+                    <input id="field_expirationCheckDate" type="text" class="form-control" name="expirationCheckDate" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.expirationCheckDate" is-open="vm.datePickerOpenStatus.expirationCheckDate"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('expirationCheckDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_statusCheckDate">Status Check Date</label>
+                <div class="input-group">
+                    <input id="field_statusCheckDate" type="text" class="form-control" name="statusCheckDate" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.statusCheckDate" is-open="vm.datePickerOpenStatus.statusCheckDate"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('statusCheckDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_lastValidPing">Last Valid Ping</label>
+                <div class="input-group">
+                    <input id="field_lastValidPing" type="text" class="form-control" name="lastValidPing" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.lastValidPing" is-open="vm.datePickerOpenStatus.lastValidPing"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('lastValidPing')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_lastRconDate">Last Rcon Date</label>
+                <div class="input-group">
+                    <input id="field_lastRconDate" type="text" class="form-control" name="lastRconDate" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.lastRconDate" is-open="vm.datePickerOpenStatus.lastRconDate"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('lastRconDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_lastGameUpdate">Last Game Update</label>
+                <div class="input-group">
+                    <input id="field_lastGameUpdate" type="text" class="form-control" name="lastGameUpdate" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.lastGameUpdate" is-open="vm.datePickerOpenStatus.lastGameUpdate"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('lastGameUpdate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_updating">Updating</label>
+            <input type="checkbox" class="form-control" name="updating" id="field_updating"
+                    ng-model="vm.gameServer.updating"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_updateAttempts">Update Attempts</label>
+            <input type="number" class="form-control" name="updateAttempts" id="field_updateAttempts"
+                    ng-model="vm.gameServer.updateAttempts"
+                     />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_lastUpdateStart">Last Update Start</label>
+                <div class="input-group">
+                    <input id="field_lastUpdateStart" type="text" class="form-control" name="lastUpdateStart" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.lastUpdateStart" is-open="vm.datePickerOpenStatus.lastUpdateStart"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('lastUpdateStart')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_lastRconAnnounce">Last Rcon Announce</label>
+                <div class="input-group">
+                    <input id="field_lastRconAnnounce" type="text" class="form-control" name="lastRconAnnounce" datetime-picker="{{dateformat}}" ng-model="vm.gameServer.lastRconAnnounce" is-open="vm.datePickerOpenStatus.lastRconAnnounce"
+                      />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('lastRconAnnounce')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="vm.clear()">
+            <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;<span>Cancel</span>
+        </button>
+        <button type="submit" ng-disabled="editForm.$invalid || vm.isSaving" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span>&nbsp;<span>Save</span>
+        </button>
+    </div>
+</form>

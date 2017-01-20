@@ -14,7 +14,10 @@
         vm.refresh = refresh;
         vm.refreshThreadDumpData = refreshThreadDumpData;
         vm.servicesStats = {};
+        vm.gameServerStats = {};
+        vm.playerStats = {};
         vm.updatingMetrics = true;
+        vm.stateAsText = stateAsText;
 
         vm.refresh();
 
@@ -23,6 +26,36 @@
             angular.forEach(newValue.timers, function (value, key) {
                 if (key.indexOf('web.rest') !== -1 || key.indexOf('service') !== -1) {
                     vm.servicesStats[key] = value;
+                }
+            });
+
+        });
+
+        $scope.$watch('vm.metrics', function (newValue) {
+            vm.gameServerStats = {};
+            angular.forEach(newValue.timers, function (value, key) {
+                if (key.indexOf('UGC.GameServer') !== -1) {
+                    vm.gameServerStats[key] = value;
+                }
+            });
+            angular.forEach(newValue.gauges, function (value, key) {
+                if (key.indexOf('UGC.GameServer') !== -1 && key.indexOf('status') !== -1) {
+                    vm.gameServerStats[key.replace('status', 'delay')].usage = value;
+                }
+            });
+
+        });
+
+        $scope.$watch('vm.metrics', function (newValue) {
+            vm.playerStats = {};
+            angular.forEach(newValue.histograms, function (value, key) {
+                if (key.indexOf('UGC.GameServer') !== -1) {
+                    vm.playerStats[key] = value;
+                }
+            });
+            angular.forEach(newValue.gauges, function (value, key) {
+                if (key.indexOf('UGC.GameServer') !== -1 && key.indexOf('playerCount') !== -1) {
+                    vm.playerStats[key.replace('playerCount', 'players')].usage = value;
                 }
             });
 
@@ -56,6 +89,17 @@
             });
         }
 
+        function stateAsText (value) {
+            if (value === 0) {
+                return 'Healthy';
+            } else if (value === 1) {
+                return 'Alert';
+            } else if (value === 2) {
+                return 'Recovering';
+            } else {
+                return '?';
+            }
+        }
 
     }
 })();

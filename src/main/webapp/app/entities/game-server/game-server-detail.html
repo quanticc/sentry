@@ -1,0 +1,107 @@
+
+<div>
+    <h2><span>Game Server</span> {{vm.gameServer.id}}</h2>
+    <hr>
+    <jhi-alert-error></jhi-alert-error>
+    <dl class="dl-horizontal jh-entity-details">
+        <dt><span>Address</span></dt>
+        <dd>
+            <span>{{vm.gameServer.address}}</span>
+        </dd>
+        <dt><span>Name</span></dt>
+        <dd>
+            <span>{{vm.gameServer.name}}</span>
+        </dd>
+        <dt><span>Ping</span></dt>
+        <dd>
+            <span>{{vm.gameServer.ping}}</span>
+        </dd>
+        <dt><span>Players</span></dt>
+        <dd>
+            <span>{{vm.gameServer.players}}</span>
+        </dd>
+        <dt><span>Max Players</span></dt>
+        <dd>
+            <span>{{vm.gameServer.maxPlayers}}</span>
+        </dd>
+        <dt><span>Map</span></dt>
+        <dd>
+            <span>{{vm.gameServer.map}}</span>
+        </dd>
+        <dt><span>Version</span></dt>
+        <dd>
+            <span>{{vm.gameServer.version}}</span>
+        </dd>
+        <dt><span>Rcon Password</span></dt>
+        <dd>
+            <span>{{vm.gameServer.rconPassword}}</span>
+        </dd>
+        <dt><span>Sv Password</span></dt>
+        <dd>
+            <span>{{vm.gameServer.svPassword}}</span>
+        </dd>
+        <dt><span>Tv Password</span></dt>
+        <dd>
+            <span>{{vm.gameServer.tvPassword}}</span>
+        </dd>
+        <dt><span>Tv Port</span></dt>
+        <dd>
+            <span>{{vm.gameServer.tvPort}}</span>
+        </dd>
+        <dt><span>Expires</span></dt>
+        <dd>
+            <span>{{vm.gameServer.expires}}</span>
+        </dd>
+        <dt><span>Expiration Date</span></dt>
+        <dd>
+            <span>{{vm.gameServer.expirationDate | date:'medium'}}</span>
+        </dd>
+        <dt><span>Expiration Check Date</span></dt>
+        <dd>
+            <span>{{vm.gameServer.expirationCheckDate | date:'medium'}}</span>
+        </dd>
+        <dt><span>Status Check Date</span></dt>
+        <dd>
+            <span>{{vm.gameServer.statusCheckDate | date:'medium'}}</span>
+        </dd>
+        <dt><span>Last Valid Ping</span></dt>
+        <dd>
+            <span>{{vm.gameServer.lastValidPing | date:'medium'}}</span>
+        </dd>
+        <dt><span>Last Rcon Date</span></dt>
+        <dd>
+            <span>{{vm.gameServer.lastRconDate | date:'medium'}}</span>
+        </dd>
+        <dt><span>Last Game Update</span></dt>
+        <dd>
+            <span>{{vm.gameServer.lastGameUpdate | date:'medium'}}</span>
+        </dd>
+        <dt><span>Updating</span></dt>
+        <dd>
+            <span>{{vm.gameServer.updating}}</span>
+        </dd>
+        <dt><span>Update Attempts</span></dt>
+        <dd>
+            <span>{{vm.gameServer.updateAttempts}}</span>
+        </dd>
+        <dt><span>Last Update Start</span></dt>
+        <dd>
+            <span>{{vm.gameServer.lastUpdateStart | date:'medium'}}</span>
+        </dd>
+        <dt><span>Last Rcon Announce</span></dt>
+        <dd>
+            <span>{{vm.gameServer.lastRconAnnounce | date:'medium'}}</span>
+        </dd>
+    </dl>
+
+    <button type="submit"
+            ui-sref="{{ vm.previousState }}"
+            class="btn btn-info">
+        <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;<span> Back</span>
+    </button>
+
+    <button type="button" ui-sref="game-server-detail.edit({id:vm.gameServer.id})" class="btn btn-primary">
+        <span class="glyphicon glyphicon-pencil"></span>
+        <span class="hidden-xs hidden-sm"> Edit</span>
+    </button>
+</div>

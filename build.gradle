@@ -157,6 +157,11 @@ dependencies {
     compile "com.novemberain:quartz-mongodb:2.0.0"
     compile "com.rometools:rome-fetcher:1.7.1"
     compile "org.apache.httpcomponents:httpclient-cache:4.5.2"
+    compile "org.springframework.retry:spring-retry:1.2.0.RELEASE"
+    compile "org.jsoup:jsoup:1.10.2"
+    compile "io.netty:netty-all:4.1.6.Final"
+    compile "com.ibasco.agql:agql-source-query:0.1.1"
+    compile "com.ibasco.agql:agql-steam-webapi:0.1.1"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"
