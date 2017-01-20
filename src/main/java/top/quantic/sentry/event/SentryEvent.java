@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationEvent;
 
 public abstract class SentryEvent extends ApplicationEvent implements ContentSupplier {
 
-    SentryEvent(Object source) {
+    public SentryEvent(Object source) {
         super(source);
     }
 }
