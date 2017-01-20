@@ -39,7 +39,7 @@
                 }
             });
             angular.forEach(newValue.gauges, function (value, key) {
-                if (key.indexOf('UGC.GameServer') !== -1 && key.indexOf('status') !== -1) {
+                if (key.indexOf('UGC.GameServer.status') !== -1) {
                     vm.gameServerStats[key.replace('status', 'delay')].usage = value;
                 }
             });
@@ -54,8 +54,8 @@
                 }
             });
             angular.forEach(newValue.gauges, function (value, key) {
-                if (key.indexOf('UGC.GameServer') !== -1 && key.indexOf('playerCount') !== -1) {
-                    vm.playerStats[key.replace('playerCount', 'players')].usage = value;
+                if (key.indexOf('UGC.GameServer.player_count') !== -1) {
+                    vm.playerStats[key.replace('_count', 's')].usage = value;
                 }
             });
 

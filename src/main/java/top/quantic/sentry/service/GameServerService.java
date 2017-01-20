@@ -523,11 +523,11 @@ public class GameServerService implements InitializingBean {
     /////////////////////////////////
 
     private Timer getDelayTimer(GameServer server) {
-        return metricRegistry.timer("UGC.GameServer." + server.getShortName() + ".delay");
+        return metricRegistry.timer("UGC.GameServer.delay." + server.getShortName());
     }
 
     private Histogram getPlayerHistogram(GameServer server) {
-        return metricRegistry.histogram("UGC.GameServer." + server.getShortName() + ".players");
+        return metricRegistry.histogram("UGC.GameServer.players." + server.getShortName());
     }
 
     private void initServerMetrics(GameServer server) {
@@ -536,14 +536,14 @@ public class GameServerService implements InitializingBean {
     }
 
     private void initStatusGauge(GameServer server) {
-        String key = "UGC.GameServer." + server.getShortName() + ".status";
+        String key = "UGC.GameServer.status." + server.getShortName();
         if (!metricRegistry.getGauges().containsKey(key)) {
             metricRegistry.register(key, (Gauge<Integer>) () -> getStatusTracker(server).getState().ordinal());
         }
     }
 
     private void initPlayerGauge(GameServer server) {
-        String key = "UGC.GameServer." + server.getShortName() + ".playerCount";
+        String key = "UGC.GameServer.player_count." + server.getShortName();
         if (!metricRegistry.getGauges().containsKey(key)) {
             metricRegistry.register(key, (Gauge<Integer>) server::getPlayers);
         }
