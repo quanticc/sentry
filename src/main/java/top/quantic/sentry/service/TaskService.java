@@ -25,8 +25,7 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.JobKey.jobKey;
 import static org.quartz.TriggerBuilder.newTrigger;
-import static top.quantic.sentry.service.util.DateUtil.humanizeCronPattern;
-import static top.quantic.sentry.service.util.DateUtil.relativeNextTriggerFromCron;
+import static top.quantic.sentry.service.util.DateUtil.*;
 
 /**
  * Service Implementation for managing Task.
@@ -127,14 +126,18 @@ public class TaskService implements InitializingBean {
         }
         if (task.getId() != null) {
             if (task.isEnabled()) {
-                log.debug("[{}] Job enabled - Next attempt {}", jobKey, relativeNextTriggerFromCron(task.getTriggers()));
+                log.debug("[{}] Job enabled - Next attempt at {} ({})", jobKey,
+                    instantToSystem(nextValidTimeFromCron(task.getTriggers())),
+                    relativeNextTriggerFromCron(task.getTriggers()));
                 scheduler.resumeJob(jobKey);
             } else {
                 log.debug("[{}] Job paused", jobKey);
                 scheduler.pauseJob(jobKey);
             }
         } else {
-            log.debug("[{}] Next trigger attempt {}", relativeNextTriggerFromCron(task.getTriggers()));
+            log.debug("[{}] Next trigger attempt at {} ({})", jobKey,
+                instantToSystem(nextValidTimeFromCron(task.getTriggers())),
+                relativeNextTriggerFromCron(task.getTriggers()));
         }
     }
 
