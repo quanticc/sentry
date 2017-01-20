@@ -20,8 +20,7 @@ public class LoggingTriggerListener implements TriggerListener {
     }
 
     public void triggerFired(Trigger trigger, JobExecutionContext context) {
-        log.info("[{}] Trigger '{}' is firing job",
-            context.getJobDetail().getKey(), trigger.getKey().getName());
+//        log.info("[{}] Trigger '{}' is firing job", context.getJobDetail().getKey(), trigger.getKey().getName());
     }
 
     public void triggerMisfired(Trigger trigger) {
@@ -33,10 +32,12 @@ public class LoggingTriggerListener implements TriggerListener {
 
     public void triggerComplete(Trigger trigger, JobExecutionContext context,
                                 Trigger.CompletedExecutionInstruction triggerInstructionCode) {
-        log.info("[{}] Trigger '{}' completed job in {}{}",
-            context.getJobDetail().getKey(), trigger.getKey().getName(),
-            humanize(Duration.ofMillis(context.getJobRunTime())),
-            (context.getResult() != null ? " with result: " + context.getResult() : ""));
+        if (context.getJobRunTime() > 1000) {
+            log.info("[{}] Trigger '{}' completed job in {}{}",
+                context.getJobDetail().getKey(), trigger.getKey().getName(),
+                humanize(Duration.ofMillis(context.getJobRunTime())),
+                (context.getResult() != null ? " with result: " + context.getResult() : ""));
+        }
     }
 
     @Override
