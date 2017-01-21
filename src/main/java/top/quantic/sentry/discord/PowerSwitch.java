@@ -15,9 +15,7 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import java.util.List;
 
 import static top.quantic.sentry.config.Constants.INSTANCE_KEY;
-import static top.quantic.sentry.discord.util.DiscordUtil.answer;
-import static top.quantic.sentry.discord.util.DiscordUtil.deleteMessage;
-import static top.quantic.sentry.discord.util.DiscordUtil.ourBotHash;
+import static top.quantic.sentry.discord.util.DiscordUtil.*;
 
 @Component
 public class PowerSwitch implements CommandSupplier {
@@ -40,11 +38,12 @@ public class PowerSwitch implements CommandSupplier {
                 String[] args = context.getArgs();
                 if (args != null && args.length >= 2) {
                     String hash = ourBotHash(message.getClient());
-                    if (args[1].equals(hash) && !args[2].equals(INSTANCE_KEY)) {
+                    // shutdown if the args match this bot but not this instance
+                    if (args[0].equals(hash) && !args[1].equals(INSTANCE_KEY)) {
                         deleteMessage(message);
                         doLogout(context);
                     }
-                } else {
+                } else if (args == null || args.length == 0) {
                     deleteMessage(message);
                     answer(message, ":wave:");
                     doLogout(context);
