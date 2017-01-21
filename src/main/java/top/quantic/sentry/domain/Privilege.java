@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -27,6 +27,9 @@ public class Privilege extends AbstractAuditingEntity implements Serializable {
     @NotNull
     @Field("role")
     private String role;
+
+    @Field("description")
+    private String description;
 
     public String getId() {
         return id;
@@ -62,6 +65,19 @@ public class Privilege extends AbstractAuditingEntity implements Serializable {
         this.role = role;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public Privilege description(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -88,6 +104,7 @@ public class Privilege extends AbstractAuditingEntity implements Serializable {
             "id=" + id +
             ", key='" + key + "'" +
             ", role='" + role + "'" +
+            ", description='" + description + "'" +
             '}';
     }
 }

@@ -117,6 +117,7 @@
                             return {
                                 key: null,
                                 role: null,
+                                description: null,
                                 id: null
                             };
                         }

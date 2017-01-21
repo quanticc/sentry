@@ -41,6 +41,9 @@ public class PrivilegeResourceIntTest {
     private static final String DEFAULT_ROLE = "AAAAAAAAAA";
     private static final String UPDATED_ROLE = "BBBBBBBBBB";
 
+    private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
+    private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
+
     @Inject
     private PrivilegeRepository privilegeRepository;
 
@@ -73,7 +76,8 @@ public class PrivilegeResourceIntTest {
     public static Privilege createEntity() {
         Privilege privilege = new Privilege()
                 .key(DEFAULT_KEY)
-                .role(DEFAULT_ROLE);
+                .role(DEFAULT_ROLE)
+                .description(DEFAULT_DESCRIPTION);
         return privilege;
     }
 
@@ -100,6 +104,7 @@ public class PrivilegeResourceIntTest {
         Privilege testPrivilege = privilegeList.get(privilegeList.size() - 1);
         assertThat(testPrivilege.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testPrivilege.getRole()).isEqualTo(DEFAULT_ROLE);
+        assertThat(testPrivilege.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
     }
 
     @Test
@@ -166,7 +171,8 @@ public class PrivilegeResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(privilege.getId())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].role").value(hasItem(DEFAULT_ROLE.toString())));
+            .andExpect(jsonPath("$.[*].role").value(hasItem(DEFAULT_ROLE.toString())))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())));
     }
 
     @Test
@@ -180,7 +186,8 @@ public class PrivilegeResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(privilege.getId()))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY.toString()))
-            .andExpect(jsonPath("$.role").value(DEFAULT_ROLE.toString()));
+            .andExpect(jsonPath("$.role").value(DEFAULT_ROLE.toString()))
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()));
     }
 
     @Test
@@ -200,7 +207,8 @@ public class PrivilegeResourceIntTest {
         Privilege updatedPrivilege = privilegeRepository.findOne(privilege.getId());
         updatedPrivilege
                 .key(UPDATED_KEY)
-                .role(UPDATED_ROLE);
+                .role(UPDATED_ROLE)
+                .description(UPDATED_DESCRIPTION);
 
         restPrivilegeMockMvc.perform(put("/api/privileges")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -213,6 +221,7 @@ public class PrivilegeResourceIntTest {
         Privilege testPrivilege = privilegeList.get(privilegeList.size() - 1);
         assertThat(testPrivilege.getKey()).isEqualTo(UPDATED_KEY);
         assertThat(testPrivilege.getRole()).isEqualTo(UPDATED_ROLE);
+        assertThat(testPrivilege.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
     }
 
     @Test
