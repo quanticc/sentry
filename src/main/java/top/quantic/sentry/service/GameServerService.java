@@ -540,12 +540,16 @@ public class GameServerService implements InitializingBean {
     // Metric collection utilities //
     /////////////////////////////////
 
+    private String getTags(GameServer server) {
+        return "[region:" + server.getShortRegion() + ",game:" + server.getShortName() + "]";
+    }
+
     private Timer getDelayTimer(GameServer server) {
-        return metricRegistry.timer("UGC.GameServer.delay." + server.getShortName());
+        return metricRegistry.timer("UGC.GameServer.delay" + getTags(server));
     }
 
     private Histogram getPlayerHistogram(GameServer server) {
-        return metricRegistry.histogram("UGC.GameServer.players." + server.getShortName());
+        return metricRegistry.histogram("UGC.GameServer.players" + getTags(server));
     }
 
     private void initServerMetrics(GameServer server) {
@@ -554,13 +558,13 @@ public class GameServerService implements InitializingBean {
     }
 
     private void registerStatusGauge(GameServer server) {
-        String key = "UGC.GameServer.status." + server.getShortName();
+        String key = "UGC.GameServer.status" + getTags(server);
         metricRegistry.remove(key);
-        metricRegistry.register(key, (Gauge<Integer>) () -> getStatusMonitor(server).getState().ordinal());
+        metricRegistry.register(key, (Gauge<Integer>) () -> getStatusMonitor(server).getHealthPercent());
     }
 
     private void registerPlayerCountGauge(GameServer server) {
-        String key = "UGC.GameServer.player_count." + server.getShortName();
+        String key = "UGC.GameServer.player_count" + getTags(server);
         metricRegistry.remove(key);
         metricRegistry.register(key, (Gauge<Integer>) server::getPlayers);
     }

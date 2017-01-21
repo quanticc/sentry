@@ -136,6 +136,10 @@ public class Monitor<T> {
         listenerList.clear();
     }
 
+    public int getHealthPercent() {
+        return (int) (determineRatio() * 100);
+    }
+
     private double determineRatio() {
         return ((double) states.stream().mapToInt(s -> healthCheck.apply(s) ? 1 : 0).sum()) / states.size();
     }

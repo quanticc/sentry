@@ -190,7 +190,11 @@
             <tbody>
             <tr ng-repeat="(k, v) in vm.gameServerStats">
                 <td>{{k}}</td>
-                <td>{{vm.stateAsText(v.usage.value)}}</td>
+                <td>
+                    <span ng-class="vm.getHealthClass(v.usage.value)">
+                        {{v.usage.value}}%
+                    </span>
+                </td>
                 <td class="text-right">{{v.count}}</td>
                 <td class="text-right">{{v.mean * 1000 | number:0}}</td>
                 <td class="text-right">{{v.min * 1000 | number:0}}</td>

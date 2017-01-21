@@ -17,7 +17,7 @@
         vm.gameServerStats = {};
         vm.playerStats = {};
         vm.updatingMetrics = true;
-        vm.stateAsText = stateAsText;
+        vm.getHealthClass = getHealthClass;
 
         vm.refresh();
 
@@ -89,15 +89,13 @@
             });
         }
 
-        function stateAsText (value) {
-            if (value === 0) {
-                return 'Healthy';
-            } else if (value === 1) {
-                return 'Alert';
-            } else if (value === 2) {
-                return 'Recovering';
+        function getHealthClass(value) {
+            if (value < 50) {
+                return 'label label-danger';
+            } else if (value < 80) {
+                return 'label label-warning';
             } else {
-                return '?';
+                return 'label label-success';
             }
         }
 

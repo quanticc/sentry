@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
+import static java.lang.Integer.toHexString;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
@@ -412,8 +413,13 @@ public class GameServer extends AbstractAuditingEntity implements Serializable {
     }
 
     public String getShortName() {
-        return name == null ? toFullString() :
+        return name == null ? toHexString(hashCode()) :
             name.trim().replaceAll("(^[A-Za-z]{3})[^0-9]*([0-9]+).*", "$1$2").toLowerCase();
+    }
+
+    public String getShortRegion() {
+        return name == null ? toHexString(hashCode()) :
+            name.trim().replaceAll("(^[A-Za-z]{3}).*", "$1").toLowerCase();
     }
 
     @Override
