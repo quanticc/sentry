@@ -39,7 +39,7 @@ public class PowerSwitch implements CommandSupplier {
                 String[] args = context.getArgs();
                 if (args.length >= 1) {
                     String hash = ourBotHash(message.getClient());
-                    if (args[1].equals(hash)) {
+                    if (!args[1].equals(hash)) {
                         deleteMessage(message);
                         doLogout(context);
                     }
