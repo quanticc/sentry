@@ -39,8 +39,6 @@ public class SentryProperties {
 
         private List<String> administrators = new ArrayList<>();
         private List<String> defaultPrefixes = Lists.newArrayList("!");
-        private boolean announceReady = true;
-        private String coordinatorChannelId;
 
         public List<String> getAdministrators() {
             return administrators;
@@ -56,22 +54,6 @@ public class SentryProperties {
 
         public void setDefaultPrefixes(List<String> defaultPrefixes) {
             this.defaultPrefixes = defaultPrefixes;
-        }
-
-        public String getCoordinatorChannelId() {
-            return coordinatorChannelId;
-        }
-
-        public void setCoordinatorChannelId(String coordinatorChannelId) {
-            this.coordinatorChannelId = coordinatorChannelId;
-        }
-
-        public boolean isAnnounceReady() {
-            return announceReady;
-        }
-
-        public void setAnnounceReady(boolean announceReady) {
-            this.announceReady = announceReady;
         }
     }
 
