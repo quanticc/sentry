@@ -200,7 +200,6 @@ public class GameServerService implements InitializingBean {
 
     @Async
     public void refreshRconPasswords() {
-        log.debug("==== Refreshing RCON server passwords ====");
         // refreshing passwords of expired servers since they auto restart and change password
         long count = gameServerRepository.findMissingOrExpiredRcon().parallelStream()
             .map(this::refreshRconPassword)
