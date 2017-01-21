@@ -5,6 +5,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +15,13 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 @Configuration
 public class HttpClientConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(HttpClientConfiguration.class);
 
     @Autowired
     private SentryProperties sentryProperties;
@@ -47,9 +53,21 @@ public class HttpClientConfiguration {
             .setHeuristicCachingEnabled(true) // important!
             .build();
 
+        File cacheDir = new File(properties().getCacheDir());
+        try {
+            Files.createDirectories(cacheDir.toPath());
+        } catch (IOException e) {
+            log.warn("Could not create cache directory - using temp folder", e);
+            try {
+                cacheDir = Files.createTempDirectory("cache").toFile();
+            } catch (IOException ee) {
+                log.warn("Could not create temp cache directory", ee);
+            }
+        }
+
         return CachingHttpClients.custom()
             .setCacheConfig(cacheConfig)
-            .setCacheDir(new File(properties().getCacheDir()))
+            .setCacheDir(cacheDir)
             .setDefaultRequestConfig(requestConfig)
             .setConnectionManager(connectionManager)
             .build();
