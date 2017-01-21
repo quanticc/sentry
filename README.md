@@ -1,6 +1,6 @@
 # Sentry
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc33fe55d2454684bc537690e4cda0a1)](https://www.codacy.com/app/quanticc/sentry?utm_source=github.com&utm_medium=referral&utm_content=quanticc/sentry&utm_campaign=badger)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc33fe55d2454684bc537690e4cda0a1)](https://www.codacy.com/app/quanticc/sentry?utm_source=github.com&utm_medium=referral&utm_content=quanticc/sentry&utm_campaign=badger) [![Dependency Status](https://www.versioneye.com/user/projects/587fb1b6e25f59002c91bcd5/badge.svg)](https://www.versioneye.com/user/projects/587fb1b6e25f59002c91bcd5)
 
 This application is an assistant for [UGC League][] operations and the successor for the [ugc-bot][] project.
 Bootstrapped using [JHipster 3.12.2][] (Spring Boot + AngularJS).
