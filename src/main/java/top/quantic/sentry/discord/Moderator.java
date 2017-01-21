@@ -54,6 +54,7 @@ public class Moderator implements CommandSupplier {
                 IChannel channel = message.getChannel();
                 if (channel.isPrivate()) {
                     answerPrivately(message, "This command does not work for private messages, use `unsay`");
+                    return;
                 }
                 if (!o.has(lastSpec)
                     && !o.has(matchingSpec)

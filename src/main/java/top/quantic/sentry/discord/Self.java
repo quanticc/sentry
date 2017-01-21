@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.asList;
 import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
 public class Self implements CommandSupplier {
@@ -186,7 +187,7 @@ public class Self implements CommandSupplier {
         IDiscordClient client = message.getClient();
         IChannel c = client.getChannelByID(message.getChannel().getID());
         if (c != null) {
-            log.info("Preparing to delete last {} bot messages to channel {}", limit, c.getName());
+            log.info("Preparing to delete latest {} to channel {}", inflect(limit, "bot message"), c.getName());
             int cap = c.getMessages().getCacheCapacity();
             c.getMessages().setCacheCapacity(MessageList.UNLIMITED_CAPACITY);
             int deleted = 0;
