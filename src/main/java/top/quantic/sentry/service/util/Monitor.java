@@ -16,14 +16,14 @@ public class Monitor<T> {
 
     private volatile Function<T, Boolean> healthCheck;
     private volatile State state = State.GOOD;
-    private volatile double nominalRatio = 0.95;
+    private volatile double nominalRatio = 0.90;
 
     public Monitor(String name, int failuresToTrigger, int successesToRecover, Function<T, Boolean> healthCheck) {
         this.name = name;
         this.failuresToTrigger = failuresToTrigger;
         this.successesToRecover = successesToRecover;
         this.healthCheck = healthCheck;
-        int capacity = 2 * Math.max(failuresToTrigger, successesToRecover);
+        int capacity = 4 * Math.max(failuresToTrigger, successesToRecover);
         this.states = new ArrayBlockingQueue<>(capacity, true);
     }
 
