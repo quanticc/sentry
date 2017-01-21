@@ -1,5 +1,7 @@
 # Sentry
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc33fe55d2454684bc537690e4cda0a1)](https://www.codacy.com/app/quanticc/sentry?utm_source=github.com&utm_medium=referral&utm_content=quanticc/sentry&utm_campaign=badger)
+
 This application is an assistant for [UGC League][] operations and the successor for the [ugc-bot][] project.
 Bootstrapped using [JHipster 3.12.2][] (Spring Boot + AngularJS).
 
