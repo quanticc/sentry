@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.FlowService;
 import top.quantic.sentry.service.dto.FlowDTO;
+import top.quantic.sentry.service.util.TaskException;
 import top.quantic.sentry.web.rest.util.HeaderUtil;
 import top.quantic.sentry.web.rest.util.PaginationUtil;
 import top.quantic.sentry.web.rest.vm.DatadogEvent;
@@ -58,12 +59,20 @@ public class FlowResource {
     public ResponseEntity<FlowDTO> createFlow(@Valid @RequestBody FlowDTO flowDTO) throws URISyntaxException {
         log.debug("REST request to save Flow : {}", flowDTO);
         if (flowDTO.getId() != null) {
-            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("flow", "idexists", "A new flow cannot already have an ID")).body(null);
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("flow",
+                "idexists", "A new flow cannot already have an ID"))
+                .body(null);
         }
-        FlowDTO result = flowService.save(flowDTO);
-        return ResponseEntity.created(new URI("/api/flows/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("flow", result.getId().toString()))
-            .body(result);
+        try {
+            FlowDTO result = flowService.save(flowDTO);
+            return ResponseEntity.created(new URI("/api/flows/" + result.getId()))
+                .headers(HeaderUtil.createEntityCreationAlert("flow", result.getId()))
+                .body(result);
+        } catch (TaskException e) {
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("flow",
+                "badarg", "An event flow must have a valid event type as message"))
+                .body(null);
+        }
     }
 
     /**
@@ -83,10 +92,16 @@ public class FlowResource {
         if (flowDTO.getId() == null) {
             return createFlow(flowDTO);
         }
-        FlowDTO result = flowService.save(flowDTO);
-        return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("flow", flowDTO.getId().toString()))
-            .body(result);
+        try {
+            FlowDTO result = flowService.save(flowDTO);
+            return ResponseEntity.ok()
+                .headers(HeaderUtil.createEntityUpdateAlert("flow", flowDTO.getId()))
+                .body(result);
+        } catch (TaskException e) {
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("flow",
+                "badarg", "An event flow must have a valid event type as message"))
+                .body(null);
+        }
     }
 
     /**
@@ -138,7 +153,7 @@ public class FlowResource {
     public ResponseEntity<Void> deleteFlow(@PathVariable String id) {
         log.debug("REST request to delete Flow : {}", id);
         flowService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("flow", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("flow", id)).build();
     }
 
 }

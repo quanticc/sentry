@@ -27,6 +27,7 @@ public final class Constants {
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.97 Safari/537.36";
 
     public static final String JOBS_PACKAGE = "top.quantic.sentry.job";
+    public static final String EVENTS_PACKAGE = "top.quantic.sentry.event";
 
     public static final String INSTANCE_KEY = RandomStringUtils.randomAlphanumeric(7);
 
