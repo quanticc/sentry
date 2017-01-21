@@ -40,7 +40,6 @@ public class GameExpiryService {
         try {
             ResponseEntity<Map<String, Integer>> response = restTemplate.exchange(SERVICE_URL, GET, entity, type);
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("GameServer expiration status refreshed");
                 return response.getBody();
             }
         } catch (RestClientException e) {

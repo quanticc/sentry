@@ -365,8 +365,6 @@ public class GameServerService implements InitializingBean {
 
     @Async
     public void updateGameServers() {
-        log.debug("==== Refreshing server status ====");
-        //int latestVersion = getLatestVersion();
         // check for availability of game update from GS side
         long refreshed = gameServerRepository.findAll().parallelStream()
             .map(this::refreshStatus)
