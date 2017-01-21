@@ -148,8 +148,8 @@ public class DiscordUtil {
         }
     }
 
-    public static String ourBotHash(IDiscordClient client) {
-        return Integer.toHexString(client.getOurUser().getID().hashCode());
+    public static String ourBotId(IDiscordClient client) {
+        return client.getOurUser().getID();
     }
 
     public static void answer(IMessage to, String content) {
@@ -157,8 +157,6 @@ public class DiscordUtil {
     }
 
     public static void answer(IMessage to, String content, boolean tts) {
-        // TODO: In D4J v2.7, using RequestBuffer does not allow us to reliably retrieve the resulting IMessage
-        // if that behavior is needed, don't use this convenience method
         answerToChannel(to.getChannel(), content, tts);
     }
 

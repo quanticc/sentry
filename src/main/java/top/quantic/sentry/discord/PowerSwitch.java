@@ -37,11 +37,13 @@ public class PowerSwitch implements CommandSupplier {
                 IMessage message = context.getMessage();
                 String[] args = context.getArgs();
                 if (args != null && args.length >= 2) {
-                    String hash = ourBotHash(message.getClient());
+                    String id = ourBotId(message.getClient());
                     // shutdown if the args match this bot but not this instance
-                    if (args[0].equals(hash) && !args[1].equals(INSTANCE_KEY)) {
+                    if (args[0].equals(id) && !args[1].equals(INSTANCE_KEY)) {
                         deleteMessage(message);
                         doLogout(context);
+                    } else {
+                        log.debug("Ignoring logout request - Expected args {} and anything but {}", id, INSTANCE_KEY);
                     }
                 } else if (args == null || args.length == 0) {
                     deleteMessage(message);
