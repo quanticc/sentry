@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.DiscordException;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandBuilder;
-import top.quantic.sentry.discord.command.CommandContext;
+import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.discord.core.CommandBuilder;
+import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
 
 import java.util.List;

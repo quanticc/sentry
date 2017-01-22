@@ -11,8 +11,8 @@ import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.MessageList;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandBuilder;
+import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
 
 import java.time.ZoneId;

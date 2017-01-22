@@ -1,6 +1,6 @@
 package top.quantic.sentry.discord.module;
 
-import top.quantic.sentry.discord.command.Command;
+import top.quantic.sentry.discord.core.Command;
 
 import java.util.List;
 

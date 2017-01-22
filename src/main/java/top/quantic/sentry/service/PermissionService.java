@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sx.blah.discord.handle.obj.IMessage;
-import top.quantic.sentry.discord.command.Command;
+import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.domain.Permission;
 import top.quantic.sentry.domain.Privilege;
 import top.quantic.sentry.domain.enumeration.PermissionType;

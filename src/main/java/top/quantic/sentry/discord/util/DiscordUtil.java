@@ -9,7 +9,7 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Constants;
-import top.quantic.sentry.discord.command.Command;
+import top.quantic.sentry.discord.core.Command;
 
 import java.io.File;
 import java.io.FileNotFoundException;

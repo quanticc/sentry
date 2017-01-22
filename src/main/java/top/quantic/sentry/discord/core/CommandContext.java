@@ -1,4 +1,4 @@
-package top.quantic.sentry.discord.command;
+package top.quantic.sentry.discord.core;
 
 import joptsimple.OptionSet;
 import sx.blah.discord.handle.obj.IMessage;

@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import sx.blah.discord.api.IDiscordClient;
 import top.quantic.sentry.domain.Bot;
-import top.quantic.sentry.discord.DiscordClients;
+import top.quantic.sentry.discord.core.ClientRegistry;
 import top.quantic.sentry.service.dto.BotDTO;
 
 public abstract class BotMapperDecorator implements BotMapper {
@@ -14,12 +14,12 @@ public abstract class BotMapperDecorator implements BotMapper {
     private BotMapper delegate;
 
     @Autowired
-    private DiscordClients discordClients;
+    private ClientRegistry clientRegistry;
 
     @Override
     public BotDTO botToBotDTO(Bot bot) {
         BotDTO dto = delegate.botToBotDTO(bot);
-        IDiscordClient client = discordClients.getClients().get(bot);
+        IDiscordClient client = clientRegistry.getClients().get(bot);
         if (client != null) {
             dto.setCreated(true);
             dto.setReady(client.isReady());

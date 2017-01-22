@@ -1,4 +1,4 @@
-package top.quantic.sentry.discord;
+package top.quantic.sentry.discord.core;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -14,9 +14,7 @@ import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.config.Operations;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandContext;
-import top.quantic.sentry.discord.command.CommandRegistry;
+import top.quantic.sentry.discord.Help;
 import top.quantic.sentry.discord.module.ListenerSupplier;
 import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.service.PermissionService;

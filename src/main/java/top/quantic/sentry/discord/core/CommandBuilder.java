@@ -1,4 +1,4 @@
-package top.quantic.sentry.discord.command;
+package top.quantic.sentry.discord.core;
 
 import com.google.common.collect.Sets;
 import joptsimple.OptionParser;

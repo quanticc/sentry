@@ -11,9 +11,9 @@ import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.IListener;
 import sx.blah.discord.util.DiscordException;
-import top.quantic.sentry.discord.DiscordClients;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandRegistry;
+import top.quantic.sentry.discord.core.ClientRegistry;
+import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.discord.core.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.module.DiscordSubscriber;
 import top.quantic.sentry.discord.module.ListenerSupplier;
@@ -36,19 +36,19 @@ public class BotService implements InitializingBean {
 
     private final BotMapper botMapper;
     private final BotRepository botRepository;
-    private final DiscordClients discordClients;
+    private final ClientRegistry clientRegistry;
     private final CommandRegistry commandRegistry;
     private final List<CommandSupplier> commandSuppliers;
     private final List<ListenerSupplier> listenerSuppliers;
     private final List<DiscordSubscriber> discordSubscribers;
 
     @Autowired
-    public BotService(BotMapper botMapper, BotRepository botRepository, DiscordClients discordClients,
+    public BotService(BotMapper botMapper, BotRepository botRepository, ClientRegistry clientRegistry,
                       CommandRegistry commandRegistry, List<CommandSupplier> commandSuppliers,
                       List<ListenerSupplier> listenerSuppliers, List<DiscordSubscriber> discordSubscribers) {
         this.botMapper = botMapper;
         this.botRepository = botRepository;
-        this.discordClients = discordClients;
+        this.clientRegistry = clientRegistry;
         this.commandRegistry = commandRegistry;
         this.commandSuppliers = commandSuppliers;
         this.listenerSuppliers = listenerSuppliers;
@@ -69,7 +69,7 @@ public class BotService implements InitializingBean {
 
     private IDiscordClient login(Bot bot) throws DiscordException {
         log.debug("Request to login : {}", bot);
-        if (discordClients.getClients().containsKey(bot)) {
+        if (clientRegistry.getClients().containsKey(bot)) {
             throw new IllegalStateException("Bot is already logged in");
         }
         IDiscordClient client = new ClientBuilder()
@@ -78,7 +78,7 @@ public class BotService implements InitializingBean {
             .withPingTimeout(bot.getMaxMissedPings())
             .setMaxReconnectAttempts(bot.getMaxReconnectAttempts())
             .login();
-        discordClients.getClients().put(bot, client);
+        clientRegistry.getClients().put(bot, client);
 
         for (DiscordSubscriber subscriber : discordSubscribers) {
             log.debug("[{}] Registering subscriber: {}", bot.getName(), subscriber.getClass().getSimpleName());
@@ -105,18 +105,18 @@ public class BotService implements InitializingBean {
 
     private IDiscordClient logout(Bot bot) throws DiscordException {
         log.debug("Request to logout: {}", bot);
-        if (!discordClients.getClients().containsKey(bot)) {
+        if (!clientRegistry.getClients().containsKey(bot)) {
             throw new IllegalStateException("Bot is not logged in");
         }
 
-        IDiscordClient client = discordClients.getClients().get(bot);
+        IDiscordClient client = clientRegistry.getClients().get(bot);
         if (client != null) {
             if (client.isLoggedIn()) {
                 client.logout();
             } else {
                 log.warn("Bot {} is not logged in", bot.getName());
             }
-            discordClients.getClients().remove(bot);
+            clientRegistry.getClients().remove(bot);
         }
 
         return client;
@@ -129,7 +129,7 @@ public class BotService implements InitializingBean {
         } catch (DiscordException e) {
             log.warn("Could not logout: {}", bot, e);
         }
-        discordClients.getClients().remove(bot);
+        clientRegistry.getClients().remove(bot);
     }
 
     //////////////////

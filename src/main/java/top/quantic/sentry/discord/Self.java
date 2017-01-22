@@ -12,9 +12,9 @@ import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.Status;
 import sx.blah.discord.util.*;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandBuilder;
-import top.quantic.sentry.discord.command.CommandContext;
+import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.discord.core.CommandBuilder;
+import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.service.SettingService;
 

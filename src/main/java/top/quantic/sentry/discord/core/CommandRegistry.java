@@ -1,4 +1,4 @@
-package top.quantic.sentry.discord.command;
+package top.quantic.sentry.discord.core;
 
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;

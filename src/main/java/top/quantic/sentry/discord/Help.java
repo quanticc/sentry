@@ -12,10 +12,10 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Operations;
-import top.quantic.sentry.discord.command.Command;
-import top.quantic.sentry.discord.command.CommandBuilder;
-import top.quantic.sentry.discord.command.CommandContext;
-import top.quantic.sentry.discord.command.CommandRegistry;
+import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.discord.core.CommandBuilder;
+import top.quantic.sentry.discord.core.CommandContext;
+import top.quantic.sentry.discord.core.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordHelpFormatter;
 import top.quantic.sentry.service.PermissionService;
@@ -113,11 +113,11 @@ public class Help implements CommandSupplier {
             && message.getChannel().getModifiedPermissions(message.getAuthor()).containsAll(command.getRequiredPermissions());
     }
 
-    void replyWithHelp(Command command, CommandContext context) {
+    public void replyWithHelp(Command command, CommandContext context) {
         replyWithHelp(command, context, null);
     }
 
-    void replyWithHelp(Command command, CommandContext context, String comment) {
+    public void replyWithHelp(Command command, CommandContext context, String comment) {
         StringBuilder response = new StringBuilder();
         if (comment != null) {
             response.append(comment).append("\n");
