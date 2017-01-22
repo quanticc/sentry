@@ -66,6 +66,7 @@ public class GameServerService implements InitializingBean {
     private final Map<GameServer, Integer> playerCountMap = new ConcurrentHashMap<>();
     private final LoggingMonitorListener monitorListener = new LoggingMonitorListener();
 
+    private long lastSettingsCheck = -1L;
     private int rconSayIntervalMinutes = Key.RCON_SAY_INTERVAL_MINUTES.getDefaultValue();
     private int updateAttemptsThreshold = Key.UPDATE_ATTEMPTS_ALERT_THRESHOLD.getDefaultValue();
     private int updateAttemptIntervalMinutes = Key.UPDATE_ATTEMPTS_INTERVAL_MINUTES.getDefaultValue();
@@ -736,28 +737,32 @@ public class GameServerService implements InitializingBean {
     /////////////////////////////////
 
     public void refreshSettings() {
-        rconSayIntervalMinutes = settingService.getValueFromKey(Key.RCON_SAY_INTERVAL_MINUTES);
-        updateAttemptsThreshold = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_ALERT_THRESHOLD);
-        updateAttemptIntervalMinutes = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_INTERVAL_MINUTES);
+        if (settingService.isInvalidated(lastSettingsCheck)) {
+            rconSayIntervalMinutes = settingService.getValueFromKey(Key.RCON_SAY_INTERVAL_MINUTES);
+            updateAttemptsThreshold = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_ALERT_THRESHOLD);
+            updateAttemptIntervalMinutes = settingService.getValueFromKey(Key.UPDATE_ATTEMPTS_INTERVAL_MINUTES);
 
-        int oldFailuresToTrigger = consecutiveFailuresToTrigger;
-        int oldSuccessesToRecover = consecutiveSuccessesToRecover;
+            int oldFailuresToTrigger = consecutiveFailuresToTrigger;
+            int oldSuccessesToRecover = consecutiveSuccessesToRecover;
 
-        consecutiveFailuresToTrigger = settingService.getValueFromKey(Key.CONSECUTIVE_FAILURES_TO_TRIGGER);
-        consecutiveSuccessesToRecover = settingService.getValueFromKey(Key.CONSECUTIVE_SUCCESSES_TO_RECOVER);
+            consecutiveFailuresToTrigger = settingService.getValueFromKey(Key.CONSECUTIVE_FAILURES_TO_TRIGGER);
+            consecutiveSuccessesToRecover = settingService.getValueFromKey(Key.CONSECUTIVE_SUCCESSES_TO_RECOVER);
 
-        if (oldFailuresToTrigger != consecutiveFailuresToTrigger
-            || oldSuccessesToRecover != consecutiveSuccessesToRecover) {
-            log.debug("Monitor parameters were changed, resetting all monitors");
-            serverStatusMap.clear();
-            gameServerRepository.findAll().forEach(this::registerStatusGauge);
-        }
+            if (oldFailuresToTrigger != consecutiveFailuresToTrigger
+                || oldSuccessesToRecover != consecutiveSuccessesToRecover) {
+                log.debug("Monitor parameters were changed, resetting all monitors");
+                serverStatusMap.clear();
+                gameServerRepository.findAll().forEach(this::registerStatusGauge);
+            }
 
-        int oldPingThreshold = pingThreshold;
-        pingThreshold = settingService.getValueFromKey(Key.PING_ALERT_THRESHOLD);
-        if (oldPingThreshold != pingThreshold) {
-            log.debug("Ping threshold was changed, updating all monitors");
-            serverStatusMap.values().forEach(d -> d.setHealthCheck(getStatusCheckFunction()));
+            int oldPingThreshold = pingThreshold;
+            pingThreshold = settingService.getValueFromKey(Key.PING_ALERT_THRESHOLD);
+            if (oldPingThreshold != pingThreshold) {
+                log.debug("Ping threshold was changed, updating all monitors");
+                serverStatusMap.values().forEach(d -> d.setHealthCheck(getStatusCheckFunction()));
+            }
+
+            lastSettingsCheck = settingService.getLastUpdate();
         }
     }
 

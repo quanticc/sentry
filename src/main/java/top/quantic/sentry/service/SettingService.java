@@ -37,12 +37,22 @@ public class SettingService {
     private final SettingMapper settingMapper;
     private final SentryProperties sentryProperties;
 
+    private long lastUpdate = 0L;
+
     @Autowired
     public SettingService(SettingRepository settingRepository, SettingMapper settingMapper,
                           SentryProperties sentryProperties) {
         this.settingRepository = settingRepository;
         this.settingMapper = settingMapper;
         this.sentryProperties = sentryProperties;
+    }
+
+    public boolean isInvalidated(long lastCheck) {
+        return lastUpdate != lastCheck;
+    }
+
+    public long getLastUpdate() {
+        return lastUpdate;
     }
 
     public Setting getSettingFromKey(Key<?> key) {
@@ -140,6 +150,7 @@ public class SettingService {
         log.debug("Request to save Setting : {}", settingDTO);
         Setting setting = settingMapper.settingDTOToSetting(settingDTO);
         setting = settingRepository.save(setting);
+        lastUpdate = System.currentTimeMillis();
         SettingDTO result = settingMapper.settingToSettingDTO(setting);
         return result;
     }
@@ -189,12 +200,14 @@ public class SettingService {
         setting.setKey(key);
         setting.setValue(value);
         settingRepository.save(setting);
+        lastUpdate = System.currentTimeMillis();
     }
 
     public void updateValue(Setting setting, String value) {
         log.debug("Request to update Setting : {} with value: {}", setting, value);
         setting.setValue(value);
         settingRepository.save(setting);
+        lastUpdate = System.currentTimeMillis();
     }
 
     public void createSetting(String group, String key, String value) {

@@ -12,7 +12,6 @@ import com.ibasco.agql.protocols.valve.steam.webapi.pojos.ServerUpdateStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.quantic.sentry.service.util.Key;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-public class GameQueryService implements InitializingBean, DisposableBean {
+public class GameQueryService implements DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(GameQueryService.class);
 
@@ -37,9 +36,12 @@ public class GameQueryService implements InitializingBean, DisposableBean {
     private final SettingService settingService;
     private final SourceRconClient sourceRconClient;
 
-    private volatile ServerUpdateStatus cachedVersion = null;
-    private volatile int versionCacheExpirationMinutes = 1;
-    private volatile long lastVersionCheck = 0L;
+    private ServerUpdateStatus cachedVersion = null;
+    private long lastVersionCheck = 0L;
+    private long lastSettingsCheck = -1L;
+    private int cacheRefreshIntervalMinutes = Key.CACHE_REFRESH_INTERVAL_MINUTES.getDefaultValue();
+    private int cacheExpirationIntervalMinutes = Key.CACHE_EXPIRATION_INTERVAL_MINUTES.getDefaultValue();
+    private int versionCacheExpirationMinutes = Key.VERSION_CACHE_EXPIRATION_MINUTES.getDefaultValue();
 
     @Autowired
     public GameQueryService(SteamWebApiClient steamWebApiClient, SettingService settingService) {
@@ -50,15 +52,26 @@ public class GameQueryService implements InitializingBean, DisposableBean {
         this.sourceRconClient = new SourceRconClient();
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        sourceQueryClient.setCacheRefreshInterval(Duration.ofMinutes(
-            settingService.getValueFromKey(Key.CACHE_REFRESH_INTERVAL_MINUTES)
-        ));
-        sourceQueryClient.setCacheExpiration(Duration.ofMinutes(
-            settingService.getValueFromKey(Key.CACHE_EXPIRATION_INTERVAL_MINUTES)
-        ));
-        versionCacheExpirationMinutes = settingService.getValueFromKey(Key.VERSION_CACHE_EXPIRATION_MINUTES);
+    public void refreshSettings() {
+        if (settingService.isInvalidated(lastSettingsCheck)) {
+
+            int oldCacheRefresh = cacheRefreshIntervalMinutes;
+            int oldCacheExpiration = cacheExpirationIntervalMinutes;
+
+            cacheRefreshIntervalMinutes = settingService.getValueFromKey(Key.CACHE_REFRESH_INTERVAL_MINUTES);
+            cacheExpirationIntervalMinutes = settingService.getValueFromKey(Key.CACHE_EXPIRATION_INTERVAL_MINUTES);
+            versionCacheExpirationMinutes = settingService.getValueFromKey(Key.VERSION_CACHE_EXPIRATION_MINUTES);
+
+            if (oldCacheRefresh != cacheRefreshIntervalMinutes) {
+                sourceQueryClient.setCacheRefreshInterval(Duration.ofMinutes(cacheRefreshIntervalMinutes));
+            }
+
+            if (oldCacheExpiration != cacheExpirationIntervalMinutes) {
+                sourceQueryClient.setCacheExpiration(cacheExpirationIntervalMinutes);
+            }
+
+            lastSettingsCheck = settingService.getLastUpdate();
+        }
     }
 
     // Steam Web API
@@ -69,6 +82,7 @@ public class GameQueryService implements InitializingBean, DisposableBean {
 
     public synchronized CompletableFuture<ServerUpdateStatus> getServerUpdateStatus() {
         if (cachedVersion == null || hasCachedVersionExpired()) {
+            refreshSettings();
             return steamApps.getServerUpdateStatus(DEFAULT_VERSION, APP_ID)
                 .whenComplete((status, error) -> {
                     if (status != null && status.isSuccess()) {
