@@ -355,7 +355,14 @@ public class GameServerService implements InitializingBean {
     public int getLatestVersion() {
         return gameQueryService.getServerUpdateStatus()
             .thenApply(ServerUpdateStatus::getRequiredVersion)
-            .join();
+            .exceptionally(t -> {
+                log.warn("Could not get latest version from Steam Web API", t);
+                if (gameQueryService.getCachedVersion() != null) {
+                    return gameQueryService.getCachedVersion().getRequiredVersion();
+                } else {
+                    return 0;
+                }
+            }).join();
     }
 
     public List<GameServer> findOutdatedServers() {

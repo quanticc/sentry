@@ -63,6 +63,10 @@ public class GameQueryService implements InitializingBean, DisposableBean {
 
     // Steam Web API
 
+    public ServerUpdateStatus getCachedVersion() {
+        return cachedVersion;
+    }
+
     public synchronized CompletableFuture<ServerUpdateStatus> getServerUpdateStatus() {
         if (cachedVersion == null || hasCachedVersionExpired()) {
             return steamApps.getServerUpdateStatus(DEFAULT_VERSION, APP_ID)
