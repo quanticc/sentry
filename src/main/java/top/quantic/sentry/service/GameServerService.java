@@ -63,6 +63,7 @@ public class GameServerService implements InitializingBean {
     private final SettingService settingService;
 
     private final Map<GameServer, Monitor<Integer>> serverStatusMap = new ConcurrentHashMap<>();
+    private final Map<GameServer, Integer> playerCountMap = new ConcurrentHashMap<>();
     private final LoggingMonitorListener monitorListener = new LoggingMonitorListener();
 
     private int rconSayIntervalMinutes = Key.RCON_SAY_INTERVAL_MINUTES.getDefaultValue();
@@ -441,6 +442,8 @@ public class GameServerService implements InitializingBean {
             server.setMaxPlayers(max);
             server.setVersion(checkedParseInt(versionString));
             server.setTvPort(tvPort);
+
+            playerCountMap.put(server, players);
         } catch (Exception e) {
             if (e.getCause() instanceof ReadTimeoutException) {
                 log.info("[{}] Status check timed out", server);
@@ -572,7 +575,7 @@ public class GameServerService implements InitializingBean {
     private void registerPlayerCountGauge(GameServer server) {
         String key = "UGC.GameServer.player_count" + getTags(server);
         metricRegistry.remove(key);
-        metricRegistry.register(key, (Gauge<Integer>) () -> gameServerRepository.findOne(server.getId()).getPlayers());
+        metricRegistry.register(key, (Gauge<Integer>) () -> playerCountMap.getOrDefault(server, 0));
     }
 
     private Monitor<Integer> getStatusMonitor(GameServer server) {
