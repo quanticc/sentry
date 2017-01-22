@@ -20,6 +20,7 @@ import top.quantic.sentry.domain.Subscriber;
 import top.quantic.sentry.repository.SubscriberRepository;
 import top.quantic.sentry.service.dto.SubscriberDTO;
 import top.quantic.sentry.service.mapper.SubscriberMapper;
+import top.quantic.sentry.web.rest.vm.DatadogEvent;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
 
 import java.util.List;
@@ -78,7 +79,8 @@ public class SubscriberService {
                         message.setAvatarUrl(avatarUrl);
                     }
                     try {
-                        execute(message, url);
+                        ResponseEntity<Map<String, ?>> responseEntity = execute(message, url);
+                        log.debug("[{}] Response: {}", outputChannel, responseEntity);
                     } catch (RestClientException e) {
                         log.warn("Could not execute webhook", e);
                     }
@@ -145,6 +147,37 @@ public class SubscriberService {
         return clientId.equals(entry.getKey().getId())
             || clientId.equalsIgnoreCase(entry.getKey().getName())
             || clientId.equalsIgnoreCase(entry.getValue().getOurUser().getName());
+    }
+
+    public void publish(String outputChannel, String id, DatadogEvent message) {
+        log.debug("Publishing an event message ({}) to output channel : {}", id, outputChannel);
+        subscriberRepository.findByChannelAndType(outputChannel, "DatadogEvent").stream()
+            .filter(sub -> timeFrameService.included(sub.getId()))
+            .filter(sub -> checkDuplicate(sub, id))
+            .forEach(sub -> {
+                String apiKey = (String) sub.getVariables().get("api_key");
+                if (apiKey == null) {
+                    log.warn("Subscriber did not define a Datadog API Key: {}", sub);
+                } else {
+                    try {
+                        ResponseEntity<Map<String, ?>> responseEntity = publishEvent(message, apiKey);
+                        log.debug("[{}] Response: {}", outputChannel, responseEntity);
+                    } catch (RestClientException e) {
+                        log.warn("Could not publish event", e);
+                    }
+                }
+            });
+    }
+
+    private ResponseEntity<Map<String, ?>> publishEvent(DatadogEvent event, String apiKey) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        headers.add("User-Agent", "curl");
+        return restTemplate.exchange("https://app.datadoghq.com/api/v1/events",
+            HttpMethod.POST,
+            new HttpEntity<>(event, headers),
+            new ParameterizedTypeReference<Map<String, ?>>() {
+            }, "api_key", apiKey);
     }
 
     private boolean checkDuplicate(Subscriber subscriber, String id) {

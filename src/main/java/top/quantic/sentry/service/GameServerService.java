@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.GameServer;
 import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.event.RconRefreshFailedEvent;
+import top.quantic.sentry.event.UpdateDelayedEvent;
 import top.quantic.sentry.repository.GameServerRepository;
 import top.quantic.sentry.service.dto.GameServerDTO;
 import top.quantic.sentry.service.mapper.GameServerMapper;
@@ -398,6 +399,7 @@ public class GameServerService implements InitializingBean {
                 // TODO: publish as datadog event instead
                 List<GameServer> delaying = gameServerRepository
                     .findByUpdatingIsTrueAndUpdateAttemptsGreaterThan(getUpdateAttemptsThreshold());
+                publisher.publishEvent(new UpdateDelayedEvent(getLatestVersion(), delaying));
                 if (!delaying.isEmpty()) {
                     log.debug("-- Servers delaying update --\n", delaying.stream()
                         .map(this::formatDelayed)
@@ -483,6 +485,14 @@ public class GameServerService implements InitializingBean {
             server.setUpdating(true);
             server.setUpdateAttempts(1);
             server.setLastUpdateStart(ZonedDateTime.now());
+        }
+
+        ZonedDateTime lastAvailableUpdate = gameAdminService.getLastAvailableUpdate(server.getId());
+
+        if (lastAvailableUpdate != null && lastAvailableUpdate.isBefore(server.getLastUpdateStart())) {
+            // panel might not have the version ready yet! wait for a bit
+            server.setUpdateAttempts(server.getUpdateAttempts() + 1);
+            return server;
         }
 
         // limit max update attempts per server: once per 5 minutes

@@ -2,8 +2,12 @@ package top.quantic.sentry.event;
 
 import top.quantic.sentry.domain.GameServer;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import static top.quantic.sentry.service.util.Maps.entriesToMap;
+import static top.quantic.sentry.service.util.Maps.entry;
 
 public class RconRefreshFailedEvent extends SentryEvent {
 
@@ -33,11 +37,12 @@ public class RconRefreshFailedEvent extends SentryEvent {
     @Override
     public Map<String, Object> asMap() {
         GameServer server = (GameServer) getSource();
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", server.getShortName());
-        map.put("address", server.getAddress());
-        map.put("reason", reason);
-        return map;
+        return Collections.unmodifiableMap(
+            Stream.of(
+                entry("name", server.getShortName()),
+                entry("address", server.getAddress()),
+                entry("reason", reason)
+            ).collect(entriesToMap()));
     }
 
     @Override

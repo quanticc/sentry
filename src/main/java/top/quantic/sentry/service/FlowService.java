@@ -18,8 +18,11 @@ import top.quantic.sentry.service.dto.FlowDTO;
 import top.quantic.sentry.service.mapper.FlowMapper;
 import top.quantic.sentry.service.util.TaskException;
 import top.quantic.sentry.web.rest.vm.DatadogEvent;
+import top.quantic.sentry.web.rest.vm.DatadogPayload;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,7 +65,7 @@ public class FlowService implements InitializingBean {
             .forEach(flow -> executeEventFlow(flow, event));
     }
 
-    public void executeDatadogFlowsByKey(String key, DatadogEvent event) {
+    public void executeDatadogFlowsByKey(String key, DatadogPayload event) {
         flowRepository.findByEnabledIsTrueAndInput(INBOUND_WEBHOOK).stream()
             .filter(flow -> key.equals(flow.getVariables().get("key")))
             .forEach(flow -> executeEventFlow(flow, event));
@@ -71,24 +74,60 @@ public class FlowService implements InitializingBean {
     private void executeEventFlow(Flow flow, ContentSupplier supplier) {
         log.info("Executing {} flow: {}", supplier.getClass().getSimpleName(), flow);
         String translatorType = flow.getTranslator();
-        Map<String, Object> variables = flow.getVariables();
         if (translatorType.startsWith("DiscordWebhook")) {
-            DiscordWebhook webhook = new DiscordWebhook();
-            Object username = variables.get("username");
-            Object avatarUrl = variables.get("avatarUrl");
-            if (username != null) {
-                webhook.setUsername((String) username);
-            }
-            if (avatarUrl != null) {
-                webhook.setAvatarUrl((String) avatarUrl);
-            }
-            webhook.setContent(supplier.asContent());
-            publish(flow, supplier.getContentId(), webhook);
+            publish(flow, supplier.getContentId(), asDiscordWebhook(flow, supplier));
         } else if (translatorType.startsWith("DiscordMessage")) {
             publish(flow, supplier.getContentId(), supplier.asContent());
+        } else if (translatorType.startsWith("DatadogEvent")) {
+            publish(flow, supplier.getContentId(), asDatadogEvent(flow, supplier));
         } else {
             log.warn("Unknown translator type for this flow: {}", translatorType);
         }
+    }
+
+    private DiscordWebhook asDiscordWebhook(Flow flow, ContentSupplier supplier) {
+        Map<String, Object> variables = flow.getVariables();
+        DiscordWebhook webhook = new DiscordWebhook();
+        Object username = variables.get("username");
+        Object avatarUrl = variables.get("avatarUrl");
+        if (username != null) {
+            webhook.setUsername((String) username);
+        }
+        if (avatarUrl != null) {
+            webhook.setAvatarUrl((String) avatarUrl);
+        }
+        webhook.setContent(supplier.asContent());
+        return webhook;
+    }
+
+    @SuppressWarnings("unchecked")
+    private DatadogEvent asDatadogEvent(Flow flow, ContentSupplier supplier) {
+        Map<String, Object> variables = flow.getVariables();
+        Map<String, Object> map = supplier.asMap();
+
+        String title = (String) getFromMap("title", variables, map);
+        String text = (String) getFromMap("text", variables, map);
+        String alertType = (String) getFromMap("alert_type", variables, map);
+        String aggregationKey = (String) getFromMap("aggregation_key", variables, map);
+        String priority = (String) getFromMap("priority", variables, map);
+        String host = (String) getFromMap("host", variables, map);
+        String sourceTypeName = (String) getFromMap("source_type_name", variables, map);
+        Long dateHappened = (Long) getFromMap("date_happened", variables, map);
+
+        // decorate with markdown markers if needed
+        Object markdown = getFromMap("markdown", variables, map);
+        if (markdown != null && (boolean) markdown) {
+            text = "%%%\n" + text + "\n%%%";
+        }
+
+        // combine tags
+        List<String> tags = (List<String>) variables.getOrDefault("tags", new ArrayList<String>());
+        tags.addAll((List<String>) map.getOrDefault("tags", new ArrayList<String>()));
+        return new DatadogEvent(title, text, dateHappened, priority, host, tags, alertType, aggregationKey, sourceTypeName);
+    }
+
+    private Object getFromMap(String key, Map<String, Object> first, Map<String, Object> second) {
+        return first.getOrDefault(key, second.get(key));
     }
 
     private void publish(Flow flow, String id, String content) {
@@ -97,6 +136,10 @@ public class FlowService implements InitializingBean {
 
     private void publish(Flow flow, String id, DiscordWebhook webhook) {
         subscriberService.publish(flow.getOutput(), id, webhook);
+    }
+
+    private void publish(Flow flow, String id, DatadogEvent event) {
+        subscriberService.publish(flow.getOutput(), id, event);
     }
 
     /**

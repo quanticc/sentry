@@ -2,11 +2,14 @@ package top.quantic.sentry.event;
 
 import sx.blah.discord.api.IDiscordClient;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static top.quantic.sentry.config.Constants.INSTANCE_KEY;
 import static top.quantic.sentry.discord.util.DiscordUtil.ourBotId;
+import static top.quantic.sentry.service.util.Maps.entriesToMap;
+import static top.quantic.sentry.service.util.Maps.entry;
 
 public class LogoutRequestEvent extends SentryEvent {
 
@@ -31,10 +34,11 @@ public class LogoutRequestEvent extends SentryEvent {
 
     @Override
     public Map<String, Object> asMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", getSource().getOurUser().getName());
-        map.put("botHash", ourBotId(getSource()));
-        map.put("instanceKey", INSTANCE_KEY);
-        return map;
+        return Collections.unmodifiableMap(
+            Stream.of(
+                entry("name", getSource().getOurUser().getName()),
+                entry("botHash", ourBotId(getSource())),
+                entry("instanceKey", INSTANCE_KEY)
+            ).collect(entriesToMap()));
     }
 }
