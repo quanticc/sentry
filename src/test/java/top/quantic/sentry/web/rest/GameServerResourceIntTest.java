@@ -70,9 +70,6 @@ public class GameServerResourceIntTest {
     private static final String DEFAULT_SV_PASSWORD = "AAAAAAAAAA";
     private static final String UPDATED_SV_PASSWORD = "BBBBBBBBBB";
 
-    private static final String DEFAULT_TV_PASSWORD = "AAAAAAAAAA";
-    private static final String UPDATED_TV_PASSWORD = "BBBBBBBBBB";
-
     private static final Integer DEFAULT_TV_PORT = 1;
     private static final Integer UPDATED_TV_PORT = 2;
 
@@ -155,7 +152,6 @@ public class GameServerResourceIntTest {
                 .version(DEFAULT_VERSION)
                 .rconPassword(DEFAULT_RCON_PASSWORD)
                 .svPassword(DEFAULT_SV_PASSWORD)
-                .tvPassword(DEFAULT_TV_PASSWORD)
                 .tvPort(DEFAULT_TV_PORT)
                 .expires(DEFAULT_EXPIRES)
                 .expirationDate(DEFAULT_EXPIRATION_DATE)
@@ -202,7 +198,6 @@ public class GameServerResourceIntTest {
         assertThat(testGameServer.getVersion()).isEqualTo(DEFAULT_VERSION);
         assertThat(testGameServer.getRconPassword()).isEqualTo(DEFAULT_RCON_PASSWORD);
         assertThat(testGameServer.getSvPassword()).isEqualTo(DEFAULT_SV_PASSWORD);
-        assertThat(testGameServer.getTvPassword()).isEqualTo(DEFAULT_TV_PASSWORD);
         assertThat(testGameServer.getTvPort()).isEqualTo(DEFAULT_TV_PORT);
         assertThat(testGameServer.isExpires()).isEqualTo(DEFAULT_EXPIRES);
         assertThat(testGameServer.getExpirationDate()).isEqualTo(DEFAULT_EXPIRATION_DATE);
@@ -310,7 +305,6 @@ public class GameServerResourceIntTest {
             .andExpect(jsonPath("$.[*].version").value(hasItem(DEFAULT_VERSION)))
             .andExpect(jsonPath("$.[*].rconPassword").value(hasItem(DEFAULT_RCON_PASSWORD.toString())))
             .andExpect(jsonPath("$.[*].svPassword").value(hasItem(DEFAULT_SV_PASSWORD.toString())))
-            .andExpect(jsonPath("$.[*].tvPassword").value(hasItem(DEFAULT_TV_PASSWORD.toString())))
             .andExpect(jsonPath("$.[*].tvPort").value(hasItem(DEFAULT_TV_PORT)))
             .andExpect(jsonPath("$.[*].expires").value(hasItem(DEFAULT_EXPIRES.booleanValue())))
             .andExpect(jsonPath("$.[*].expirationDate").value(hasItem(sameInstant(DEFAULT_EXPIRATION_DATE))))
@@ -344,7 +338,6 @@ public class GameServerResourceIntTest {
             .andExpect(jsonPath("$.version").value(DEFAULT_VERSION))
             .andExpect(jsonPath("$.rconPassword").value(DEFAULT_RCON_PASSWORD.toString()))
             .andExpect(jsonPath("$.svPassword").value(DEFAULT_SV_PASSWORD.toString()))
-            .andExpect(jsonPath("$.tvPassword").value(DEFAULT_TV_PASSWORD.toString()))
             .andExpect(jsonPath("$.tvPort").value(DEFAULT_TV_PORT))
             .andExpect(jsonPath("$.expires").value(DEFAULT_EXPIRES.booleanValue()))
             .andExpect(jsonPath("$.expirationDate").value(sameInstant(DEFAULT_EXPIRATION_DATE)))
@@ -384,7 +377,6 @@ public class GameServerResourceIntTest {
                 .version(UPDATED_VERSION)
                 .rconPassword(UPDATED_RCON_PASSWORD)
                 .svPassword(UPDATED_SV_PASSWORD)
-                .tvPassword(UPDATED_TV_PASSWORD)
                 .tvPort(UPDATED_TV_PORT)
                 .expires(UPDATED_EXPIRES)
                 .expirationDate(UPDATED_EXPIRATION_DATE)
@@ -417,7 +409,6 @@ public class GameServerResourceIntTest {
         assertThat(testGameServer.getVersion()).isEqualTo(UPDATED_VERSION);
         assertThat(testGameServer.getRconPassword()).isEqualTo(UPDATED_RCON_PASSWORD);
         assertThat(testGameServer.getSvPassword()).isEqualTo(UPDATED_SV_PASSWORD);
-        assertThat(testGameServer.getTvPassword()).isEqualTo(UPDATED_TV_PASSWORD);
         assertThat(testGameServer.getTvPort()).isEqualTo(UPDATED_TV_PORT);
         assertThat(testGameServer.isExpires()).isEqualTo(UPDATED_EXPIRES);
         assertThat(testGameServer.getExpirationDate()).isEqualTo(UPDATED_EXPIRATION_DATE);

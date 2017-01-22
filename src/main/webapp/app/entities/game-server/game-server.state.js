@@ -127,7 +127,6 @@
                                 version: null,
                                 rconPassword: null,
                                 svPassword: null,
-                                tvPassword: null,
                                 tvPort: null,
                                 expires: false,
                                 expirationDate: null,

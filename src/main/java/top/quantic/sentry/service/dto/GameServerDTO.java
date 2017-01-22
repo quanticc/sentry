@@ -33,8 +33,6 @@ public class GameServerDTO implements Serializable {
 
     private String svPassword;
 
-    private String tvPassword;
-
     private Integer tvPort;
 
     @NotNull
@@ -130,13 +128,6 @@ public class GameServerDTO implements Serializable {
 
     public void setSvPassword(String svPassword) {
         this.svPassword = svPassword;
-    }
-    public String getTvPassword() {
-        return tvPassword;
-    }
-
-    public void setTvPassword(String tvPassword) {
-        this.tvPassword = tvPassword;
     }
     public Integer getTvPort() {
         return tvPort;
@@ -257,7 +248,6 @@ public class GameServerDTO implements Serializable {
             ", version='" + version + "'" +
             ", rconPassword='" + rconPassword + "'" +
             ", svPassword='" + svPassword + "'" +
-            ", tvPassword='" + tvPassword + "'" +
             ", tvPort='" + tvPort + "'" +
             ", expires='" + expires + "'" +
             ", expirationDate='" + expirationDate + "'" +

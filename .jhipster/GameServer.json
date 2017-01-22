@@ -45,10 +45,6 @@
             "fieldType": "String"
         },
         {
-            "fieldName": "tvPassword",
-            "fieldType": "String"
-        },
-        {
             "fieldName": "tvPort",
             "fieldType": "Integer"
         },

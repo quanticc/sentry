@@ -54,9 +54,6 @@ public class GameServer extends AbstractAuditingEntity implements Serializable {
     @Field("sv_password")
     private String svPassword;
 
-    @Field("tv_password")
-    private String tvPassword;
-
     @Field("tv_port")
     private Integer tvPort;
 
@@ -217,19 +214,6 @@ public class GameServer extends AbstractAuditingEntity implements Serializable {
 
     public void setSvPassword(String svPassword) {
         this.svPassword = svPassword;
-    }
-
-    public String getTvPassword() {
-        return tvPassword;
-    }
-
-    public GameServer tvPassword(String tvPassword) {
-        this.tvPassword = tvPassword;
-        return this;
-    }
-
-    public void setTvPassword(String tvPassword) {
-        this.tvPassword = tvPassword;
     }
 
     public Integer getTvPort() {
@@ -446,7 +430,6 @@ public class GameServer extends AbstractAuditingEntity implements Serializable {
             ", version='" + version + "'" +
             ", rconPassword='" + rconPassword + "'" +
             ", svPassword='" + svPassword + "'" +
-            ", tvPassword='" + tvPassword + "'" +
             ", tvPort='" + tvPort + "'" +
             ", expires='" + expires + "'" +
             ", expirationDate='" + expirationDate + "'" +
