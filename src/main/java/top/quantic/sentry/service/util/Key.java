@@ -19,7 +19,7 @@ public class Key<T> {
     public static final Key<Integer> CONSECUTIVE_SUCCESSES_TO_RECOVER = key("gameServer", "consecutiveSuccessesToRecover", 4);
 
     // GameQuery
-    public static final Key<Integer> CACHE_REFRESH_INTERVAL_MINUTES = key("sourceQuery", "cacheRefreshIntervalMinutes", 5);
+    public static final Key<Integer> CACHE_REFRESH_INTERVAL_MINUTES = key("sourceQuery", "cacheRefreshIntervalMinutes", 1);
     public static final Key<Integer> CACHE_EXPIRATION_INTERVAL_MINUTES = key("sourceQuery", "cacheExpirationIntervalMinutes", 15);
     public static final Key<Integer> VERSION_CACHE_EXPIRATION_MINUTES = key("steamWebApi", "versionCacheExpirationMinutes", 1);
 
