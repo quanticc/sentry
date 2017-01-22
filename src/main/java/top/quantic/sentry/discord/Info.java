@@ -191,7 +191,9 @@ public class Info implements CommandSupplier {
                         .collect(Collectors.toList());
                     if (matching.size() == 1) {
                         IRole role = matching.get(0);
-                        builder.append(getRoleInfo(role));
+                        boolean withGuild = aware &&
+                            (channel.isPrivate() || !channel.getGuild().equals(role.getGuild()));
+                        builder.append(getRoleInfo(role, withGuild));
                     } else if (matching.size() > 1) {
                         builder.append("Multiple matches for ").append(query).append("\n")
                             .append(matching.stream()
@@ -206,7 +208,7 @@ public class Info implements CommandSupplier {
             }).build();
     }
 
-    private String getRoleInfo(IRole role) {
+    private String getRoleInfo(IRole role, boolean withGuild) {
         if (role == null) {
             return "";
         }
@@ -234,7 +236,7 @@ public class Info implements CommandSupplier {
                     .collect(Collectors.joining(", "));
         }
         result += leftPad("Permissions: ", pad) + perms + "\n```";
-        if (isEveryone) {
+        if (isEveryone || withGuild) {
             result += "\n" + getGuildInfo(role.getGuild());
         }
         return result;
