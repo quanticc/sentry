@@ -7,7 +7,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;
-import top.quantic.sentry.service.DiscordService;
+import top.quantic.sentry.discord.DiscordClients;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +17,7 @@ import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
 public class DiscordMessenger implements Job {
 
     @Autowired
-    private DiscordService discordService;
+    private DiscordClients discordClients;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -27,7 +27,7 @@ public class DiscordMessenger implements Job {
         String content = jobDataMap.getString("content");
 
         if (botId != null && channelId != null && content != null) {
-            Optional<IDiscordClient> client = discordService.getClients().entrySet().stream()
+            Optional<IDiscordClient> client = discordClients.getClients().entrySet().stream()
                 .filter(entry -> botId.equals(entry.getKey().getId())
                     || botId.equals(entry.getKey().getName())
                     || (entry.getValue().isReady() && botId.equals(entry.getValue().getOurUser().getID())))

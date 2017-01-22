@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;
+import top.quantic.sentry.discord.DiscordClients;
 import top.quantic.sentry.domain.AbstractAuditingEntity;
 import top.quantic.sentry.domain.Bot;
 import top.quantic.sentry.domain.Setting;
@@ -42,18 +43,18 @@ public class SubscriberService {
     private final SubscriberRepository subscriberRepository;
     private final SubscriberMapper subscriberMapper;
     private final TimeFrameService timeFrameService;
-    private final DiscordService discordService;
+    private final DiscordClients discordClients;
     private final SettingService settingService;
     private final RestTemplate restTemplate;
 
     @Autowired
     public SubscriberService(SubscriberRepository subscriberRepository, SubscriberMapper subscriberMapper,
-                             TimeFrameService timeFrameService, DiscordService discordService,
+                             TimeFrameService timeFrameService, DiscordClients discordClients,
                              SettingService settingService, RestTemplate restTemplate) {
         this.subscriberRepository = subscriberRepository;
         this.subscriberMapper = subscriberMapper;
         this.timeFrameService = timeFrameService;
-        this.discordService = discordService;
+        this.discordClients = discordClients;
         this.settingService = settingService;
         this.restTemplate = restTemplate;
     }
@@ -118,7 +119,7 @@ public class SubscriberService {
     }
 
     private boolean isClientReady(String clientId) {
-        boolean ready = discordService.getClients().entrySet().stream()
+        boolean ready = discordClients.getClients().entrySet().stream()
             .filter(entry -> matchesClient(clientId, entry))
             .allMatch(entry -> entry.getValue().isReady());
         if (!ready) {
@@ -128,7 +129,7 @@ public class SubscriberService {
     }
 
     private void executeMessage(String clientId, String channelId, String message) {
-        discordService.getClients().entrySet().stream()
+        discordClients.getClients().entrySet().stream()
             .filter(entry -> matchesClient(clientId, entry))
             .forEach(entry -> {
                 IChannel channel = entry.getValue().getChannelByID(channelId);
