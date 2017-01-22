@@ -565,7 +565,7 @@ public class GameServerService implements InitializingBean {
     private void registerPlayerCountGauge(GameServer server) {
         String key = "UGC.GameServer.player_count" + getTags(server);
         metricRegistry.remove(key);
-        metricRegistry.register(key, (Gauge<Integer>) server::getPlayers);
+        metricRegistry.register(key, (Gauge<Integer>) () -> gameServerRepository.findOne(server.getId()).getPlayers());
     }
 
     private Monitor<Integer> getStatusMonitor(GameServer server) {
