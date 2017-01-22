@@ -1,78 +1,51 @@
 <div>
-    <h2>Game Servers</h2>
     <jhi-alert></jhi-alert>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-xs-4 no-padding-left">
-                <button class="btn btn-primary" ui-sref="game-server.new" >
-                    <span class="glyphicon glyphicon-plus"></span>
-                    <span>
-                        Create new Game Server
-                    </span>
-                </button>
-                <button class="btn btn-info" ui-sref="game-server.refresh" >
-                    <span class="glyphicon glyphicon-refresh"></span>
-                    <span>
-                        Refresh Game Servers
-                    </span>
-                </button>
-            </div>
-        </div>
-    </div>
     <br/>
     <div class="table-responsive">
-        <table class="jh-table table table-striped">
+        <table class="jh-table table table-striped no-padding smaller-font">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.reset()">
-                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="address"><span>Address</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="ping"><span>Ping</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="address"><span>Address</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="players"><span>Players</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="maxPlayers"><span>Max Players</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="map"><span>Map</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="svPassword"><span>Password</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="expirationDate"><span>Expiration</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="lastValidPing"><span>Valid Ping</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="lastRconDate"><span>RCON</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="version"><span>Version</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="rconPassword"><span>Rcon Password</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="svPassword"><span>Sv Password</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="tvPort"><span>Tv Port</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="expires"><span>Expires</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="expirationDate"><span>Expiration Date</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="expirationCheckDate"><span>Expiration Check Date</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="statusCheckDate"><span>Status Check Date</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="lastValidPing"><span>Last Valid Ping</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="lastRconDate"><span>Last Rcon Date</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="lastGameUpdate"><span>Last Game Update</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="updating"><span>Updating</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="updateAttempts"><span>Update Attempts</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="lastUpdateStart"><span>Last Update Start</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="lastRconAnnounce"><span>Last Rcon Announce</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="updateAttempts"><span>Attempts</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="lastUpdateStart"><span>Update Started</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="lastRconAnnounce"><span>Rcon Announce</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th></th>
                 </tr>
             </thead>
             <tbody infinite-scroll="vm.loadPage(vm.page + 1)" infinite-scroll-disabled="vm.page >= vm.links['last']">
                 <tr ng-repeat="gameServer in vm.gameServers track by gameServer.id">
-                    <td><a ui-sref="game-server-detail({id:gameServer.id})">{{gameServer.id}}</a></td>
-                    <td>{{gameServer.address}}</td>
-                    <td>{{gameServer.name}}</td>
-                    <td>{{gameServer.ping}}</td>
-                    <td>{{gameServer.players}}</td>
-                    <td>{{gameServer.maxPlayers}}</td>
-                    <td>{{gameServer.map}}</td>
-                    <td>{{gameServer.version}}</td>
-                    <td>{{gameServer.rconPassword}}</td>
+                    <td>
+                        <a ng-attr-title="Last checked {{gameServer.statusCheckDate | relativeDate}}" ng-attr-href="steam://connect/{{gameServer.address}}/{{gameServer.svPassword}}">
+                            <span class="label" ng-class="vm.pingToClass(gameServer.ping)">
+                                {{vm.shortName(gameServer.name)}}
+                            </span>
+                        </a>
+                    </td>
+                    <td><a ui-sref="game-server-detail({id:gameServer.id})">{{gameServer.address}}</a></td>
+                    <td ng-class="vm.grayIfZero(gameServer.players)"><span class="fa fa-male"></span>
+                        {{gameServer.players}}/{{gameServer.maxPlayers}}{{vm.formatMap(gameServer.map)}}
+                    </td>
                     <td>{{gameServer.svPassword}}</td>
-                    <td>{{gameServer.tvPort}}</td>
-                    <td>{{gameServer.expires}}</td>
-                    <td>{{gameServer.expirationDate | date:'medium'}}</td>
-                    <td>{{gameServer.expirationCheckDate | date:'medium'}}</td>
-                    <td>{{gameServer.statusCheckDate | date:'medium'}}</td>
-                    <td>{{gameServer.lastValidPing | date:'medium'}}</td>
-                    <td>{{gameServer.lastRconDate | date:'medium'}}</td>
-                    <td>{{gameServer.lastGameUpdate | date:'medium'}}</td>
-                    <td>{{gameServer.updating}}</td>
+                    <td ng-class="vm.grayIfFalse(gameServer.expires)" ng-attr-title="Last checked {{gameServer.expirationCheckDate | relativeDate}}">{{gameServer.expirationDate | relativeDate}}</td>
+                    <td>{{gameServer.lastValidPing | relativeDate}}</td>
+                    <td ng-attr-title="Last updated {{gameServer.lastRconDate | relativeDate}}">{{gameServer.rconPassword}}</td>
+                    <td ng-attr-title="Last updated {{gameServer.lastGameUpdate | relativeDate}}">v{{gameServer.version}}</td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(gameServer.updating)">
+                            {{vm.prettyBoolText(gameServer.updating)}}
+                        </span>
+                    </td>
                     <td>{{gameServer.updateAttempts}}</td>
-                    <td>{{gameServer.lastUpdateStart | date:'medium'}}</td>
-                    <td>{{gameServer.lastRconAnnounce | date:'medium'}}</td>
+                    <td>{{gameServer.lastUpdateStart | relativeDate}}</td>
+                    <td>{{gameServer.lastRconAnnounce | relativeDate}}</td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
                             <button type="submit"

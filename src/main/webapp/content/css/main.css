@@ -16,6 +16,22 @@ body {
     }
 }
 
+.flow {
+    float: left;
+}
+
+.gray {
+    color: gray;
+}
+
+.no-padding > tbody > tr > td {
+    padding: 0;
+}
+
+.smaller-font {
+    font-size: 13px;
+}
+
 /* ==========================================================================
 Hide ng-cloak on page load, https://docs.angularjs.org/api/ng/directive/ngCloak
 ========================================================================== */

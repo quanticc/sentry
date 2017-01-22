@@ -11,6 +11,8 @@
         // disable debug data on prod profile to improve performance
         $compileProvider.debugInfoEnabled(DEBUG_INFO_ENABLED);
 
+        $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|steam|ftp|mailto|chrome-extension):/);
+
         /*
         If you wish to debug an application with this information
         then you should open up a debug console in the browser

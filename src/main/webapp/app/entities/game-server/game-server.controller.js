@@ -17,9 +17,18 @@
         vm.links = {
             last: 0
         };
-        vm.predicate = 'id';
+        vm.predicate = 'name';
         vm.reset = reset;
         vm.reverse = true;
+
+        vm.shortName = shortName;
+        vm.pingToText = pingToText;
+        vm.grayIfZero = grayIfZero;
+        vm.formatMap = formatMap;
+        vm.pingToClass = pingToClass;
+        vm.grayIfFalse = grayIfFalse;
+        vm.prettyBoolText = prettyBoolText;
+        vm.prettyBoolClass = prettyBoolClass;
 
         loadAll();
 
@@ -31,8 +40,8 @@
             }, onSuccess, onError);
             function sort() {
                 var result = [vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc')];
-                if (vm.predicate !== 'id') {
-                    result.push('id');
+                if (vm.predicate !== 'name') {
+                    result.push('name');
                 }
                 return result;
             }
@@ -59,6 +68,66 @@
         function loadPage(page) {
             vm.page = page;
             loadAll();
+        }
+
+        function shortName(value) {
+            return value.replace(/(^[A-Za-z]{3})[^0-9]*([0-9]+).*/, "$1$2").toUpperCase();
+        }
+
+        function pingToText(ping) {
+            if (ping > 0 && ping < 1000) {
+                return 'UP';
+            } else {
+                return 'DOWN';
+            }
+        }
+
+        function grayIfZero(number) {
+            if (number > 0) {
+                return '';
+            } else {
+                return 'gray';
+            }
+        }
+
+        function formatMap(name) {
+            if (name != null && name != '') {
+                return ' @ ' + name;
+            } else {
+                return '';
+            }
+        }
+
+        function pingToClass(ping) {
+            if (ping > 0) {
+                return 'label-success';
+            } else {
+                return 'label-danger';
+            }
+        }
+
+        function grayIfFalse(flag) {
+            if (flag === true) {
+                return '';
+            } else {
+                return 'gray';
+            }
+        }
+
+        function prettyBoolText(value) {
+            if (value) {
+                return 'YES';
+            } else {
+                return 'NO';
+            }
+        }
+
+        function prettyBoolClass(value) {
+            if (value) {
+                return 'label-warning';
+            } else {
+                return 'label-info';
+            }
         }
     }
 })();
