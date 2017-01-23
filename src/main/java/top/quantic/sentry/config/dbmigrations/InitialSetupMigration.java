@@ -6,7 +6,9 @@ import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Creates the initial database setup
@@ -14,9 +16,9 @@ import java.util.*;
 @ChangeLog(order = "001")
 public class InitialSetupMigration {
 
-    private Map<String, String>[] authoritiesUser = new Map[] { new HashMap<>() };
+    private Map<String, String>[] authoritiesUser = new Map[]{new HashMap<>()};
 
-    private Map<String, String>[] authoritiesAdminAndUser = new Map[] { new HashMap<>(), new HashMap<>() };
+    private Map<String, String>[] authoritiesAdminAndUser = new Map[]{new HashMap<>(), new HashMap<>()};
 
     {
         authoritiesUser[0].put("_id", "ROLE_USER");
@@ -71,7 +73,8 @@ public class InitialSetupMigration {
             .get()
         );
     }
-    @ChangeSet(author = "initiator", id = "03-addSocialUserConnection", order = "03")
+
+    @ChangeSet(order = "03", author = "initiator", id = "03-addSocialUserConnection")
     public void addSocialUserConnection(DB db) {
         DBCollection socialUserConnectionCollection = db.getCollection("jhi_social_user_connection");
         socialUserConnectionCollection.createIndex(BasicDBObjectBuilder
@@ -80,6 +83,19 @@ public class InitialSetupMigration {
                 .add("provider_user_id", 1)
                 .get(),
             "user-prov-provusr-idx", true);
+    }
+
+    @ChangeSet(order = "04", author = "user", id = "04-addAuthorities-2")
+    public void addAuthorities2(DB db) {
+        DBCollection authorityCollection = db.getCollection("jhi_authority");
+        authorityCollection.insert(
+            BasicDBObjectBuilder.start()
+                .add("_id", "ROLE_MANAGER")
+                .get());
+        authorityCollection.insert(
+            BasicDBObjectBuilder.start()
+                .add("_id", "ROLE_SUPPORT")
+                .get());
     }
 
 }
