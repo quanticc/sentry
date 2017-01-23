@@ -14,6 +14,7 @@ public class SentryProperties {
     private final Http http = new Http();
     private final GameAdmin gameAdmin = new GameAdmin();
     private final GameQuery gameQuery = new GameQuery();
+    private final Twitch twitch = new Twitch();
 
     public Discord getDiscord() {
         return discord;
@@ -33,6 +34,10 @@ public class SentryProperties {
 
     public GameQuery getGameQuery() {
         return gameQuery;
+    }
+
+    public Twitch getTwitch() {
+        return twitch;
     }
 
     public static class Discord {
@@ -259,6 +264,18 @@ public class SentryProperties {
 
         public void setSteamApiKey(String steamApiKey) {
             this.steamApiKey = steamApiKey;
+        }
+    }
+
+    public static class Twitch {
+        private String clientId;
+
+        public String getClientId() {
+            return clientId;
+        }
+
+        public void setClientId(String clientId) {
+            this.clientId = clientId;
         }
     }
 

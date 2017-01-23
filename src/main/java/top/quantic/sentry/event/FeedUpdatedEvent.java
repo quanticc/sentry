@@ -2,6 +2,7 @@ package top.quantic.sentry.event;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -46,6 +47,11 @@ public class FeedUpdatedEvent extends SentryEvent {
             map.put("publishedDate", entry.getPublishedDate());
         }
         return map;
+    }
+
+    @Override
+    public EmbedObject asEmbed(Map<String, Object> dataMap) {
+        return null;
     }
 
     @Override

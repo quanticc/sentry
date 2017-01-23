@@ -1,6 +1,7 @@
 package top.quantic.sentry.service.util;
 
 import net.redhogs.cronparser.CronExpressionDescriptor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ocpsoft.prettytime.PrettyTime;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import org.ocpsoft.prettytime.units.JustNow;
@@ -23,14 +24,14 @@ public class DateUtil {
     private static final Logger log = LoggerFactory.getLogger(DateUtil.class);
 
     public static String humanize(Duration duration) {
-        return humanize(duration, false);
+        return humanize(duration, false, false);
     }
 
-    public static String humanize(Duration duration, boolean minimal) {
+    public static String humanize(Duration duration, boolean compact, boolean elide) {
         Duration abs = duration.abs();
         long totalSeconds = abs.getSeconds();
         if (totalSeconds == 0) {
-            if (minimal) {
+            if (compact) {
                 return abs.toMillis() + "ms";
             } else {
                 return inflect(abs.toMillis(), "millisecond");
@@ -40,16 +41,14 @@ public class DateUtil {
         long h = (totalSeconds % (3600 * 24)) / 3600;
         long m = (totalSeconds % 3600) / 60;
         long s = totalSeconds % 60;
-        String days = minimal ? compact(d, "d") : inflect(d, "day");
-        String hours = minimal ? compact(h, "h") : inflect(h, "hour");
-        String minutes = minimal ? compact(m, "m") : inflect(m, "minute");
-        String seconds = minimal ? compact(s, "s") : inflect(s, "second");
-        return Stream.of(days, hours, minutes, seconds)
-            .filter(str -> !str.isEmpty()).collect(Collectors.joining(minimal ? "" : ", "));
-    }
-
-    private static String compact(long value, String suffix) {
-        return (value == 0 ? "" : value + suffix);
+        String days = compact ? d + "d" : inflect(d, "day");
+        String hours = compact ? h + "h" : inflect(h, "hour");
+        String minutes = compact ? m + "m" : inflect(m, "minute");
+        String seconds = compact ? s + "s" : inflect(s, "second");
+        return Stream.of(Pair.of(d, days), Pair.of(h, hours), Pair.of(m, minutes), Pair.of(s, seconds))
+            .filter(pair -> !pair.getValue().isEmpty() && (!elide || pair.getKey() != 0))
+            .map(Pair::getValue)
+            .collect(Collectors.joining(compact ? "" : ", "));
     }
 
     public static Instant systemToInstant(LocalDateTime localDateTime) {

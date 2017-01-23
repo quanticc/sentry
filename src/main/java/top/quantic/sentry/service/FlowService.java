@@ -9,6 +9,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.domain.Flow;
 import top.quantic.sentry.event.ContentSupplier;
@@ -74,15 +75,30 @@ public class FlowService implements InitializingBean {
     private void executeEventFlow(Flow flow, ContentSupplier supplier) {
         log.info("Executing {} flow: {}", supplier.getClass().getSimpleName(), flow);
         String translatorType = flow.getTranslator();
-        if (translatorType.startsWith("DiscordWebhook")) {
-            publish(flow, supplier.getContentId(), asDiscordWebhook(flow, supplier));
-        } else if (translatorType.startsWith("DiscordMessage")) {
-            publish(flow, supplier.getContentId(), supplier.asContent());
-        } else if (translatorType.startsWith("DatadogEvent")) {
-            publish(flow, supplier.getContentId(), asDatadogEvent(flow, supplier));
-        } else {
-            log.warn("Unknown translator type for this flow: {}", translatorType);
+        switch (translatorType) {
+            case "DiscordWebhook":
+                publish(flow, supplier.getContentId(), asDiscordWebhook(flow, supplier));
+                break;
+            case "DiscordMessage":
+                publish(flow, supplier.getContentId(), supplier.asContent());
+                break;
+            case "DiscordEmbed":
+                publish(flow, supplier.getContentId(), asDiscordEmbed(flow, supplier));
+                break;
+            case "DiscordMessageEmbed":
+                publish(flow, supplier.getContentId(), supplier.asContent(), asDiscordEmbed(flow, supplier));
+                break;
+            case "DatadogEvent":
+                publish(flow, supplier.getContentId(), asDatadogEvent(flow, supplier));
+                break;
+            default:
+                log.warn("Unknown translator type for this flow: {}", translatorType);
+                break;
         }
+    }
+
+    private EmbedObject asDiscordEmbed(Flow flow, ContentSupplier supplier) {
+        return supplier.asEmbed(flow.getVariables());
     }
 
     private DiscordWebhook asDiscordWebhook(Flow flow, ContentSupplier supplier) {
@@ -140,6 +156,14 @@ public class FlowService implements InitializingBean {
 
     private void publish(Flow flow, String id, DatadogEvent event) {
         subscriberService.publish(flow.getOutput(), id, event);
+    }
+
+    private void publish(Flow flow, String id, EmbedObject event) {
+        subscriberService.publish(flow.getOutput(), id, event);
+    }
+
+    private void publish(Flow flow, String id, String content, EmbedObject event) {
+        subscriberService.publish(flow.getOutput(), id, content, event);
     }
 
     /**

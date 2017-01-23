@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.IChannel;
 import top.quantic.sentry.discord.core.ClientRegistry;
 import top.quantic.sentry.domain.AbstractAuditingEntity;
@@ -100,6 +101,46 @@ public class SubscriberService {
             });
     }
 
+    public void publish(String outputChannel, String id, String content, EmbedObject embedObject) {
+        log.debug("Publishing a discord message and embed ({}) to output channel : {}", id, outputChannel);
+        subscriberRepository.findByChannelAndType(outputChannel, "DiscordMessageEmbed").stream()
+            // only include if the subscriber has allowed this time
+            .filter(sub -> timeFrameService.included(sub.getId()))
+            // abort if one of the target clients is not ready
+            .filter(sub -> isClientReady((String) sub.getVariables().get("client")))
+            // check for duplicated messages to avoid spam
+            .filter(sub -> checkDuplicate(sub, id))
+            .forEach(sub -> {
+                String channelId = (String) sub.getVariables().get("channel");
+                String clientId = (String) sub.getVariables().get("client");
+                if (channelId == null) {
+                    log.warn("Subscriber did not define a target channel: {}", sub);
+                } else {
+                    executeMessage(clientId, channelId, content, embedObject);
+                }
+            });
+    }
+
+    public void publish(String outputChannel, String id, EmbedObject embedObject) {
+        log.debug("Publishing a discord embed ({}) to output channel : {}", id, outputChannel);
+        subscriberRepository.findByChannelAndType(outputChannel, "DiscordEmbed").stream()
+            // only include if the subscriber has allowed this time
+            .filter(sub -> timeFrameService.included(sub.getId()))
+            // abort if one of the target clients is not ready
+            .filter(sub -> isClientReady((String) sub.getVariables().get("client")))
+            // check for duplicated messages to avoid spam
+            .filter(sub -> checkDuplicate(sub, id))
+            .forEach(sub -> {
+                String channelId = (String) sub.getVariables().get("channel");
+                String clientId = (String) sub.getVariables().get("client");
+                if (channelId == null) {
+                    log.warn("Subscriber did not define a target channel: {}", sub);
+                } else {
+                    executeMessage(clientId, channelId, null, embedObject);
+                }
+            });
+    }
+
     public void publish(String outputChannel, String id, String message) {
         log.debug("Publishing a discord message ({}) to output channel : {}", id, outputChannel);
         subscriberRepository.findByChannelAndType(outputChannel, "DiscordMessage").stream()
@@ -115,7 +156,7 @@ public class SubscriberService {
                 if (channelId == null) {
                     log.warn("Subscriber did not define a target channel: {}", sub);
                 } else {
-                    executeMessage(clientId, channelId, message);
+                    executeMessage(clientId, channelId, message, null);
                 }
             });
     }
@@ -130,13 +171,13 @@ public class SubscriberService {
         return ready;
     }
 
-    private void executeMessage(String clientId, String channelId, String message) {
+    private void executeMessage(String clientId, String channelId, String content, EmbedObject embedObject) {
         clientRegistry.getClients().entrySet().stream()
             .filter(entry -> matchesClient(clientId, entry))
             .forEach(entry -> {
                 IChannel channel = entry.getValue().getChannelByID(channelId);
                 if (channel != null) {
-                    sendMessage(channel, message);
+                    sendMessage(channel, content, embedObject);
                 } else {
                     log.warn("Did not found a channel with id {} in bot {}", channelId, clientId);
                 }

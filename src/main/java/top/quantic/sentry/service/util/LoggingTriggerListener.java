@@ -35,7 +35,7 @@ public class LoggingTriggerListener implements TriggerListener {
         if (context.getJobRunTime() > 1000) {
             log.info("[{}] Trigger '{}' completed job in {}{}",
                 context.getJobDetail().getKey(), trigger.getKey().getName(),
-                humanize(Duration.ofMillis(context.getJobRunTime())),
+                humanize(Duration.ofMillis(context.getJobRunTime()), false, true),
                 (context.getResult() != null ? " with result: " + context.getResult() : ""));
         }
     }

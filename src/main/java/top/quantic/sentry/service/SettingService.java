@@ -10,16 +10,14 @@ import org.springframework.stereotype.Service;
 import sx.blah.discord.handle.obj.IMessage;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.config.SentryProperties;
+import top.quantic.sentry.domain.AbstractAuditingEntity;
 import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.repository.SettingRepository;
 import top.quantic.sentry.service.dto.SettingDTO;
 import top.quantic.sentry.service.mapper.SettingMapper;
 import top.quantic.sentry.service.util.Key;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static top.quantic.sentry.config.Constants.ANY;
@@ -136,6 +134,12 @@ public class SettingService {
         return settingRepository.findByGuildAndKey(guild, key).stream().findAny();
     }
 
+    public Optional<Setting> findMostRecentByGuildAndKey(String guild, String key) {
+        return settingRepository.findByGuildAndKey(guild, key).stream()
+            .sorted(Comparator.comparing(AbstractAuditingEntity::getLastModifiedDate).reversed())
+            .findFirst();
+    }
+
     public Optional<Setting> findOneByGlobalKey(String key) {
         return settingRepository.findByGuildAndKey(Constants.ANY, key).stream().findAny();
     }
@@ -213,5 +217,9 @@ public class SettingService {
     public void createSetting(String group, String key, String value) {
         log.debug("Request to create Setting with ({}, {}, {})", group, key, value);
         updateSetting(new Setting(), group, key, value);
+    }
+
+    public List<Setting> findByKeyStartingWith(String key) {
+        return settingRepository.findByKeyStartingWith(key);
     }
 }

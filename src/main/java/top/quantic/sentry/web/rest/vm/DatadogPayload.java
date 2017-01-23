@@ -2,6 +2,7 @@ package top.quantic.sentry.web.rest.vm;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import top.quantic.sentry.event.ContentSupplier;
 
 import java.io.Serializable;
@@ -105,6 +106,12 @@ public class DatadogPayload implements ContentSupplier, Serializable {
                 entry("body", body),
                 entry("shortBody", shorten(body))
             ).collect(entriesToMap()));
+    }
+
+    @Override
+    public EmbedObject asEmbed(Map<String, Object> variables) {
+        // TODO: Create embed
+        return null;
     }
 
     @Override

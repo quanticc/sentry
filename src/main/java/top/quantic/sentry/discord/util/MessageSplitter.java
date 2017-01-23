@@ -19,7 +19,7 @@ public class MessageSplitter {
         List<String> splits = new ArrayList<>();
         String str = message;
         int end;
-        while (!str.isEmpty()) {
+        while (str != null && !str.isEmpty()) {
             int codeBlockTags = StringUtils.countOccurrencesOf(str, "```");
             if (str.length() <= Math.max(1, maxLength - (codeBlockTags > 0 ? 4 : 0))) {
                 splits.add(str);
@@ -33,7 +33,7 @@ public class MessageSplitter {
                 str = str.substring(end);
                 int tagsAfterSplit = StringUtils.countOccurrencesOf(split, "```");
                 if (codeBlockTags > 0 && tagsAfterSplit < codeBlockTags && tagsAfterSplit % 2 != 0) {
-                    split = split + "\n```";
+                    split = split + "```";
                     str = "```\n" + str;
                 }
                 splits.add(split);

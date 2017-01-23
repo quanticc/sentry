@@ -1,6 +1,7 @@
 package top.quantic.sentry.event;
 
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 
 import java.util.Collections;
 import java.util.Map;
@@ -40,5 +41,10 @@ public class LogoutRequestEvent extends SentryEvent {
                 entry("botHash", ourBotId(getSource())),
                 entry("instanceKey", INSTANCE_KEY)
             ).collect(entriesToMap()));
+    }
+
+    @Override
+    public EmbedObject asEmbed(Map<String, Object> dataMap) {
+        return null;
     }
 }

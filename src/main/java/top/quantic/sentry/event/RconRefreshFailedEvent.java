@@ -1,5 +1,6 @@
 package top.quantic.sentry.event;
 
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import top.quantic.sentry.domain.GameServer;
 
 import java.util.Collections;
@@ -43,6 +44,11 @@ public class RconRefreshFailedEvent extends SentryEvent {
                 entry("address", server.getAddress()),
                 entry("reason", reason)
             ).collect(entriesToMap()));
+    }
+
+    @Override
+    public EmbedObject asEmbed(Map<String, Object> dataMap) {
+        return null;
     }
 
     @Override

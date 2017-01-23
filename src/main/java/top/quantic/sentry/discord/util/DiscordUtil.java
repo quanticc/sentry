@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -15,9 +16,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static top.quantic.sentry.discord.util.DiscordLimiter.acquire;
 import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 
 public class DiscordUtil {
@@ -152,6 +155,21 @@ public class DiscordUtil {
         return client.getOurUser().getID();
     }
 
+    public static StringBuilder appendOrAnswer(IMessage message, StringBuilder builder, String content) {
+        if (content != null) {
+            if (shouldSplit(builder, content)) {
+                answer(message, builder.toString());
+                builder = new StringBuilder();
+            }
+            builder.append(content);
+        }
+        return builder;
+    }
+
+    private static boolean shouldSplit(StringBuilder builder, String content) {
+        return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
+    }
+
     public static void answer(IMessage to, String content) {
         answer(to, content, false);
     }
@@ -192,7 +210,7 @@ public class DiscordUtil {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(to.getChannel(), splits.get(i), false);
+                sendMessage(to.getChannel(), splits.get(i), null, false);
             }
             sendFile(to.getChannel(), splits.get(splits.size() - 1), file);
         } else {
@@ -227,10 +245,10 @@ public class DiscordUtil {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (String split : splits) {
-                sendMessage(channel, split, false);
+                sendMessage(channel, split, null, false);
             }
         } else {
-            sendMessage(channel, content, tts);
+            sendMessage(channel, content, null, tts);
         }
     }
 
@@ -239,7 +257,7 @@ public class DiscordUtil {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(channel, splits.get(i), false);
+                sendMessage(channel, splits.get(i), null, false);
             }
             sendFile(channel, splits.get(splits.size() - 1), file);
         } else {
@@ -252,7 +270,7 @@ public class DiscordUtil {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(channel, splits.get(i), false);
+                sendMessage(channel, splits.get(i), null, false);
             }
             sendFile(channel, splits.get(splits.size() - 1), stream, fileName);
         } else {
@@ -260,18 +278,30 @@ public class DiscordUtil {
         }
     }
 
-    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content) {
-        return sendMessage(channel, content, false);
+    public static <T> CompletableFuture<RequestBuffer.RequestFuture<T>> request(IChannel channel, RequestBuffer.IRequest<T> request) {
+        return CompletableFuture.supplyAsync(() -> {
+            acquire(channel);
+            return RequestBuffer.request(request);
+        });
     }
 
-    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, boolean tts) {
-        if (content.isEmpty()) {
-            return null;
-        }
-        DiscordLimiter.acquire(channel);
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content) {
+        return sendMessage(channel, content, null, false);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, EmbedObject embedObject) {
+        return sendMessage(channel, null, embedObject, false);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, EmbedObject embedObject) {
+        return sendMessage(channel, content, embedObject, false);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, EmbedObject embedObject, boolean tts) {
+        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
-                return channel.sendMessage(content, tts);
+                return channel.sendMessage(content, embedObject, tts);
             } catch (MissingPermissionsException e) {
                 log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
                     humanize(channel), e);
@@ -285,7 +315,7 @@ public class DiscordUtil {
 
     private static void innerReply(IMessage message, String content) {
         if (!content.isEmpty()) {
-            DiscordLimiter.acquire(message);
+            acquire(message);
             RequestBuffer.request(() -> {
                 try {
                     message.reply(content);
@@ -301,7 +331,7 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, File file) {
-        DiscordLimiter.acquire(channel);
+        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendFile(content, file);
@@ -317,7 +347,7 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, InputStream stream, String fileName) {
-        DiscordLimiter.acquire(channel);
+        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendFile(content, false, stream, fileName);

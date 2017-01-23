@@ -1,5 +1,6 @@
 package top.quantic.sentry.event;
 
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import top.quantic.sentry.domain.GameServer;
 
 import java.time.Duration;
@@ -46,6 +47,11 @@ public class UpdateDelayedEvent extends SentryEvent {
         map.put("alert_type", alertType());
         map.put("aggregation_key", "game_updates");
         return map;
+    }
+
+    @Override
+    public EmbedObject asEmbed(Map<String, Object> dataMap) {
+        return null;
     }
 
     private String title() {

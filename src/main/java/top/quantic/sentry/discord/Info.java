@@ -13,7 +13,6 @@ import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
-import top.quantic.sentry.discord.util.MessageSplitter;
 import top.quantic.sentry.service.PermissionService;
 
 import java.awt.*;
@@ -29,10 +28,9 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static top.quantic.sentry.config.Operations.QUERY_ALL_GUILDS;
-import static top.quantic.sentry.discord.util.DiscordUtil.answer;
-import static top.quantic.sentry.discord.util.DiscordUtil.equalsAnyName;
-import static top.quantic.sentry.service.util.DateUtil.systemToInstant;
+import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
+import static top.quantic.sentry.service.util.DateUtil.systemToInstant;
 
 @Component
 public class Info implements CommandSupplier {
@@ -345,20 +343,5 @@ public class Info implements CommandSupplier {
             return "";
         }
         return "• " + channel.getName() + " <" + channel.getID() + ">";
-    }
-
-    private StringBuilder appendOrAnswer(IMessage message, StringBuilder builder, String content) {
-        if (content != null) {
-            if (shouldSplit(builder, content)) {
-                answer(message, builder.toString());
-                builder = new StringBuilder();
-            }
-            builder.append(content);
-        }
-        return builder;
-    }
-
-    private boolean shouldSplit(StringBuilder builder, String content) {
-        return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
     }
 }
