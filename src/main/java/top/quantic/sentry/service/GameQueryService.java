@@ -7,8 +7,12 @@ import com.ibasco.agql.protocols.valve.source.query.exceptions.RconNotYetAuthExc
 import com.ibasco.agql.protocols.valve.source.query.pojos.SourcePlayer;
 import com.ibasco.agql.protocols.valve.source.query.pojos.SourceServer;
 import com.ibasco.agql.protocols.valve.steam.webapi.SteamWebApiClient;
+import com.ibasco.agql.protocols.valve.steam.webapi.enums.VanityUrlType;
 import com.ibasco.agql.protocols.valve.steam.webapi.interfaces.SteamApps;
+import com.ibasco.agql.protocols.valve.steam.webapi.interfaces.SteamUser;
 import com.ibasco.agql.protocols.valve.steam.webapi.pojos.ServerUpdateStatus;
+import com.ibasco.agql.protocols.valve.steam.webapi.pojos.SteamBanStatus;
+import com.ibasco.agql.protocols.valve.steam.webapi.pojos.SteamPlayerProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -21,19 +25,23 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class GameQueryService implements DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(GameQueryService.class);
-
+    private static final Pattern COMMUNITY_URL = Pattern.compile("(https?://steamcommunity\\.com/)(id|profiles)/([\\w-]+)/?");
     private static final int APP_ID = 440;
     private static final int DEFAULT_VERSION = 1;
 
     private final SteamWebApiClient steamWebApiClient;
-    private final SourceQueryClient sourceQueryClient;
-    private final SteamApps steamApps;
     private final SettingService settingService;
+
+    private final SteamApps steamApps;
+    private final SteamUser steamUser;
+    private final SourceQueryClient sourceQueryClient;
     private final SourceRconClient sourceRconClient;
 
     private ServerUpdateStatus cachedVersion = null;
@@ -46,8 +54,9 @@ public class GameQueryService implements DisposableBean {
     @Autowired
     public GameQueryService(SteamWebApiClient steamWebApiClient, SettingService settingService) {
         this.steamWebApiClient = steamWebApiClient;
-        this.steamApps = new SteamApps(steamWebApiClient);
         this.settingService = settingService;
+        this.steamApps = new SteamApps(steamWebApiClient);
+        this.steamUser = new SteamUser(steamWebApiClient);
         this.sourceQueryClient = new SourceQueryClient();
         this.sourceRconClient = new SourceRconClient();
     }
@@ -74,7 +83,7 @@ public class GameQueryService implements DisposableBean {
         }
     }
 
-    // Steam Web API
+    // Steam Web API - Apps
 
     public ServerUpdateStatus getCachedVersion() {
         return cachedVersion;
@@ -101,6 +110,45 @@ public class GameQueryService implements DisposableBean {
     private boolean hasCachedVersionExpired() {
         return lastVersionCheck + 60 * versionCacheExpirationMinutes < System.currentTimeMillis();
     }
+
+    // Steam Web API - User
+
+    public CompletableFuture<SteamPlayerProfile> getPlayerProfile(Long steamId64) {
+        return steamUser.getPlayerProfile(steamId64);
+    }
+
+    public CompletableFuture<Long> getSteamId64(String key) {
+        if (key.matches("[0-9]+")) {
+            return CompletableFuture.completedFuture(Long.parseLong(key));
+        } else if (key.matches("^STEAM_[0-1]:[0-1]:[0-9]+$")) {
+            String[] tmpId = key.substring(8).split(":");
+            return CompletableFuture.completedFuture(Long.valueOf(tmpId[0]) + Long.valueOf(tmpId[1]) * 2 + 76561197960265728L);
+        } else if (key.matches("^U:[0-1]:[0-9]+$")) {
+            String[] tmpId = key.substring(2, key.length()).split(":");
+            return CompletableFuture.completedFuture(Long.valueOf(tmpId[0]) + Long.valueOf(tmpId[1]) + 76561197960265727L);
+        } else if (key.matches("^\\[U:[0-1]:[0-9]+]+$")) {
+            String[] tmpId = key.substring(3, key.length() - 1).split(":");
+            return CompletableFuture.completedFuture(Long.valueOf(tmpId[0]) + Long.valueOf(tmpId[1]) + 76561197960265727L);
+        } else {
+            Matcher matcher = COMMUNITY_URL.matcher(key);
+            if (matcher.matches()) {
+                String type = matcher.group(2);
+                String value = matcher.group(3);
+                if (type.equalsIgnoreCase("profiles")) {
+                    return CompletableFuture.completedFuture(Long.parseLong(value));
+                } else {
+                    return steamUser.getSteamIdFromVanityUrl(value, VanityUrlType.DEFAULT);
+                }
+            } else {
+                return steamUser.getSteamIdFromVanityUrl(key, VanityUrlType.DEFAULT);
+            }
+        }
+    }
+
+    public CompletableFuture<List<SteamBanStatus>> getPlayerBans(Long steamId64) {
+        return steamUser.getPlayerBans(steamId64);
+    }
+
 
     // Source Query
 
