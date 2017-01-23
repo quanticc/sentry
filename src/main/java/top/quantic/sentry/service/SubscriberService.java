@@ -40,7 +40,6 @@ import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
 public class SubscriberService {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriberService.class);
-    private static final String LAST_PUBLISHED = "lastPublished";
 
     private final SubscriberRepository subscriberRepository;
     private final SubscriberMapper subscriberMapper;
@@ -223,12 +222,12 @@ public class SubscriberService {
 
     private boolean checkDuplicate(Subscriber subscriber, String id) {
         // check if the last message published was the same as this one
-        List<Setting> settingList = settingService.findByGuildAndKey(subscriber.getChannel(), LAST_PUBLISHED).stream()
+        List<Setting> settingList = settingService.findByGuildAndKey(subscriber.getChannel(), "last-from:" + subscriber.getId()).stream()
             .sorted(nullsLast(comparing(AbstractAuditingEntity::getLastModifiedDate)))
             .collect(Collectors.toList());
         if (settingList.isEmpty()) {
             // no messages published here, record this one
-            settingService.createSetting(subscriber.getChannel(), LAST_PUBLISHED, id);
+            settingService.createSetting(subscriber.getChannel(), "last-from:" + subscriber.getId(), id);
             return true;
         } else {
             Setting mostRecent = settingList.get(0);
