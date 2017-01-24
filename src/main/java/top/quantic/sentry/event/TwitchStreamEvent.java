@@ -43,7 +43,7 @@ public class TwitchStreamEvent extends SentryEvent {
     @Override
     public String asContent(Map<String, Object> dataMap) {
         if (dataMap != null) {
-            if (isMatchingGameAndLeague(dataMap)) {
+            if (!isMatchingGameAndLeague(dataMap)) {
                 return null;
             }
         }
@@ -54,7 +54,7 @@ public class TwitchStreamEvent extends SentryEvent {
     @Override
     public EmbedObject asEmbed(Map<String, Object> dataMap) {
         if (dataMap != null) {
-            if (isMatchingGameAndLeague(dataMap)) {
+            if (!isMatchingGameAndLeague(dataMap)) {
                 return null;
             }
         }
@@ -80,7 +80,7 @@ public class TwitchStreamEvent extends SentryEvent {
     @Override
     public Map<String, Object> asMap(Map<String, Object> dataMap) {
         if (dataMap != null) {
-            if (isMatchingGameAndLeague(dataMap)) {
+            if (!isMatchingGameAndLeague(dataMap)) {
                 return null;
             }
         }
