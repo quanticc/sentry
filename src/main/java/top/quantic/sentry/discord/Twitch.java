@@ -61,11 +61,13 @@ public class Twitch implements CommandSupplier {
                 String key = "twitch." + league.replace(".", "_") + "." + div.replace(".", "_");
                 if (o.has(addSpec)) {
                     ids.forEach(id -> settingService.createSetting(guild(message), key, id));
-                    answer(message, "Added: " + ids.stream().collect(Collectors.joining(", ")));
+                    answer(message, "Added to " + (league.equals("all") ? "" : "**" + league + "** league ")
+                        + "and " + (div.equals("none") ? "" : "**" + div + "** division ") + ": "
+                        + ids.stream().collect(Collectors.joining(", ")));
                 } else if (o.has(removeSpec)) {
                     settingService.findByGuildAndKey(guild(message), key)
                         .forEach(setting -> settingService.delete(setting.getId()));
-                    answer(message, "Removed: " + ids.stream().collect(Collectors.joining(", ")));
+                    answer(message, "Removed *" + ids.stream().collect(Collectors.joining(", ")) + "*");
                 } else if (o.has(listSpec)) {
                     answer(message, "Streamers: " + settingService.findByGuildAndKey(guild(message), key).stream()
                         .map(this::streamerInfo)
@@ -75,24 +77,24 @@ public class Twitch implements CommandSupplier {
     }
 
     private String streamerInfo(Setting setting) {
-         String[] parts = setting.getKey().split("\\.");
-         String league = null;
-         String div = null;
-         if (parts.length == 3) {
-             league = parts[1];
-             div = parts[2];
-         } else if (parts.length == 2) {
-             league = parts[1];
-         }
-         String result = "**" + setting.getValue() + "**";
-         if (league != null) {
-             result += " (" + league;
-             if (div != null) {
-                 result += " " + div;
-             }
-             result += ")";
-         }
-         return result;
+        String[] parts = setting.getKey().split("\\.");
+        String league = null;
+        String div = null;
+        if (parts.length == 3) {
+            league = parts[1];
+            div = parts[2];
+        } else if (parts.length == 2) {
+            league = parts[1];
+        }
+        String result = "**" + setting.getValue() + "**";
+        if (league != null) {
+            result += " (" + league;
+            if (div != null) {
+                result += " " + div;
+            }
+            result += ")";
+        }
+        return result;
     }
 
     private String guild(IMessage message) {
