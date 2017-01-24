@@ -126,6 +126,10 @@ public class SettingService {
         return settingRepository.findByGuildAndKey(guild, key);
     }
 
+    public List<Setting> findByGuildAndKeyStartingWith(String guild, String key) {
+        return settingRepository.findByGuildAndKeyStartingWith(guild, key);
+    }
+
     public List<Setting> findByGlobalKey(String key) {
         return settingRepository.findByGuildAndKey(Constants.ANY, key);
     }
@@ -142,6 +146,10 @@ public class SettingService {
 
     public Optional<Setting> findOneByGlobalKey(String key) {
         return settingRepository.findByGuildAndKey(Constants.ANY, key).stream().findAny();
+    }
+
+    public List<Setting> findByKeyStartingWith(String key) {
+        return settingRepository.findByKeyStartingWith(key);
     }
 
     /**
@@ -217,9 +225,5 @@ public class SettingService {
     public void createSetting(String group, String key, String value) {
         log.debug("Request to create Setting with ({}, {}, {})", group, key, value);
         updateSetting(new Setting(), group, key, value);
-    }
-
-    public List<Setting> findByKeyStartingWith(String key) {
-        return settingRepository.findByKeyStartingWith(key);
     }
 }

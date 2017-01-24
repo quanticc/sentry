@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.asList;
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 
 @Component
@@ -45,7 +46,7 @@ public class Twitch implements CommandSupplier {
         OptionSpec<Void> listSpec = parser.accepts("list", "List streamers");
         OptionSpec<String> leagueSpec = parser.accepts("league", "Set the league data")
             .withRequiredArg().defaultsTo("all");
-        OptionSpec<String> divSpec = parser.accepts("div", "Set the division data")
+        OptionSpec<String> divSpec = parser.acceptsAll(asList("div", "division"), "Set the division data")
             .withRequiredArg().defaultsTo("none");
         return CommandBuilder.of("twitch")
             .describedAs("Manage twitch tracked streamers")
@@ -69,9 +70,9 @@ public class Twitch implements CommandSupplier {
                         .forEach(setting -> settingService.delete(setting.getId()));
                     answer(message, "Removed *" + ids.stream().collect(Collectors.joining(", ")) + "*");
                 } else if (o.has(listSpec)) {
-                    answer(message, "Streamers: " + settingService.findByGuildAndKey(guild(message), key).stream()
-                        .map(this::streamerInfo)
-                        .collect(Collectors.joining(", ")));
+                    answer(message,
+                        "Streamers: " + settingService.findByGuildAndKeyStartingWith(guild(message),
+                            "twitch.").stream().map(this::streamerInfo).collect(Collectors.joining(", ")));
                 }
             }).build();
     }
