@@ -13,7 +13,7 @@
             parent: 'entity',
             url: '/permission?page&sort&search',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'Permissions'
             },
             views: {
@@ -50,7 +50,7 @@
             parent: 'entity',
             url: '/permission/{id}',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'Permission'
             },
             views: {

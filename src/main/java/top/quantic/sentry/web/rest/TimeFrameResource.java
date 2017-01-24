@@ -45,7 +45,7 @@ public class TimeFrameResource {
      */
     @PostMapping("/time-frames")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<TimeFrameDTO> createTimeFrame(@Valid @RequestBody TimeFrameDTO timeFrameDTO) throws URISyntaxException {
         log.debug("REST request to save TimeFrame : {}", timeFrameDTO);
         if (timeFrameDTO.getId() != null) {
@@ -68,7 +68,7 @@ public class TimeFrameResource {
      */
     @PutMapping("/time-frames")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<TimeFrameDTO> updateTimeFrame(@Valid @RequestBody TimeFrameDTO timeFrameDTO) throws URISyntaxException {
         log.debug("REST request to update TimeFrame : {}", timeFrameDTO);
         if (timeFrameDTO.getId() == null) {
@@ -89,7 +89,7 @@ public class TimeFrameResource {
      */
     @GetMapping("/time-frames")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<TimeFrameDTO>> getAllTimeFrames(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of TimeFrames");
@@ -106,7 +106,7 @@ public class TimeFrameResource {
      */
     @GetMapping("/time-frames/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<TimeFrameDTO> getTimeFrame(@PathVariable String id) {
         log.debug("REST request to get TimeFrame : {}", id);
         TimeFrameDTO timeFrameDTO = timeFrameService.findOne(id);
@@ -125,7 +125,7 @@ public class TimeFrameResource {
      */
     @DeleteMapping("/time-frames/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<Void> deleteTimeFrame(@PathVariable String id) {
         log.debug("REST request to delete TimeFrame : {}", id);
         timeFrameService.delete(id);

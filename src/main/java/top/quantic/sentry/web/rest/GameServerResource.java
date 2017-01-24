@@ -90,7 +90,7 @@ public class GameServerResource {
      */
     @GetMapping("/game-servers")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<GameServerDTO>> getAllGameServers(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of GameServers");
@@ -107,7 +107,7 @@ public class GameServerResource {
      */
     @GetMapping("/game-servers/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<GameServerDTO> getGameServer(@PathVariable String id) {
         log.debug("REST request to get GameServer : {}", id);
         GameServerDTO gameServerDTO = gameServerService.findOne(id);
@@ -135,7 +135,7 @@ public class GameServerResource {
 
     @PostMapping("/game-servers/refresh")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<List<GameServerDTO>> refreshAllGameServers(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to refresh all GameServers");

@@ -90,7 +90,7 @@ public class PermissionResource {
      */
     @GetMapping("/permissions")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<Permission>> getAllPermissions(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Permissions");
@@ -107,7 +107,7 @@ public class PermissionResource {
      */
     @GetMapping("/permissions/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<Permission> getPermission(@PathVariable String id) {
         log.debug("REST request to get Permission : {}", id);
         Permission permission = permissionService.findOne(id);

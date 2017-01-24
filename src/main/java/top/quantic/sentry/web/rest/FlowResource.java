@@ -55,7 +55,7 @@ public class FlowResource {
      */
     @PostMapping("/flows")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<FlowDTO> createFlow(@Valid @RequestBody FlowDTO flowDTO) throws URISyntaxException {
         log.debug("REST request to save Flow : {}", flowDTO);
         if (flowDTO.getId() != null) {
@@ -86,7 +86,7 @@ public class FlowResource {
      */
     @PutMapping("/flows")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<FlowDTO> updateFlow(@Valid @RequestBody FlowDTO flowDTO) throws URISyntaxException {
         log.debug("REST request to update Flow : {}", flowDTO);
         if (flowDTO.getId() == null) {
@@ -113,7 +113,7 @@ public class FlowResource {
      */
     @GetMapping("/flows")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<FlowDTO>> getAllFlows(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Flows");
@@ -130,7 +130,7 @@ public class FlowResource {
      */
     @GetMapping("/flows/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<FlowDTO> getFlow(@PathVariable String id) {
         log.debug("REST request to get Flow : {}", id);
         FlowDTO flowDTO = flowService.findOne(id);

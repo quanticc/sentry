@@ -91,7 +91,7 @@ public class PrivilegeResource {
      */
     @GetMapping("/privileges")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<Privilege>> getAllPrivileges(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Privileges");
@@ -108,7 +108,7 @@ public class PrivilegeResource {
      */
     @GetMapping("/privileges/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<Privilege> getPrivilege(@PathVariable String id) {
         log.debug("REST request to get Privilege : {}", id);
         Privilege privilege = privilegeRepository.findOne(id);

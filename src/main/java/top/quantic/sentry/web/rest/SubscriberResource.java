@@ -45,7 +45,7 @@ public class SubscriberResource {
      */
     @PostMapping("/subscribers")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<SubscriberDTO> createSubscriber(@Valid @RequestBody SubscriberDTO subscriberDTO) throws URISyntaxException {
         log.debug("REST request to save Subscriber : {}", subscriberDTO);
         if (subscriberDTO.getId() != null) {
@@ -68,7 +68,7 @@ public class SubscriberResource {
      */
     @PutMapping("/subscribers")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<SubscriberDTO> updateSubscriber(@Valid @RequestBody SubscriberDTO subscriberDTO) throws URISyntaxException {
         log.debug("REST request to update Subscriber : {}", subscriberDTO);
         if (subscriberDTO.getId() == null) {
@@ -89,7 +89,7 @@ public class SubscriberResource {
      */
     @GetMapping("/subscribers")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<SubscriberDTO>> getAllSubscribers(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Subscribers");
@@ -106,7 +106,7 @@ public class SubscriberResource {
      */
     @GetMapping("/subscribers/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<SubscriberDTO> getSubscriber(@PathVariable String id) {
         log.debug("REST request to get Subscriber : {}", id);
         SubscriberDTO subscriberDTO = subscriberService.findOne(id);
@@ -125,7 +125,7 @@ public class SubscriberResource {
      */
     @DeleteMapping("/subscribers/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<Void> deleteSubscriber(@PathVariable String id) {
         log.debug("REST request to delete Subscriber : {}", id);
         subscriberService.delete(id);

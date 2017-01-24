@@ -13,7 +13,7 @@
             parent: 'entity',
             url: '/game-server',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'GameServers'
             },
             views: {
@@ -30,7 +30,7 @@
             parent: 'game-server',
             url: '/game-server',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_REFRESH'],
                 pageTitle: 'GameServers'
             },
             views: {
@@ -53,7 +53,7 @@
             parent: 'entity',
             url: '/game-server/{id}',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'GameServer'
             },
             views: {

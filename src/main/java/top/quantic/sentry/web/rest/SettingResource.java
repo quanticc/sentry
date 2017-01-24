@@ -45,7 +45,7 @@ public class SettingResource {
      */
     @PostMapping("/settings")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<SettingDTO> createSetting(@Valid @RequestBody SettingDTO settingDTO) throws URISyntaxException {
         log.debug("REST request to save Setting : {}", settingDTO);
         if (settingDTO.getId() != null) {
@@ -68,7 +68,7 @@ public class SettingResource {
      */
     @PutMapping("/settings")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<SettingDTO> updateSetting(@Valid @RequestBody SettingDTO settingDTO) throws URISyntaxException {
         log.debug("REST request to update Setting : {}", settingDTO);
         if (settingDTO.getId() == null) {
@@ -89,7 +89,7 @@ public class SettingResource {
      */
     @GetMapping("/settings")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<SettingDTO>> getAllSettings(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Settings");
@@ -106,7 +106,7 @@ public class SettingResource {
      */
     @GetMapping("/settings/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<SettingDTO> getSetting(@PathVariable String id) {
         log.debug("REST request to get Setting : {}", id);
         SettingDTO settingDTO = settingService.findOne(id);
@@ -125,7 +125,7 @@ public class SettingResource {
      */
     @DeleteMapping("/settings/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<Void> deleteSetting(@PathVariable String id) {
         log.debug("REST request to delete Setting : {}", id);
         settingService.delete(id);

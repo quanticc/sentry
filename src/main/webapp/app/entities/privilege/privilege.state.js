@@ -13,7 +13,7 @@
             parent: 'entity',
             url: '/privilege?page&sort&search',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'Privileges'
             },
             views: {
@@ -50,7 +50,7 @@
             parent: 'entity',
             url: '/privilege/{id}',
             data: {
-                authorities: ['ROLE_ADMIN'],
+                authorities: ['ROLE_SUPPORT'],
                 pageTitle: 'Privilege'
             },
             views: {

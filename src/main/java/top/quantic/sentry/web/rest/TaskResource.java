@@ -46,7 +46,7 @@ public class TaskResource {
      */
     @PostMapping("/tasks")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<TaskDTO> createTask(@Valid @RequestBody TaskDTO taskDTO) throws URISyntaxException {
         log.debug("REST request to save Task : {}", taskDTO);
         if (taskDTO.getId() != null) {
@@ -76,7 +76,7 @@ public class TaskResource {
      */
     @PutMapping("/tasks")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.MANAGER)
     public ResponseEntity<TaskDTO> updateTask(@Valid @RequestBody TaskDTO taskDTO) throws URISyntaxException {
         log.debug("REST request to update Task : {}", taskDTO);
         if (taskDTO.getId() == null) {
@@ -103,7 +103,7 @@ public class TaskResource {
      */
     @GetMapping("/tasks")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<TaskDTO>> getAllTasks(@ApiParam Pageable pageable)
         throws URISyntaxException {
         log.debug("REST request to get a page of Tasks");
@@ -120,7 +120,7 @@ public class TaskResource {
      */
     @GetMapping("/tasks/{id}")
     @Timed
-    @Secured(AuthoritiesConstants.ADMIN)
+    @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<TaskDTO> getTask(@PathVariable String id) {
         log.debug("REST request to get Task : {}", id);
         TaskDTO taskDTO = taskService.findOne(id);
