@@ -30,13 +30,13 @@ public class RconRefreshFailedEvent extends SentryEvent {
     }
 
     @Override
-    public String asContent() {
+    public String asContent(Map<String, Object> dataMap) {
         GameServer server = (GameServer) getSource();
         return server.toString() + " Failed to refresh RCON due to: " + reason;
     }
 
     @Override
-    public Map<String, Object> asMap() {
+    public Map<String, Object> asMap(Map<String, Object> dataMap) {
         GameServer server = (GameServer) getSource();
         return Collections.unmodifiableMap(
             Stream.of(

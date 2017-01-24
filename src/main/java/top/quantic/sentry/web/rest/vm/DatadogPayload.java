@@ -95,7 +95,7 @@ public class DatadogPayload implements ContentSupplier, Serializable {
     }
 
     @Override
-    public Map<String, Object> asMap() {
+    public Map<String, Object> asMap(Map<String, Object> dataMap) {
         return Collections.unmodifiableMap(
             Stream.of(
                 entry("id", id),
@@ -115,7 +115,7 @@ public class DatadogPayload implements ContentSupplier, Serializable {
     }
 
     @Override
-    public String asContent() {
+    public String asContent(Map<String, Object> dataMap) {
         return "**" + title + "**\n" + shorten(body);
     }
 

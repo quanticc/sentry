@@ -34,12 +34,12 @@ public class UpdateDelayedEvent extends SentryEvent {
     }
 
     @Override
-    public String asContent() {
+    public String asContent(Map<String, Object> dataMap) {
         return "**" + title() + "**\n" + body();
     }
 
     @Override
-    public Map<String, Object> asMap() {
+    public Map<String, Object> asMap(Map<String, Object> dataMap) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("title", title());
         map.put("text", body());

@@ -222,12 +222,12 @@ public class SubscriberService {
 
     private boolean checkDuplicate(Subscriber subscriber, String id) {
         // check if the last message published was the same as this one
-        List<Setting> settingList = settingService.findByGuildAndKey(subscriber.getChannel(), "last-from:" + subscriber.getId()).stream()
+        List<Setting> settingList = settingService.findByGuildAndKey(subscriber.getChannel(), "lastFrom:" + subscriber.getId()).stream()
             .sorted(nullsLast(comparing(AbstractAuditingEntity::getLastModifiedDate)))
             .collect(Collectors.toList());
         if (settingList.isEmpty()) {
             // no messages published here, record this one
-            settingService.createSetting(subscriber.getChannel(), "last-from:" + subscriber.getId(), id);
+            settingService.createSetting(subscriber.getChannel(), "lastFrom:" + subscriber.getId(), id);
             return true;
         } else {
             Setting mostRecent = settingList.get(0);

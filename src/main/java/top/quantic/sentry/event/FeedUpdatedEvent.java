@@ -34,7 +34,7 @@ public class FeedUpdatedEvent extends SentryEvent {
     }
 
     @Override
-    public Map<String, Object> asMap() {
+    public Map<String, Object> asMap(Map<String, Object> dataMap) {
         Map<String, Object> map = new LinkedHashMap<>();
         SyndEntry entry = getSource().getEntries().stream().findFirst().orElse(null);
         if (entry != null) {
@@ -55,7 +55,7 @@ public class FeedUpdatedEvent extends SentryEvent {
     }
 
     @Override
-    public String asContent() {
+    public String asContent(Map<String, Object> dataMap) {
         SyndEntry entry = getSource().getEntries().stream().findFirst().orElse(null);
         if (entry != null) {
             return entry.getTitle() + " " + formatRelative(entry.getPublishedDate().toInstant());

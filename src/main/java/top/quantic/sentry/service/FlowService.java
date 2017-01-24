@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 /**
  * Service Implementation for managing Flow.
  */
@@ -61,7 +63,7 @@ public class FlowService implements InitializingBean {
     @EventListener
     public void onSentryEvent(SentryEvent event) {
         String className = event.getClass().getSimpleName();
-        log.debug("[{}] {}", className, event.asContent());
+        log.debug("[{}] {}", className, event.asContent(null));
         flowRepository.findByEnabledIsTrueAndInputAndMessage(SENTRY_EVENT, className)
             .forEach(flow -> executeEventFlow(flow, event));
     }
@@ -80,13 +82,13 @@ public class FlowService implements InitializingBean {
                 publish(flow, supplier.getContentId(), asDiscordWebhook(flow, supplier));
                 break;
             case "DiscordMessage":
-                publish(flow, supplier.getContentId(), supplier.asContent());
+                publish(flow, supplier.getContentId(), supplier.asContent(flow.getVariables()));
                 break;
             case "DiscordEmbed":
                 publish(flow, supplier.getContentId(), asDiscordEmbed(flow, supplier));
                 break;
             case "DiscordMessageEmbed":
-                publish(flow, supplier.getContentId(), supplier.asContent(), asDiscordEmbed(flow, supplier));
+                publish(flow, supplier.getContentId(), supplier.asContent(flow.getVariables()), asDiscordEmbed(flow, supplier));
                 break;
             case "DatadogEvent":
                 publish(flow, supplier.getContentId(), asDatadogEvent(flow, supplier));
@@ -103,6 +105,8 @@ public class FlowService implements InitializingBean {
 
     private DiscordWebhook asDiscordWebhook(Flow flow, ContentSupplier supplier) {
         Map<String, Object> variables = flow.getVariables();
+        String content = supplier.asContent(variables);
+
         DiscordWebhook webhook = new DiscordWebhook();
         Object username = variables.get("username");
         Object avatarUrl = variables.get("avatarUrl");
@@ -112,14 +116,15 @@ public class FlowService implements InitializingBean {
         if (avatarUrl != null) {
             webhook.setAvatarUrl((String) avatarUrl);
         }
-        webhook.setContent(supplier.asContent());
+        webhook.setContent(content);
+        // TODO: webhook with embeds
         return webhook;
     }
 
     @SuppressWarnings("unchecked")
     private DatadogEvent asDatadogEvent(Flow flow, ContentSupplier supplier) {
         Map<String, Object> variables = flow.getVariables();
-        Map<String, Object> map = supplier.asMap();
+        Map<String, Object> map = supplier.asMap(variables);
 
         String title = (String) getFromMap("title", variables, map);
         String text = (String) getFromMap("text", variables, map);
@@ -147,23 +152,43 @@ public class FlowService implements InitializingBean {
     }
 
     private void publish(Flow flow, String id, String content) {
-        subscriberService.publish(flow.getOutput(), id, content);
+        if (isBlank(content)) {
+            log.info("[{}] Not publishing blank content to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, content);
+        }
     }
 
     private void publish(Flow flow, String id, DiscordWebhook webhook) {
-        subscriberService.publish(flow.getOutput(), id, webhook);
+        if (isBlank(webhook.getContent())) {
+            log.info("[{}] Not publishing blank webhook to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, webhook);
+        }
     }
 
     private void publish(Flow flow, String id, DatadogEvent event) {
-        subscriberService.publish(flow.getOutput(), id, event);
+        if (isBlank(event.getText()) || isBlank(event.getTitle())) {
+            log.info("[{}] Missing title and text - Not publishing event to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, event);
+        }
     }
 
-    private void publish(Flow flow, String id, EmbedObject event) {
-        subscriberService.publish(flow.getOutput(), id, event);
+    private void publish(Flow flow, String id, EmbedObject embed) {
+        if (embed == null) {
+            log.info("[{}] Not publishing null embed to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, embed);
+        }
     }
 
-    private void publish(Flow flow, String id, String content, EmbedObject event) {
-        subscriberService.publish(flow.getOutput(), id, content, event);
+    private void publish(Flow flow, String id, String content, EmbedObject embed) {
+        if (embed == null && isBlank(content)) {
+            log.info("[{}] Not publishing null and/or blank content/embed to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, content, embed);
+        }
     }
 
     /**

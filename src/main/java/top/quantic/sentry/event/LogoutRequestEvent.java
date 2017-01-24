@@ -29,12 +29,12 @@ public class LogoutRequestEvent extends SentryEvent {
     }
 
     @Override
-    public String asContent() {
+    public String asContent(Map<String, Object> dataMap) {
         return ".logout " + ourBotId(getSource()) + " " + INSTANCE_KEY;
     }
 
     @Override
-    public Map<String, Object> asMap() {
+    public Map<String, Object> asMap(Map<String, Object> dataMap) {
         return Collections.unmodifiableMap(
             Stream.of(
                 entry("name", getSource().getOurUser().getName()),

@@ -43,8 +43,10 @@ public class Twitch implements CommandSupplier {
         OptionSpec<Void> addSpec = parser.accepts("add", "Add streamers");
         OptionSpec<Void> removeSpec = parser.accepts("remove", "Remove streamers");
         OptionSpec<Void> listSpec = parser.accepts("list", "List streamers");
-        OptionSpec<String> gameSpec = parser.accepts("group", "Set group to store")
+        OptionSpec<String> leagueSpec = parser.accepts("league", "Set the league data")
             .withRequiredArg().defaultsTo("all");
+        OptionSpec<String> divSpec = parser.accepts("div", "Set the division data")
+            .withRequiredArg().defaultsTo("none");
         return CommandBuilder.of("twitch")
             .describedAs("Manage twitch tracked streamers")
             .in("Integrations")
@@ -54,20 +56,43 @@ public class Twitch implements CommandSupplier {
                 IMessage message = context.getMessage();
                 OptionSet o = context.getOptionSet();
                 List<String> ids = o.valuesOf(nonOptSpec);
-                String game = o.valueOf(gameSpec);
+                String league = o.valueOf(leagueSpec);
+                String div = o.valueOf(divSpec);
+                String key = "twitch." + league.replace(".", "_") + "." + div.replace(".", "_");
                 if (o.has(addSpec)) {
-                    ids.forEach(id -> settingService.createSetting(guild(message), "twitch." + game, id));
+                    ids.forEach(id -> settingService.createSetting(guild(message), key, id));
                     answer(message, "Added: " + ids.stream().collect(Collectors.joining(", ")));
                 } else if (o.has(removeSpec)) {
-                    settingService.findByGuildAndKey(guild(message), "twitch." + game)
+                    settingService.findByGuildAndKey(guild(message), key)
                         .forEach(setting -> settingService.delete(setting.getId()));
                     answer(message, "Removed: " + ids.stream().collect(Collectors.joining(", ")));
                 } else if (o.has(listSpec)) {
-                    answer(message, "Streamers: " + settingService.findByGuildAndKey(guild(message), "twitch." + game).stream()
-                        .map(Setting::getValue)
+                    answer(message, "Streamers: " + settingService.findByGuildAndKey(guild(message), key).stream()
+                        .map(this::streamerInfo)
                         .collect(Collectors.joining(", ")));
                 }
             }).build();
+    }
+
+    private String streamerInfo(Setting setting) {
+         String[] parts = setting.getKey().split("\\.");
+         String league = null;
+         String div = null;
+         if (parts.length == 3) {
+             league = parts[1];
+             div = parts[2];
+         } else if (parts.length == 2) {
+             league = parts[1];
+         }
+         String result = "**" + setting.getValue() + "**";
+         if (league != null) {
+             result += " (" + league;
+             if (div != null) {
+                 result += " " + div;
+             }
+             result += ")";
+         }
+         return result;
     }
 
     private String guild(IMessage message) {
@@ -76,13 +101,5 @@ public class Twitch implements CommandSupplier {
         } else {
             return message.getGuild().getID();
         }
-    }
-
-    private Setting newSetting(IMessage message, String game, String name) {
-        Setting setting = new Setting();
-
-        setting.setKey("twitch." + game);
-        setting.setValue(name);
-        return setting;
     }
 }

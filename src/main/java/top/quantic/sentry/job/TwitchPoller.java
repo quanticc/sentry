@@ -24,7 +24,9 @@ import top.quantic.sentry.web.rest.vm.TwitchStream;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -69,6 +71,7 @@ public class TwitchPoller implements Job {
                 List<Setting> subList = streamers.subList(x * batchSize, Math.min(streamers.size(), (x + 1) * batchSize));
                 String channels = subList.stream()
                     .map(Setting::getValue)
+                    .distinct()
                     .collect(Collectors.joining(","));
 
                 limiter.acquire();
@@ -89,7 +92,14 @@ public class TwitchPoller implements Job {
                         if (!wasRecentlyPublished(stream, expireMinutes)) {
                             CompletableFuture.runAsync(() -> {
                                 limiter.acquire();
-                                publisher.publishEvent(new TwitchStreamEvent(stream));
+                                TwitchStreamEvent event = new TwitchStreamEvent(stream);
+                                event.getMetadata().putAll(streamerMap(subList.stream()
+                                    .filter(setting -> stream.getChannel().getName().equals(setting.getValue()))
+                                    .distinct()
+                                    .findAny()
+                                    .orElse(null)
+                                ));
+                                publisher.publishEvent(event);
                             });
                         } else {
                             recent++;
@@ -105,6 +115,21 @@ public class TwitchPoller implements Job {
         } catch (RestClientException e) {
             log.warn("Exception while retrieving streamers", e);
         }
+    }
+
+    private Map<String, String> streamerMap(Setting setting) {
+        Map<String, String> map = new HashMap<>();
+        if (setting != null) {
+            String[] parts = setting.getKey().split("\\.");
+            if (parts.length > 1) {
+                map.put("league", parts[1]);
+            }
+            if (parts.length > 2) {
+                map.put("division", parts[2]);
+            }
+            map.put("id", setting.getValue());
+        }
+        return map;
     }
 
     private boolean wasRecentlyPublished(TwitchStream stream, int expireMinutes) {
