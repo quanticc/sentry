@@ -32,6 +32,10 @@ body {
     font-size: 13px;
 }
 
+.minimal-font {
+    font-size: 10px;
+}
+
 /* ==========================================================================
 Hide ng-cloak on page load, https://docs.angularjs.org/api/ng/directive/ngCloak
 ========================================================================== */
@@ -415,8 +419,13 @@ Social Buttons
     border-radius: 0;
 }
 
-.beepblue-bg {
-    background-color: #1062f1;
+.logo-anim {
+    filter: brightness(1) hue-rotate(0deg);
+    transition: 1s linear;
+}
+
+.logo-anim:hover {
+    filter: brightness(1.5) hue-rotate(270deg);
 }
 
 .dashboard-discord-logo {

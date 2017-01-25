@@ -7,9 +7,9 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand logo" href="#/" ng-click="vm.collapseNavbar()">
+            <a class="navbar-brand logo logo-anim" href="#/" ng-click="vm.collapseNavbar()">
                 <img class="logo-img" src="content/images/logo.png"/>
-                <span><strong>quantic</strong></span> <span class="badge beepblue-bg">.top</span>
+                <span><strong style="font-size: 20px">Sentry</strong></span>
             </a>
         </div>
         <div class="navbar-collapse" uib-collapse="vm.isNavbarCollapsed" ng-switch="vm.isAuthenticated()">
@@ -21,7 +21,7 @@
                     </a>
                 </li>
                 <!-- jhipster-needle-add-element-to-menu - JHipster will add new menu items here -->
-                <li ng-class="{active: vm.$state.includes('entity')}" ng-switch-when="true" uib-dropdown class="dropdown pointer">
+                <li ng-class="{active: vm.$state.includes('entity')}" ng-switch-when="true" has-authority="ROLE_SUPPORT" uib-dropdown class="dropdown pointer">
                     <a class="dropdown-toggle" uib-dropdown-toggle href="" id="entity-menu">
                         <span>
                             <span class="glyphicon glyphicon-th-list"></span>
@@ -33,57 +33,57 @@
                     </a>
                     <ul class="dropdown-menu" uib-dropdown-menu>
                         <li ui-sref-active="active">
-                            <a ui-sref="permission" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Permission</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
                             <a ui-sref="bot" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Bot</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="setting" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Setting</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="privilege" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Privilege</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="flow" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Flow</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="subscriber" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Subscriber</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="time-frame" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Time Frame</span>
-                            </a>
-                        </li>
-                        <li ui-sref-active="active">
-                            <a ui-sref="task" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Task</span>
+                                <span class="fa fa-rocket"></span>&nbsp;
+                                <span >Bots</span>
                             </a>
                         </li>
                         <li ui-sref-active="active">
                             <a ui-sref="game-server" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span >Game Server</span>
+                                <span class="fa fa-steam-square"></span>&nbsp;
+                                <span >GameServers</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="setting" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-cogs"></span>&nbsp;
+                                <span >Settings</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="privilege" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-key"></span>&nbsp;
+                                <span >Privileges</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="permission" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-check-square"></span>&nbsp;
+                                <span >Permissions</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="task" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-history"></span>&nbsp;
+                                <span >Scheduled Tasks</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="flow" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-exchange"></span>&nbsp;
+                                <span >Integration Flows</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="subscriber" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-bell"></span>&nbsp;
+                                <span >Subscribers</span>
+                            </a>
+                        </li>
+                        <li ui-sref-active="active">
+                            <a ui-sref="time-frame" ng-click="vm.collapseNavbar()">
+                                <span class="fa fa-calendar-check-o"></span>&nbsp;
+                                <span >Subscriber TimeFrames</span>
                             </a>
                         </li>
                         <!-- jhipster-needle-add-entity-to-menu - JHipster will add entities to the menu here -->
@@ -100,12 +100,6 @@
                         </span>
                     </a>
                     <ul class="dropdown-menu" uib-dropdown-menu>
-                        <li ui-sref-active="active">
-                            <a ui-sref="settings" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-wrench"></span>&nbsp;
-                                <span>Settings</span>
-                            </a>
-                        </li>
                         <li ui-sref-active="active">
                             <a href="" ng-click="vm.logout()" id="logout">
                                 <span class="glyphicon glyphicon-log-out"></span>&nbsp;
