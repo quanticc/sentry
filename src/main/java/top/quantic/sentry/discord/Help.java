@@ -135,7 +135,7 @@ public class Help implements CommandSupplier {
     private StringBuilder appendHelp(StringBuilder builder, Command command) {
         builder.append("• Help for **").append(command.getName()).append("**: ")
             .append(command.getDescription()).append('\n');
-        if (command.getParser() == null) {
+        if (command.getParser() != null) {
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
                 command.getParser().formatHelpWith(new DiscordHelpFormatter(140, 5));
                 command.getParser().printHelpOn(stream);
