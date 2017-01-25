@@ -5,9 +5,9 @@
         .module('sentryApp')
         .controller('GameServerController', GameServerController);
 
-    GameServerController.$inject = ['$scope', '$state', 'GameServer', 'ParseLinks', 'AlertService', 'paginationConstants'];
+    GameServerController.$inject = ['$scope', '$state', '$interval', 'GameServer', 'ParseLinks', 'AlertService', 'paginationConstants'];
 
-    function GameServerController ($scope, $state, GameServer, ParseLinks, AlertService, paginationConstants) {
+    function GameServerController ($scope, $state, $interval, GameServer, ParseLinks, AlertService, paginationConstants) {
         var vm = this;
 
         vm.gameServers = [];
@@ -31,6 +31,22 @@
         vm.prettyBoolClass = prettyBoolClass;
 
         loadAll();
+
+        vm.refresher = $interval(loadAll, 60000);
+        vm.nextRefresh = 60;
+        vm.clock = $interval(updateTime, 1000);
+
+        $scope.$on('$destroy', function() {
+            $interval.cancel(vm.refresher);
+            $interval.cancel(vm.clock);
+        });
+
+        function updateTime() {
+            if (vm.nextRefresh === 0) {
+                vm.nextRefresh = 60;
+            }
+            vm.nextRefresh--;
+        }
 
         function loadAll () {
             GameServer.query({

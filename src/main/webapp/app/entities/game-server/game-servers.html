@@ -1,6 +1,7 @@
 <div>
     <jhi-alert></jhi-alert>
     <br/>
+    <div class="alert alert-info">Refreshing in <strong>{{vm.nextRefresh}}</strong> seconds...</div>
     <div class="table-responsive">
         <table class="jh-table table table-striped no-padding smaller-font">
             <thead>
@@ -52,18 +53,6 @@
                                     ui-sref="game-server-detail({id:gameServer.id})"
                                     class="btn btn-info btn-sm">
                                 <span class="glyphicon glyphicon-eye-open"></span>
-                                <span class="hidden-xs hidden-sm"></span>
-                            </button>
-                            <button type="submit"
-                                    ui-sref="game-server.edit({id:gameServer.id})"
-                                    class="btn btn-primary btn-sm">
-                                <span class="glyphicon glyphicon-pencil"></span>
-                                <span class="hidden-xs hidden-sm"></span>
-                            </button>
-                            <button type="submit"
-                                    ui-sref="game-server.delete({id:gameServer.id})"
-                                    class="btn btn-danger btn-sm">
-                                <span class="glyphicon glyphicon-remove-circle"></span>
                                 <span class="hidden-xs hidden-sm"></span>
                             </button>
                         </div>
