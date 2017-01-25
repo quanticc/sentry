@@ -32,8 +32,8 @@ body {
     font-size: 13px;
 }
 
-.minimal-font {
-    font-size: 10px;
+.alert {
+    padding-left: 10px;
 }
 
 /* ==========================================================================
