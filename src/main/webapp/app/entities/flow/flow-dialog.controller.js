@@ -27,7 +27,7 @@
 
         function save () {
             vm.isSaving = true;
-            vm.task.variables = ParseMaps.parseToMap(vm.entries);
+            vm.flow.variables = ParseMaps.parseToMap(vm.entries);
             if (vm.flow.id !== null) {
                 Flow.update(vm.flow, onSaveSuccess, onSaveError);
             } else {

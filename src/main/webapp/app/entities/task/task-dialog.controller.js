@@ -11,7 +11,7 @@
         var vm = this;
 
         vm.task = entity;
-        vm.entries = ParseMaps.parseToEntries(vm.task.variables);
+        vm.entries = ParseMaps.parseToEntries(vm.task.dataMap);
         vm.clear = clear;
         vm.save = save;
 
@@ -25,7 +25,7 @@
 
         function save () {
             vm.isSaving = true;
-            vm.task.variables = ParseMaps.parseToMap(vm.entries);
+            vm.task.dataMap = ParseMaps.parseToMap(vm.entries);
             if (vm.task.id !== null) {
                 Task.update(vm.task, onSaveSuccess, onSaveError);
             } else {
