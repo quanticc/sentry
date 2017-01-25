@@ -11,6 +11,7 @@
         var vm = this;
 
         vm.inputTypes = ['sentryEvent', 'inboundWebhook'];
+        vm.translatorTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DiscordEmbed', 'DiscordMessageEmbed'];
         vm.flow = entity;
         vm.clear = clear;
         vm.save = save;
