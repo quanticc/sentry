@@ -2,8 +2,9 @@ package top.quantic.sentry.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  * Service Implementation for managing Bot.
  */
 @Service
-public class BotService implements InitializingBean {
+public class BotService {
 
     private final Logger log = LoggerFactory.getLogger(BotService.class);
 
@@ -53,6 +54,29 @@ public class BotService implements InitializingBean {
         this.commandSuppliers = commandSuppliers;
         this.listenerSuppliers = listenerSuppliers;
         this.discordSubscribers = discordSubscribers;
+    }
+
+    @EventListener
+    public void onApplicationReady(ApplicationReadyEvent event) {
+        autoLoginBots();
+    }
+
+    private void autoLoginBots() {
+        if (botRepository.count() == 0) {
+            log.warn("No bots in store - Please add at least one bot definition");
+        } else {
+            botRepository.findAll().stream()
+                .filter(Bot::isAutoLogin)
+                .forEach(this::checkedLogin);
+        }
+    }
+
+    private void checkedLogin(Bot bot) {
+        try {
+            login(bot);
+        } catch (DiscordException e) {
+            log.warn("Could not auto-login : " + bot.toString(), e);
+        }
     }
 
     public void login(BotDTO dto) throws DiscordException {
@@ -191,32 +215,5 @@ public class BotService implements InitializingBean {
     public void delete(String id) {
         log.debug("Request to delete Bot : {}", id);
         botRepository.delete(id);
-    }
-
-    ///////////////
-    // Lifecycle //
-    ///////////////
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        autoLoginBots();
-    }
-
-    private void autoLoginBots() {
-        if (botRepository.count() == 0) {
-            log.warn("No bots in store - Please add at least one bot definition");
-        } else {
-            botRepository.findAll().stream()
-                .filter(Bot::isAutoLogin)
-                .forEach(this::checkedLogin);
-        }
-    }
-
-    private void checkedLogin(Bot bot) {
-        try {
-            login(bot);
-        } catch (DiscordException e) {
-            log.warn("Could not auto-login : " + bot.toString(), e);
-        }
     }
 }
