@@ -25,8 +25,9 @@
                 if (to.name !== 'accessdenied') {
                     Auth.storePreviousState(to.name, params);
                 }
-                var LoginService = $injector.get('LoginService');
-                LoginService.open();
+                // Fix more bad CSRF issues
+                // var LoginService = $injector.get('LoginService');
+                // LoginService.open();
             }
             return $q.reject(response);
         }
