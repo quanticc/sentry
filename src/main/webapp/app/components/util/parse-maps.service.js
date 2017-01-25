@@ -7,7 +7,7 @@
 
     function ParseMaps() {
 
-        let service = {
+        var service = {
             parseToEntries: parseToEntries,
             parseToMap: parseToMap
         };
@@ -15,11 +15,11 @@
         return service;
 
         function parseToEntries(json) {
-            let result = [];
-            let map = flatten(json);
-            for (let key in map) {
+            var result = [];
+            var map = flatten(json);
+            for (var key in map) {
                 if (map.hasOwnProperty(key)) {
-                    let data = {};
+                    var data = {};
                     data.name = key;
                     data.value = map[key];
                     result.push(data);
@@ -30,9 +30,9 @@
 
         function parseToMap(entries) {
             var data = {};
-            for (let entry in entries) {
+            for (var entry in entries) {
                 if (entries.hasOwnProperty(entry)) {
-                    let key = entries[entry].name;
+                    var key = entries[entry].name;
                     data[key] = entries[entry].value;
                 }
             }
