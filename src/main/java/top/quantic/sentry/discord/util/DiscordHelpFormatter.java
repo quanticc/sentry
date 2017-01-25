@@ -21,12 +21,7 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
 
     @Override
     protected void addHeaders(Collection<? extends OptionDescriptor> options) {
-        addOptionRow("Arguments");
-        if (hasRequiredOption(options)) {
-            addOptionRow("__Option__ (\\* = required)", "__Description__");
-        } else {
-            addOptionRow("__Option__", "__Description__");
-        }
+        addOptionRow("Parameters with options" + (hasRequiredOption(options) ? " (\\* = required)" : ""));
     }
 
     @Override
@@ -59,8 +54,16 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
     }
 
     @Override
-    protected void appendTypeIndicator(StringBuilder buffer, String typeIndicator, String description,
-                                       char start, char end) {
+    protected void addNonOptionsDescription(Collection<? extends OptionDescriptor> options) {
+        OptionDescriptor nonOptions = findAndRemoveNonOptionsSpec(options);
+        if (shouldShowNonOptionArgumentDisplay(nonOptions)) {
+            addNonOptionRow("Parameters");
+            addNonOptionRow(createNonOptionArgumentsDisplay(nonOptions));
+        }
+    }
+
+    @Override
+    protected void appendTypeIndicator(StringBuilder buffer, String typeIndicator, String description, char start, char end) {
         buffer.append(' ').append(start);
         if (!isBlank(description)) {
             buffer.append(description);

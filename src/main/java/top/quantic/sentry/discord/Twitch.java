@@ -3,8 +3,7 @@ package top.quantic.sentry.discord;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import joptsimple.OptionSpecBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.handle.obj.IMessage;
@@ -24,8 +23,6 @@ import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 @Component
 public class Twitch implements CommandSupplier {
 
-    private static final Logger log = LoggerFactory.getLogger(Twitch.class);
-
     private final SettingService settingService;
 
     @Autowired
@@ -40,14 +37,24 @@ public class Twitch implements CommandSupplier {
 
     private Command twitch() {
         OptionParser parser = new OptionParser();
-        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by space").ofType(String.class);
-        OptionSpec<Void> addSpec = parser.accepts("add", "Add streamers");
-        OptionSpec<Void> removeSpec = parser.accepts("remove", "Remove streamers");
-        OptionSpec<Void> listSpec = parser.accepts("list", "List streamers");
-        OptionSpec<String> leagueSpec = parser.accepts("league", "Set the league data")
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by space\n\nExamples:\n"
+            + "• Add streams: `.twitch add streamerId1 streamerId2`\n"
+            + "• Remove stream: `.twitch remove streamerId streamerId2`\n"
+            + "• List streams: `.twitch list`\n"
+            + "You can also assign a **league** and **division** value when adding streams:\n"
+            + "• With league info: `.twitch add league TF2 streamerId`\n"
+            + "• With division info: `.twitch add league TF2 division Plat streamerId`\n"
+            + "• This format is also allowed: `.twitch add league=TF2 division=Plat streamerId`\n"
+            + "Each of the above supports multiple number of streamers defined, separated by spaces\n"
+        ).ofType(String.class).describedAs("streamer1 streamer2 streamer3 ...");
+        OptionSpec<Void> addSpec = parser.accepts("add", "Add streamers, separated by spaces");
+        OptionSpec<Void> removeSpec = parser.accepts("remove", "Remove streamers, separated by spaces");
+        OptionSpec<Void> listSpec = parser.accepts("list", "List all registered streamers");
+        OptionSpec<String> leagueSpec = parser.accepts("league", "When adding a stream, use to assign league/game info")
             .withRequiredArg().defaultsTo("all");
-        OptionSpec<String> divSpec = parser.acceptsAll(asList("div", "division"), "Set the division data")
-            .withRequiredArg().defaultsTo("none");
+        OptionSpec<String> divSpec = parser.acceptsAll(asList("div", "division"), "When adding a stream, use to assign division info")
+            .requiredIf(leagueSpec).withRequiredArg().defaultsTo("none");
+        parser.mutuallyExclusive((OptionSpecBuilder) addSpec, (OptionSpecBuilder) removeSpec);
         return CommandBuilder.of("twitch")
             .describedAs("Manage twitch tracked streamers")
             .in("Integrations")
@@ -62,8 +69,8 @@ public class Twitch implements CommandSupplier {
                 String key = "twitch." + league.replace(".", "_") + "." + div.replace(".", "_");
                 if (o.has(addSpec)) {
                     ids.forEach(id -> settingService.createSetting(guild(message), key, id));
-                    answer(message, "Added to " + (league.equals("all") ? "" : "**" + league + "** league ")
-                        + "and " + (div.equals("none") ? "" : "**" + div + "** division ") + ": "
+                    answer(message, "Added" + (league.equals("all") ? "" : " to **" + league + "** league")
+                        + (div.equals("none") ? "" : " and **" + div + "** division ") + ": "
                         + ids.stream().collect(Collectors.joining(", ")));
                 } else if (o.has(removeSpec)) {
                     settingService.findByGuildAndKey(guild(message), key)
@@ -74,7 +81,9 @@ public class Twitch implements CommandSupplier {
                         "Streamers: " + settingService.findByGuildAndKeyStartingWith(guild(message),
                             "twitch.").stream().map(this::streamerInfo).collect(Collectors.joining(", ")));
                 }
-            }).build();
+            })
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .build();
     }
 
     private String streamerInfo(Setting setting) {

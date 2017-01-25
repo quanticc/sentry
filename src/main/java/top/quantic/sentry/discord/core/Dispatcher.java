@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -32,7 +32,8 @@ import static top.quantic.sentry.discord.util.DiscordUtil.humanize;
 public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
-    private static final Pattern PATTERN = Pattern.compile("[^ \\t\"']+|\"([^\"]*)\"|'([^']*)'");
+    private static final Pattern QUOTE_PATTERN = Pattern.compile("[^ \\t\"']+|\"([^\"]*)\"|'([^']*)'");
+    private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^[\\w]+=[\\w]+$");
 
     private final CommandRegistry commandRegistry;
     private final SettingService settingService;
@@ -152,7 +153,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
     }
 
     private String[] splitAndConvert(String args, int limit, boolean unquote, Map<String, String> parameterAliases) {
-        Matcher matcher = PATTERN.matcher(args);
+        Matcher matcher = QUOTE_PATTERN.matcher(args);
         List<String> matches = new ArrayList<>();
         int count = 1;
         while (matcher.find()) {
@@ -166,8 +167,15 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
             }
         }
         if (parameterAliases != null && !parameterAliases.isEmpty()) {
-            return matches.stream().map(s -> parameterAliases.getOrDefault(s, s))
-                .collect(Collectors.toList()).toArray(new String[matches.size()]);
+            return matches.stream().map(s -> {
+                // if this match is in the form key=value and starts with a key present, prepend "--" to it
+                if (KEY_VALUE_PATTERN.matcher(s).matches()
+                    && parameterAliases.keySet().stream().anyMatch(s::startsWith)) {
+                    return "--" + s;
+                } else {
+                    return parameterAliases.getOrDefault(s, s);
+                }
+            }).collect(Collectors.toList()).toArray(new String[matches.size()]);
         } else {
             return matches.toArray(new String[matches.size()]);
         }

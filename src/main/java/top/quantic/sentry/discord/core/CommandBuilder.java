@@ -9,11 +9,19 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static top.quantic.sentry.discord.util.DiscordUtil.answerPrivately;
 
 /**
  * Constructs Commands in a builder pattern fashion.
  */
 public class CommandBuilder {
+
+    private static final Consumer<CommandContext> GENERIC_NO_PERMISSION =
+        context -> answerPrivately(context.getMessage(), "You don't have permission to execute this command");
+
+    public static Consumer<CommandContext> noPermission() {
+        return GENERIC_NO_PERMISSION;
+    }
 
     private String name;
     private Set<String> aliases = new HashSet<>();
