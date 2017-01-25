@@ -11,7 +11,7 @@
         var vm = this;
 
         vm.inputTypes = ['sentryEvent', 'inboundWebhook'];
-        vm.translatorTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DiscordEmbed', 'DiscordMessageEmbed'];
+        vm.translatorTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DatadogDowntime', 'DiscordEmbed', 'DiscordMessageEmbed'];
         vm.flow = entity;
         vm.entries = ParseMaps.parseToEntries(vm.flow.variables);
         vm.clear = clear;

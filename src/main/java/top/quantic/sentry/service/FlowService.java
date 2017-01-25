@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +15,12 @@ import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.domain.Flow;
 import top.quantic.sentry.event.ContentSupplier;
 import top.quantic.sentry.event.SentryEvent;
+import top.quantic.sentry.event.SentryReadyEvent;
 import top.quantic.sentry.repository.FlowRepository;
 import top.quantic.sentry.service.dto.FlowDTO;
 import top.quantic.sentry.service.mapper.FlowMapper;
 import top.quantic.sentry.service.util.TaskException;
+import top.quantic.sentry.web.rest.vm.DatadogDowntime;
 import top.quantic.sentry.web.rest.vm.DatadogEvent;
 import top.quantic.sentry.web.rest.vm.DatadogPayload;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
@@ -61,6 +64,11 @@ public class FlowService implements InitializingBean {
     }
 
     @EventListener
+    public SentryReadyEvent onApplicationReady(ApplicationReadyEvent event) {
+        return new SentryReadyEvent(event);
+    }
+
+    @EventListener
     public void onSentryEvent(SentryEvent event) {
         String className = event.getClass().getSimpleName();
         log.debug("[{}] {}", className, event.asContent(null));
@@ -92,6 +100,9 @@ public class FlowService implements InitializingBean {
                 break;
             case "DatadogEvent":
                 publish(flow, supplier.getContentId(), asDatadogEvent(flow, supplier));
+                break;
+            case "DatadogDowntime":
+                publish(flow, supplier.getContentId(), asDatadogDowntime(flow, supplier));
                 break;
             default:
                 log.warn("Unknown translator type for this flow: {}", translatorType);
@@ -147,6 +158,17 @@ public class FlowService implements InitializingBean {
         return new DatadogEvent(title, text, dateHappened, priority, host, tags, alertType, aggregationKey, sourceTypeName);
     }
 
+    private DatadogDowntime asDatadogDowntime(Flow flow, ContentSupplier supplier) {
+        Map<String, Object> variables = flow.getVariables();
+        Map<String, Object> map = supplier.asMap(variables);
+
+        String scope = (String) getFromMap("scope", variables, map);
+        String message = (String) getFromMap("message", variables, map);
+        Long end = (Long) getFromMap("end", variables, map);
+
+        return new DatadogDowntime(scope, null, end, message, null);
+    }
+
     private Object getFromMap(String key, Map<String, Object> first, Map<String, Object> second) {
         return first.getOrDefault(key, second.get(key));
     }
@@ -170,6 +192,14 @@ public class FlowService implements InitializingBean {
     private void publish(Flow flow, String id, DatadogEvent event) {
         if (isBlank(event.getText()) || isBlank(event.getTitle())) {
             log.info("[{}] Missing title and text - Not publishing event to {}", flow.getName(), id);
+        } else {
+            subscriberService.publish(flow.getOutput(), id, event);
+        }
+    }
+
+    private void publish(Flow flow, String id, DatadogDowntime event) {
+        if (isBlank(event.getScope())) {
+            log.info("[{}] Missing scope - Not publishing event to {}", flow.getName(), id);
         } else {
             subscriberService.publish(flow.getOutput(), id, event);
         }

@@ -10,7 +10,7 @@
     function SubscriberDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Subscriber, ParseMaps) {
         var vm = this;
 
-        vm.outputTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DiscordEmbed', 'DiscordMessageEmbed'];
+        vm.outputTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DatadogDowntime', 'DiscordEmbed', 'DiscordMessageEmbed'];
         vm.subscriber = entity;
         vm.entries = ParseMaps.parseToEntries(vm.subscriber.variables);
         vm.clear = clear;

@@ -21,6 +21,7 @@ import top.quantic.sentry.domain.Subscriber;
 import top.quantic.sentry.repository.SubscriberRepository;
 import top.quantic.sentry.service.dto.SubscriberDTO;
 import top.quantic.sentry.service.mapper.SubscriberMapper;
+import top.quantic.sentry.web.rest.vm.DatadogDowntime;
 import top.quantic.sentry.web.rest.vm.DatadogEvent;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
 
@@ -218,6 +219,38 @@ public class SubscriberService {
             new HttpEntity<>(event, headers),
             new ParameterizedTypeReference<Map<String, ?>>() {
             }, "api_key", apiKey);
+    }
+
+    public void publish(String outputChannel, String id, DatadogDowntime message) {
+        log.debug("Publishing a downtime message ({}) to output channel : {}", id, outputChannel);
+        subscriberRepository.findByChannelAndType(outputChannel, "DatadogDowntime").stream()
+            .filter(sub -> timeFrameService.included(sub.getId()))
+            .filter(sub -> checkDuplicate(sub, id))
+            .forEach(sub -> {
+                String apiKey = (String) sub.getVariables().get("api_key");
+                String appKey = (String) sub.getVariables().get("app_key");
+                if (apiKey == null || appKey == null) {
+                    log.warn("Subscriber did not define a Datadog API and/or APP Key: {}", sub);
+                } else {
+                    try {
+                        ResponseEntity<Map<String, ?>> responseEntity = publishDowntime(message, apiKey, appKey);
+                        log.debug("[{}] Response: {}", outputChannel, responseEntity);
+                    } catch (RestClientException e) {
+                        log.warn("Could not publish downtime", e);
+                    }
+                }
+            });
+    }
+
+    private ResponseEntity<Map<String, ?>> publishDowntime(DatadogDowntime event, String apiKey, String appKey) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        headers.add("User-Agent", "curl");
+        return restTemplate.exchange("https://app.datadoghq.com/api/v1/downtime",
+            HttpMethod.POST,
+            new HttpEntity<>(event, headers),
+            new ParameterizedTypeReference<Map<String, ?>>() {
+            }, "api_key", apiKey, "app_key", appKey);
     }
 
     private boolean checkDuplicate(Subscriber subscriber, String id) {
