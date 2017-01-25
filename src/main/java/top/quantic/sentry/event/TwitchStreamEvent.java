@@ -48,7 +48,26 @@ public class TwitchStreamEvent extends SentryEvent {
             }
         }
         TwitchStream stream = getSource();
-        return "@here " + stream.getChannel().getDisplayName() + " is now live on <" + stream.getChannel().getUrl() + "> !";
+        return "@here " + stream.getChannel().getDisplayName() + getDivisionContent(dataMap)
+            + " is now live on <" + stream.getChannel().getUrl() + "> !";
+    }
+
+    private String getDivisionContent(Map<String, Object> dataMap) {
+        String league = metadata.get("league");
+        String division = metadata.get("division");
+        String hideDivisionRegex = null;
+        if (dataMap != null) {
+            hideDivisionRegex = (String) dataMap.get("hideDivisionRegex");
+        }
+        if (division != null) {
+            if (hideDivisionRegex != null && division.matches(hideDivisionRegex)) {
+                division = null;
+            }
+        }
+        if (league != null) {
+            return " (" + league + (division != null ? " " + division : "") + ")";
+        }
+        return "";
     }
 
     @Override
@@ -58,6 +77,28 @@ public class TwitchStreamEvent extends SentryEvent {
                 return null;
             }
         }
+        String league = metadata.get("league");
+        String division = metadata.get("division");
+        String hideDivisionRegex = null;
+        if (league != null && (league.equalsIgnoreCase("all")
+            || league.equalsIgnoreCase("any")
+            || league.equalsIgnoreCase("none"))) {
+            league = null;
+            division = null;
+        } else {
+            if (dataMap != null) {
+                hideDivisionRegex = (String) dataMap.get("hideDivisionRegex");
+            }
+            if (division != null) {
+                if (hideDivisionRegex != null && division.matches(hideDivisionRegex)) {
+                    division = null;
+                }
+                if (league == null) {
+                    division = null;
+                }
+            }
+        }
+
         TwitchStream stream = getSource();
         return new EmbedBuilder()
             .withAuthorIcon(stream.getChannel().getLogo())
@@ -72,8 +113,8 @@ public class TwitchStreamEvent extends SentryEvent {
             .appendField("Playing", stream.getGame(), true)
             .appendField("Viewers", stream.getViewers() + "", true)
             .ignoreNullEmptyFields()
-            .appendField("League", metadata.get("league"), true)
-            .appendField("Division", metadata.get("division"), true)
+            .appendField("League", league, true)
+            .appendField("Division", division, true)
             .build();
     }
 
@@ -101,10 +142,15 @@ public class TwitchStreamEvent extends SentryEvent {
 
     private boolean isMatchingGameAndLeague(Map<String, Object> dataMap) {
         boolean shouldMatch = Boolean.valueOf((String) dataMap.get("matchGameWithLeague"));
-        // dataMap must also contain { "division" : "game" } mappings then
+        String league = metadata.getOrDefault("league", "all"); // "TF2"
+        String game = dataMap.get(league) == null ? league : (String) dataMap.get(league); // "Team Fortress 2"
         TwitchStream stream = getSource();
-        return !shouldMatch || stream.getGame()
-            .equalsIgnoreCase((String) dataMap.get(metadata.getOrDefault("league", "all")));
+        log.debug("[{}] Game-league matcher: ({}, {}, {}) vs {}", stream.getChannel().getName(), shouldMatch, league, game, stream.getGame());
+        return !shouldMatch
+            || game.equalsIgnoreCase("all")
+            || game.equalsIgnoreCase("any")
+            || game.equalsIgnoreCase("none")
+            || stream.getGame().equalsIgnoreCase(game);
     }
 
     private Color getDominantColor(String urlStr) {

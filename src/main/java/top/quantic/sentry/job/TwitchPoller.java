@@ -94,7 +94,7 @@ public class TwitchPoller implements Job {
                                 limiter.acquire();
                                 TwitchStreamEvent event = new TwitchStreamEvent(stream);
                                 event.getMetadata().putAll(streamerMap(subList.stream()
-                                    .filter(setting -> stream.getChannel().getName().equals(setting.getValue()))
+                                    .filter(setting -> stream.getChannel().getName().equalsIgnoreCase(setting.getValue()))
                                     .distinct()
                                     .findAny()
                                     .orElse(null)
@@ -110,7 +110,7 @@ public class TwitchPoller implements Job {
                     log.warn("Could not retrieve streamers: {}", responseEntity);
                 }
             }
-            log.info("Received {} of {} ({} recently published)", streams,
+            log.info("Received {} live of {} ({} recently published)", streams,
                 inflect(streamers.size(), "requested stream"), recent);
         } catch (RestClientException e) {
             log.warn("Exception while retrieving streamers", e);
