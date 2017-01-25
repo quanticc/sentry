@@ -25,6 +25,7 @@
 
         function save () {
             vm.isSaving = true;
+            vm.task.variables = ParseMaps.parseToMap(vm.entries);
             if (vm.task.id !== null) {
                 Task.update(vm.task, onSaveSuccess, onSaveError);
             } else {
