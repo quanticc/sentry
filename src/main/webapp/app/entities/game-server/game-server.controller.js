@@ -12,7 +12,7 @@
 
         vm.gameServers = [];
         vm.loadPage = loadPage;
-        vm.itemsPerPage = paginationConstants.itemsPerPage;
+        vm.itemsPerPage = 60;
         vm.page = 0;
         vm.links = {
             last: 0
