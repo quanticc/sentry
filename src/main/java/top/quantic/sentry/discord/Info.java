@@ -128,7 +128,7 @@ public class Info implements CommandSupplier {
         }
         result += leftPad("ID: ", pad) + '<' + user.getID() + ">\n"
             + leftPad("Joined: ", pad) + systemToInstant(user.getCreationDate()).toString() + '\n'
-            + leftPad("Status: ", pad) + user.getPresence().name().toLowerCase() + '\n';
+            + leftPad("Status: ", pad) + user.getPresence().getStatus().name().toLowerCase() + '\n';
         if (guild != null) {
             result += leftPad("Roles: ", pad) + formatRoles(user.getRolesForGuild(guild)) + '\n';
         }
