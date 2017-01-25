@@ -21,7 +21,7 @@
                     <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="input"><span>Input</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="inputParameters"><span>Input Parameters</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="variables"><span>Variables</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="message"><span>Message</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="translator"><span>Translator</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="output"><span>Output</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -34,7 +34,11 @@
                     <td><a ui-sref="flow-detail({id:flow.id})">{{flow.id}}</a></td>
                     <td>{{flow.name}}</td>
                     <td>{{flow.input}}</td>
-                    <td>{{flow.inputParameters}}</td>
+                    <td>
+                        <div ng-repeat="(key, value) in flow.variables">
+                            <span class="badge">{{key}}</span> {{value}}
+                        </div>
+                    </td>
                     <td>{{flow.message}}</td>
                     <td>{{flow.translator}}</td>
                     <td>{{flow.output}}</td>

@@ -22,7 +22,7 @@
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="channel"><span>Channel</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="type"><span>Type</span> <span class="glyphicon glyphicon-sort"></span></th>
-                    <th jh-sort-by="typeParameters"><span>Type Parameters</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="variables"><span>Variables</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th></th>
                 </tr>
             </thead>
@@ -32,7 +32,11 @@
                     <td>{{subscriber.name}}</td>
                     <td>{{subscriber.channel}}</td>
                     <td>{{subscriber.type}}</td>
-                    <td>{{subscriber.typeParameters}}</td>
+                    <td>
+                        <div ng-repeat="(key, value) in subscriber.variables">
+                            <span class="badge">{{key}}</span> {{value}}
+                        </div>
+                    </td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
                             <button type="submit"

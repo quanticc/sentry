@@ -5,13 +5,14 @@
         .module('sentryApp')
         .controller('SubscriberDialogController', SubscriberDialogController);
 
-    SubscriberDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Subscriber'];
+    SubscriberDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Subscriber', 'ParseMaps'];
 
-    function SubscriberDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Subscriber) {
+    function SubscriberDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Subscriber, ParseMaps) {
         var vm = this;
 
         vm.outputTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DiscordEmbed', 'DiscordMessageEmbed'];
         vm.subscriber = entity;
+        vm.entries = ParseMaps.parseToEntries(vm.subscriber.variables);
         vm.clear = clear;
         vm.save = save;
 
@@ -25,6 +26,7 @@
 
         function save () {
             vm.isSaving = true;
+            vm.subscriber.variables = ParseMaps.parseToMap(vm.entries);
             if (vm.subscriber.id !== null) {
                 Subscriber.update(vm.subscriber, onSaveSuccess, onSaveError);
             } else {
@@ -41,7 +43,6 @@
         function onSaveError () {
             vm.isSaving = false;
         }
-
 
     }
 })();

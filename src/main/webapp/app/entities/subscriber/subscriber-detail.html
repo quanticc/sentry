@@ -16,9 +16,11 @@
         <dd>
             <span>{{vm.subscriber.type}}</span>
         </dd>
-        <dt><span>Type Parameters</span></dt>
+        <dt><span>Variables</span></dt>
         <dd>
-            <span>{{vm.subscriber.typeParameters}}</span>
+            <div ng-repeat="(key, value) in vm.subscriber.variables">
+                <span class="badge">{{key}}</span> {{value}}
+            </div>
         </dd>
     </dl>
 

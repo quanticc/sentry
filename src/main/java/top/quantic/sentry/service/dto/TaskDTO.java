@@ -1,7 +1,8 @@
 package top.quantic.sentry.service.dto;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -23,7 +24,7 @@ public class TaskDTO implements Serializable {
     @NotNull
     private String jobClass;
 
-    private String dataMap;
+    private Map<String, Object> dataMap;
 
     private String triggers;
 
@@ -38,6 +39,7 @@ public class TaskDTO implements Serializable {
     public void setId(String id) {
         this.id = id;
     }
+
     public String getName() {
         return name;
     }
@@ -45,6 +47,7 @@ public class TaskDTO implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getGroup() {
         return group;
     }
@@ -52,6 +55,7 @@ public class TaskDTO implements Serializable {
     public void setGroup(String group) {
         this.group = group;
     }
+
     public String getDescription() {
         return description;
     }
@@ -59,6 +63,7 @@ public class TaskDTO implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
+
     public String getJobClass() {
         return jobClass;
     }
@@ -66,13 +71,15 @@ public class TaskDTO implements Serializable {
     public void setJobClass(String jobClass) {
         this.jobClass = jobClass;
     }
-    public String getDataMap() {
+
+    public Map<String, Object> getDataMap() {
         return dataMap;
     }
 
-    public void setDataMap(String dataMap) {
+    public void setDataMap(Map<String, Object> dataMap) {
         this.dataMap = dataMap;
     }
+
     public String getTriggers() {
         return triggers;
     }
@@ -80,6 +87,7 @@ public class TaskDTO implements Serializable {
     public void setTriggers(String triggers) {
         this.triggers = triggers;
     }
+
     public Boolean getEnabled() {
         return enabled;
     }
@@ -99,7 +107,7 @@ public class TaskDTO implements Serializable {
 
         TaskDTO taskDTO = (TaskDTO) o;
 
-        if ( ! Objects.equals(id, taskDTO.id)) return false;
+        if (!Objects.equals(id, taskDTO.id)) return false;
 
         return true;
     }

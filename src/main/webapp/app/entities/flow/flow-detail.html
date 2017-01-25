@@ -12,9 +12,11 @@
         <dd>
             <span>{{vm.flow.input}}</span>
         </dd>
-        <dt><span>Input Parameters</span></dt>
+        <dt><span>Variables</span></dt>
         <dd>
-            <span>{{vm.flow.inputParameters}}</span>
+            <div ng-repeat="(key, value) in vm.flow.variables">
+                <span class="badge">{{key}}</span> {{value}}
+            </div>
         </dd>
         <dt><span>Message</span></dt>
         <dd>

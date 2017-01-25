@@ -117,7 +117,7 @@
                             return {
                                 name: null,
                                 input: null,
-                                inputParameters: null,
+                                variables: null,
                                 message: null,
                                 translator: null,
                                 output: null,

@@ -1,7 +1,9 @@
 package top.quantic.sentry.service.dto;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -17,7 +19,7 @@ public class FlowDTO implements Serializable {
     @NotNull
     private String input;
 
-    private String inputParameters;
+    private Map<String, Object> variables = new LinkedHashMap<>();
 
     @NotNull
     private String message;
@@ -38,6 +40,7 @@ public class FlowDTO implements Serializable {
     public void setId(String id) {
         this.id = id;
     }
+
     public String getName() {
         return name;
     }
@@ -45,6 +48,7 @@ public class FlowDTO implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getInput() {
         return input;
     }
@@ -52,13 +56,15 @@ public class FlowDTO implements Serializable {
     public void setInput(String input) {
         this.input = input;
     }
-    public String getInputParameters() {
-        return inputParameters;
+
+    public Map<String, Object> getVariables() {
+        return variables;
     }
 
-    public void setInputParameters(String inputParameters) {
-        this.inputParameters = inputParameters;
+    public void setVariables(Map<String, Object> variables) {
+        this.variables = variables;
     }
+
     public String getMessage() {
         return message;
     }
@@ -66,6 +72,7 @@ public class FlowDTO implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
+
     public String getTranslator() {
         return translator;
     }
@@ -73,6 +80,7 @@ public class FlowDTO implements Serializable {
     public void setTranslator(String translator) {
         this.translator = translator;
     }
+
     public String getOutput() {
         return output;
     }
@@ -80,6 +88,7 @@ public class FlowDTO implements Serializable {
     public void setOutput(String output) {
         this.output = output;
     }
+
     public Boolean getEnabled() {
         return enabled;
     }
@@ -99,7 +108,7 @@ public class FlowDTO implements Serializable {
 
         FlowDTO flowDTO = (FlowDTO) o;
 
-        if ( ! Objects.equals(id, flowDTO.id)) return false;
+        if (!Objects.equals(id, flowDTO.id)) return false;
 
         return true;
     }
@@ -112,14 +121,14 @@ public class FlowDTO implements Serializable {
     @Override
     public String toString() {
         return "FlowDTO{" +
-            "id=" + id +
-            ", name='" + name + "'" +
-            ", input='" + input + "'" +
-            ", inputParameters='" + inputParameters + "'" +
-            ", message='" + message + "'" +
-            ", translator='" + translator + "'" +
-            ", output='" + output + "'" +
-            ", enabled='" + enabled + "'" +
+            "id='" + id + '\'' +
+            ", name='" + name + '\'' +
+            ", input='" + input + '\'' +
+            ", variables=" + variables +
+            ", message='" + message + '\'' +
+            ", translator='" + translator + '\'' +
+            ", output='" + output + '\'' +
+            ", enabled=" + enabled +
             '}';
     }
 }

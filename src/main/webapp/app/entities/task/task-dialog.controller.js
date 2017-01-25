@@ -5,12 +5,13 @@
         .module('sentryApp')
         .controller('TaskDialogController', TaskDialogController);
 
-    TaskDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Task'];
+    TaskDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Task', 'ParseMaps'];
 
-    function TaskDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Task) {
+    function TaskDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Task, ParseMaps) {
         var vm = this;
 
         vm.task = entity;
+        vm.entries = ParseMaps.parseToEntries(vm.task.variables);
         vm.clear = clear;
         vm.save = save;
 

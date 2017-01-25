@@ -56,10 +56,8 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="control-label" for="field_dataMap">Data Map</label>
-            <input type="text" class="form-control" name="dataMap" id="field_dataMap"
-                    ng-model="vm.task.dataMap"
-                     />
+            <label class="control-label">Data Map</label>
+            <key-value-editor entries="vm.entries" cannot-sort></key-value-editor>
         </div>
         <div class="form-group">
             <label class="control-label" for="field_triggers">Triggers</label>

@@ -10,7 +10,22 @@
     <!-- build:css content/css/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css">
+    <link rel="stylesheet" href="bower_components/bootstrap-select/dist/css/bootstrap-select.css">
+    <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css">
+    <link rel="stylesheet" href="bower_components/bootstrap-touchspin/src/jquery.bootstrap-touchspin.css">
+    <link rel="stylesheet" href="bower_components/datatables/media/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="bower_components/datatables-colvis/css/dataTables.colVis.css">
+    <link rel="stylesheet" href="bower_components/google-code-prettify/bin/prettify.min.css">
+    <link rel="stylesheet" href="bower_components/patternfly-bootstrap-combobox/css/bootstrap-combobox.css">
     <link rel="stylesheet" href="bower_components/angular-loading-bar/build/loading-bar.css">
+    <link rel="stylesheet" href="bower_components/c3/c3.css">
+    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css">
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly.css">
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly-additions.css">
+    <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.css">
+    <link rel="stylesheet" href="bower_components/angular-key-value-editor/dist/angular-key-value-editor.css">
     <!-- endinject -->
     <!-- endbuild -->
     <!-- build:css content/css/main.css -->
@@ -78,8 +93,22 @@
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/json3/lib/json3.js"></script>
     <script src="bower_components/messageformat/messageformat.js"></script>
+    <script src="bower_components/lodash/lodash.js"></script>
     <script src="bower_components/sockjs-client/dist/sockjs.js"></script>
     <script src="bower_components/stomp-websocket/lib/stomp.min.js"></script>
+    <script src="bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="bower_components/bootstrap-select/dist/js/bootstrap-select.js"></script>
+    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
+    <script src="bower_components/bootstrap-touchspin/src/jquery.bootstrap-touchspin.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
+    <script src="bower_components/datatables/media/js/jquery.dataTables.js"></script>
+    <script src="bower_components/datatables-colreorder/js/dataTables.colReorder.js"></script>
+    <script src="bower_components/datatables-colvis/js/dataTables.colVis.js"></script>
+    <script src="bower_components/google-code-prettify/bin/prettify.min.js"></script>
+    <script src="bower_components/matchHeight/dist/jquery.matchHeight.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="bower_components/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-aria/angular-aria.js"></script>
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
@@ -94,6 +123,14 @@
     <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
     <script src="bower_components/ngInfiniteScroll/build/ng-infinite-scroll.js"></script>
     <script src="bower_components/angular-relative-date/dist/angular-relative-date.js"></script>
+    <script src="bower_components/c3/c3.js"></script>
+    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/patternfly/dist/js/patternfly.js"></script>
+    <script src="bower_components/angular-patternfly/dist/angular-patternfly.js"></script>
+    <script src="bower_components/angular-key-value-editor/dist/angular-key-value-editor.js"></script>
+    <script src="bower_components/angular-key-value-editor/dist/compiled-templates.js"></script>
     <!-- endinject -->
     <!-- endbuild -->
 
@@ -181,6 +218,7 @@
     <script src="app/components/util/sort-by.directive.js"></script>
     <script src="app/components/util/sort.directive.js"></script>
     <script src="app/components/util/parse-links.service.js"></script>
+    <script src="app/components/util/parse-maps.service.js"></script>
     <script src="app/components/util/pagination-util.service.js"></script>
     <script src="app/components/util/jhi-item-count.directive.js"></script>
     <script src="app/components/util/date-util.service.js"></script>

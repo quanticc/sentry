@@ -22,7 +22,9 @@
         </dd>
         <dt><span>Data Map</span></dt>
         <dd>
-            <span>{{vm.task.dataMap}}</span>
+            <div ng-repeat="(key, value) in vm.task.dataMap">
+                <span class="badge">{{key}}</span> {{value}}
+            </div>
         </dd>
         <dt><span>Triggers</span></dt>
         <dd>

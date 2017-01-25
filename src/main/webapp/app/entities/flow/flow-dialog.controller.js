@@ -5,14 +5,15 @@
         .module('sentryApp')
         .controller('FlowDialogController', FlowDialogController);
 
-    FlowDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Flow'];
+    FlowDialogController.$inject = ['$timeout', '$scope', '$stateParams', '$uibModalInstance', 'entity', 'Flow', 'ParseMaps'];
 
-    function FlowDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Flow) {
+    function FlowDialogController ($timeout, $scope, $stateParams, $uibModalInstance, entity, Flow, ParseMaps) {
         var vm = this;
 
         vm.inputTypes = ['sentryEvent', 'inboundWebhook'];
         vm.translatorTypes = ['DiscordMessage', 'DiscordWebhook', 'DatadogEvent', 'DiscordEmbed', 'DiscordMessageEmbed'];
         vm.flow = entity;
+        vm.entries = ParseMaps.parseToEntries(vm.flow.variables);
         vm.clear = clear;
         vm.save = save;
 

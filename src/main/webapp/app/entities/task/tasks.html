@@ -34,7 +34,11 @@
                     <td>{{task.group}}</td>
                     <td>{{task.description}}</td>
                     <td>{{task.jobClass}}</td>
-                    <td>{{task.dataMap}}</td>
+                    <td>
+                        <div ng-repeat="(key, value) in task.dataMap">
+                            <span class="badge">{{key}}</span> {{value}}
+                        </div>
+                    </td>
                     <td>{{task.triggers}}</td>
                     <td>
                         <span class="label" ng-class="vm.prettyBoolClass(task.enabled)">

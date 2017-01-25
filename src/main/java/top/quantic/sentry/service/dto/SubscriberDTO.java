@@ -1,7 +1,9 @@
 package top.quantic.sentry.service.dto;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -21,8 +23,7 @@ public class SubscriberDTO implements Serializable {
     private String type;
 
     @NotNull
-    private String typeParameters;
-
+    private Map<String, Object> variables = new LinkedHashMap<>();
 
     public String getId() {
         return id;
@@ -31,6 +32,7 @@ public class SubscriberDTO implements Serializable {
     public void setId(String id) {
         this.id = id;
     }
+
     public String getName() {
         return name;
     }
@@ -38,6 +40,7 @@ public class SubscriberDTO implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getChannel() {
         return channel;
     }
@@ -45,6 +48,7 @@ public class SubscriberDTO implements Serializable {
     public void setChannel(String channel) {
         this.channel = channel;
     }
+
     public String getType() {
         return type;
     }
@@ -52,12 +56,13 @@ public class SubscriberDTO implements Serializable {
     public void setType(String type) {
         this.type = type;
     }
-    public String getTypeParameters() {
-        return typeParameters;
+
+    public Map<String, Object> getVariables() {
+        return variables;
     }
 
-    public void setTypeParameters(String typeParameters) {
-        this.typeParameters = typeParameters;
+    public void setVariables(Map<String, Object> variables) {
+        this.variables = variables;
     }
 
     @Override
@@ -71,7 +76,7 @@ public class SubscriberDTO implements Serializable {
 
         SubscriberDTO subscriberDTO = (SubscriberDTO) o;
 
-        if ( ! Objects.equals(id, subscriberDTO.id)) return false;
+        if (!Objects.equals(id, subscriberDTO.id)) return false;
 
         return true;
     }
@@ -84,11 +89,11 @@ public class SubscriberDTO implements Serializable {
     @Override
     public String toString() {
         return "SubscriberDTO{" +
-            "id=" + id +
-            ", name='" + name + "'" +
-            ", channel='" + channel + "'" +
-            ", type='" + type + "'" +
-            ", typeParameters='" + typeParameters + "'" +
+            "id='" + id + '\'' +
+            ", name='" + name + '\'' +
+            ", channel='" + channel + '\'' +
+            ", type='" + type + '\'' +
+            ", variables=" + variables +
             '}';
     }
 }

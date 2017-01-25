@@ -118,7 +118,7 @@
                                 name: null,
                                 channel: null,
                                 type: null,
-                                typeParameters: null,
+                                variables: null,
                                 id: null
                             };
                         }

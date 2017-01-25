@@ -32,10 +32,8 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="control-label" for="field_inputParameters">Input Parameters</label>
-            <input type="text" class="form-control" name="inputParameters" id="field_inputParameters"
-                    ng-model="vm.flow.inputParameters"
-                     />
+            <label class="control-label">Variables</label>
+            <key-value-editor entries="vm.entries" cannot-sort></key-value-editor>
         </div>
         <div class="form-group">
             <label class="control-label" for="field_message">Message</label>
