@@ -8,9 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Operations;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -25,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static top.quantic.sentry.discord.util.DiscordUtil.answerPrivately;
 
@@ -46,7 +44,7 @@ public class Help implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Collections.singletonList(help());
+        return Arrays.asList(help(), examples());
     }
 
     private Command help() {
@@ -103,6 +101,35 @@ public class Help implements CommandSupplier {
             }).build();
     }
 
+    private Command examples() {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> helpNonOptionSpec = parser.nonOptions("Command to get examples for").ofType(String.class);
+        return CommandBuilder.of("examples")
+            .describedAs("Show examples for commands")
+            .in("General")
+            .parsedBy(parser)
+            .onExecute(context -> {
+                OptionSet o = context.getOptionSet();
+                List<String> keys = o.valuesOf(helpNonOptionSpec);
+                IMessage message = context.getMessage();
+                List<Command> commandList = commandRegistry.getCommands(message.getClient());
+                if (keys.isEmpty()) {
+                    answerPrivately(message, "Please specify at least one command");
+                } else {
+                    List<Command> requested = commandList.stream()
+                        .filter(c -> isRequested(keys, c))
+                        .filter(c -> canExecute(c, message))
+                        .sorted(Comparator.naturalOrder())
+                        .collect(Collectors.toList());
+                    StringBuilder builder = new StringBuilder();
+                    for (Command command : requested) {
+                        appendExamples(builder, command);
+                    }
+                    answerPrivately(message, builder.toString());
+                }
+            }).build();
+    }
+
     private boolean isRequested(List<String> keys, Command c) {
         return keys.contains(c.getName().toLowerCase()) || (!c.getAliases().isEmpty()
             && keys.stream().anyMatch(k -> c.getAliases().stream().anyMatch(a -> k.contains(a.toLowerCase()))));
@@ -123,21 +150,30 @@ public class Help implements CommandSupplier {
             response.append(comment).append("\n");
         }
         String content = appendHelp(response, command).toString();
-        RequestBuffer.request(() -> {
-            try {
-                context.getMessage().getAuthor().getOrCreatePMChannel().sendMessage(content);
-            } catch (MissingPermissionsException | DiscordException e) {
-                log.warn("Could not reply with help", e);
-            }
-        });
+        answerPrivately(context.getMessage(), content);
+    }
+
+    private StringBuilder appendExamples(StringBuilder builder, Command command) {
+        builder.append("• Examples for **").append(command.getName()).append("**: ")
+            .append(command.getDescription()).append('\n');
+        if (!isBlank(command.getExamples())) {
+            builder.append(command.getExamples());
+        } else {
+            builder.append("No examples defined for this command, check `help ")
+                .append(command.getName()).append("`");
+        }
+        return builder;
     }
 
     private StringBuilder appendHelp(StringBuilder builder, Command command) {
         builder.append("• Help for **").append(command.getName()).append("**: ")
             .append(command.getDescription()).append('\n');
+        if (!isBlank(command.getExamples())) {
+            builder.append("\n*Examples*\n").append(command.getExamples());
+        }
         if (command.getParser() != null) {
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-                command.getParser().formatHelpWith(new DiscordHelpFormatter(140, 5));
+                command.getParser().formatHelpWith(new DiscordHelpFormatter(280, 5));
                 command.getParser().printHelpOn(stream);
                 builder.append(new String(stream.toByteArray(), "UTF-8")).append('\n');
             } catch (Exception e) {

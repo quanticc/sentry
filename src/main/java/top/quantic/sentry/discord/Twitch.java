@@ -37,26 +37,18 @@ public class Twitch implements CommandSupplier {
 
     private Command twitch() {
         OptionParser parser = new OptionParser();
-        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by space\n\nExamples:\n"
-            + "• Add streams: `.twitch add streamerId1 streamerId2`\n"
-            + "• Remove stream: `.twitch remove streamerId streamerId2`\n"
-            + "• List streams: `.twitch list`\n"
-            + "You can also assign a **league** and **division** value when adding streams:\n"
-            + "• With league info: `.twitch add league TF2 streamerId`\n"
-            + "• With division info: `.twitch add league TF2 division Plat streamerId`\n"
-            + "• This format is also allowed: `.twitch add league=TF2 division=Plat streamerId`\n"
-            + "Each of the above supports multiple number of streamers defined, separated by spaces\n"
-        ).ofType(String.class).describedAs("streamer1 streamer2 streamer3 ...");
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by space").ofType(String.class);
         OptionSpec<Void> addSpec = parser.accepts("add", "Add streamers, separated by spaces");
         OptionSpec<Void> removeSpec = parser.accepts("remove", "Remove streamers, separated by spaces");
         OptionSpec<Void> listSpec = parser.accepts("list", "List all registered streamers");
         OptionSpec<String> leagueSpec = parser.accepts("league", "When adding a stream, use to assign league/game info")
-            .withRequiredArg().defaultsTo("all");
+            .withRequiredArg().defaultsTo("all").describedAs("game");
         OptionSpec<String> divSpec = parser.acceptsAll(asList("div", "division"), "When adding a stream, use to assign division info")
-            .requiredIf(leagueSpec).withRequiredArg().defaultsTo("none");
+            .requiredIf(leagueSpec).withRequiredArg().defaultsTo("none").describedAs("name");
         parser.mutuallyExclusive((OptionSpecBuilder) addSpec, (OptionSpecBuilder) removeSpec);
         return CommandBuilder.of("twitch")
             .describedAs("Manage twitch tracked streamers")
+            .withExamples(twitchExamples())
             .in("Integrations")
             .parsedBy(parser)
             .secured()
@@ -84,6 +76,17 @@ public class Twitch implements CommandSupplier {
             })
             .onAuthorDenied(CommandBuilder.noPermission())
             .build();
+    }
+
+    private String twitchExamples() {
+        return "- Add streams: `.twitch add streamerId1 streamerId2`\n"
+            + "- Remove stream: `.twitch remove streamerId streamerId2`\n"
+            + "- List streams: `.twitch list`\n\n"
+            + "You can also assign a **league** and **division** value when adding streams:\n\n"
+            + "- With league info: `.twitch add league TF2 streamerId`\n"
+            + "- With division info: `.twitch add league TF2 division Plat streamerId`\n"
+            + "- This format is also allowed: `.twitch add league=TF2 division=Plat streamerId`\n"
+            + "Each of the above supports multiple number of streamers defined, separated by spaces\n";
     }
 
     private String streamerInfo(Setting setting) {

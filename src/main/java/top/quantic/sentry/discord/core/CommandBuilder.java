@@ -27,6 +27,7 @@ public class CommandBuilder {
     private Set<String> aliases = new HashSet<>();
     private String category = "";
     private String description = "";
+    private String examples = "";
     private OptionParser parser;
     private Map<String, String> parameterAliases;
     private EnumSet<Permissions> requiredPermissions = EnumSet.noneOf(Permissions.class);
@@ -91,6 +92,11 @@ public class CommandBuilder {
      */
     public CommandBuilder describedAs(String description) {
         this.description = description == null ? "" : description;
+        return this;
+    }
+
+    public CommandBuilder withExamples(String examples) {
+        this.examples = examples == null ? "" : examples;
         return this;
     }
 
@@ -214,7 +220,8 @@ public class CommandBuilder {
         if (isBlank(name)) {
             throw new IllegalArgumentException("Name must not be blank");
         }
-        return new Command(name, aliases, category, description, parser, parameterAliases, requiredPermissions, secured,
-            deleteRequest, preserveQuotes, argumentLimit, onExecute, onBotDenied, onAuthorDenied);
+        return new Command(name, aliases, category, description, examples, parser, parameterAliases,
+            requiredPermissions, secured, deleteRequest, preserveQuotes, argumentLimit,
+            onExecute, onBotDenied, onAuthorDenied);
     }
 }

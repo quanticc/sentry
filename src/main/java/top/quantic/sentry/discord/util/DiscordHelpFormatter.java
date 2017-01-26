@@ -1,5 +1,6 @@
 package top.quantic.sentry.discord.util;
 
+import com.google.common.base.Splitter;
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionDescriptor;
 
@@ -21,7 +22,7 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
 
     @Override
     protected void addHeaders(Collection<? extends OptionDescriptor> options) {
-        addOptionRow("Parameters with options" + (hasRequiredOption(options) ? " (\\* = required)" : ""));
+        addOptionRow("*Parameters with options*" + (hasRequiredOption(options) ? " (\\* = required)" : ""));
     }
 
     @Override
@@ -57,8 +58,10 @@ public class DiscordHelpFormatter extends BuiltinHelpFormatter {
     protected void addNonOptionsDescription(Collection<? extends OptionDescriptor> options) {
         OptionDescriptor nonOptions = findAndRemoveNonOptionsSpec(options);
         if (shouldShowNonOptionArgumentDisplay(nonOptions)) {
-            addNonOptionRow("Parameters");
-            addNonOptionRow(createNonOptionArgumentsDisplay(nonOptions));
+            addNonOptionRow("*Parameters*");
+            Splitter.on('\n')
+                .splitToList(nonOptions.description())
+                .forEach(this::addNonOptionRow);
         }
     }
 

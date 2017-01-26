@@ -15,6 +15,7 @@ public class Command implements Comparable<Command> {
     private final Set<String> aliases;
     private final String category;
     private final String description;
+    private final String examples;
     private final OptionParser parser;
     private final Map<String, String> parameterAliases;
     private final EnumSet<Permissions> requiredPermissions;
@@ -26,14 +27,16 @@ public class Command implements Comparable<Command> {
     private final Consumer<CommandContext> onBotDenied;
     private final Consumer<CommandContext> onAuthorDenied;
 
-    Command(String name, Set<String> aliases, String category, String description, OptionParser parser,
-            Map<String, String> parameterAliases, EnumSet<Permissions> requiredPermissions, boolean secured,
-            boolean deleteRequest, boolean preserveQuotes, int argumentLimit, Consumer<CommandContext> onExecute,
-            Consumer<CommandContext> onBotDenied, Consumer<CommandContext> onAuthorDenied) {
+    Command(String name, Set<String> aliases, String category, String description, String examples,
+            OptionParser parser, Map<String, String> parameterAliases, EnumSet<Permissions> requiredPermissions,
+            boolean secured, boolean deleteRequest, boolean preserveQuotes, int argumentLimit,
+            Consumer<CommandContext> onExecute, Consumer<CommandContext> onBotDenied,
+            Consumer<CommandContext> onAuthorDenied) {
         this.name = name;
         this.aliases = aliases;
         this.category = category;
         this.description = description;
+        this.examples = examples;
         this.parser = parser;
         this.parameterAliases = parameterAliases;
         this.requiredPermissions = requiredPermissions;
@@ -60,6 +63,10 @@ public class Command implements Comparable<Command> {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getExamples() {
+        return examples;
     }
 
     public OptionParser getParser() {
