@@ -30,7 +30,7 @@ public class BotHealthIndicator implements HealthIndicator {
             IDiscordClient client = entry.getValue();
             if (client.isReady()) {
                 ready++;
-                bot.put("status", "ready");
+                bot.put("status", "UP");
                 bot.put("id", client.getOurUser().getID());
                 bot.put("name", client.getOurUser().getName());
                 bot.put("shards", client.getShardCount());
@@ -39,9 +39,9 @@ public class BotHealthIndicator implements HealthIndicator {
                 bot.put("users", client.getUsers().size());
                 bot.put("roles", client.getRoles().size());
             } else if (client.isLoggedIn()) {
-                bot.put("status", "logged-in");
+                bot.put("status", "OUT_OF_SERVICE");
             } else {
-                bot.put("status", "offline");
+                bot.put("status", "DOWN");
             }
             details.put(entry.getKey().getName(), bot);
         }
