@@ -1,6 +1,5 @@
 package top.quantic.sentry.service;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionRepository;
@@ -16,24 +15,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class DiscordSocialService implements InitializingBean {
+public class DiscordSocialService {
 
     private final UsersConnectionRepository usersConnectionRepository;
     private final PermissionService permissionService;
-    private final UserService userService;
 
     @Autowired
-    public DiscordSocialService(UsersConnectionRepository usersConnectionRepository, PermissionService permissionService,
-                                UserService userService) {
+    public DiscordSocialService(UsersConnectionRepository usersConnectionRepository, PermissionService permissionService) {
         this.usersConnectionRepository = usersConnectionRepository;
         this.permissionService = permissionService;
-        this.userService = userService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        userService.deleteUser("admin");
-        userService.deleteUser("user");
     }
 
     public Optional<Connection<Discord>> getUserConnection(String login) {

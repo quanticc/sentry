@@ -43,6 +43,8 @@ public class SentryProperties {
     public static class Discord {
 
         private List<String> administrators = new ArrayList<>();
+        private List<String> managers = new ArrayList<>();
+        private List<String> supporters = new ArrayList<>();
         private List<String> defaultPrefixes = Lists.newArrayList("!");
 
         public List<String> getAdministrators() {
@@ -51,6 +53,22 @@ public class SentryProperties {
 
         public void setAdministrators(List<String> administrators) {
             this.administrators = administrators;
+        }
+
+        public List<String> getManagers() {
+            return managers;
+        }
+
+        public void setManagers(List<String> managers) {
+            this.managers = managers;
+        }
+
+        public List<String> getSupporters() {
+            return supporters;
+        }
+
+        public void setSupporters(List<String> supporters) {
+            this.supporters = supporters;
         }
 
         public List<String> getDefaultPrefixes() {
