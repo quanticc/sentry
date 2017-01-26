@@ -49,14 +49,14 @@ public class GameServerHealthIndicator implements HealthIndicator {
                 .map(GameServer::toString)
                 .collect(Collectors.toList()));
         }
+        Health.Builder builder;
         if (details.isEmpty()) {
-            Health.Builder builder = Health.up();
+            builder = Health.up();
             gameServerService.getSummary().forEach(builder::withDetail);
-            return builder.build();
         } else {
-            Health.Builder builder = Health.down();
+            builder = Health.outOfService();
             details.forEach(builder::withDetail);
-            return builder.build();
         }
+        return builder.build();
     }
 }
