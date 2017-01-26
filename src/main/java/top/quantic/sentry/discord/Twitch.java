@@ -37,7 +37,7 @@ public class Twitch implements CommandSupplier {
 
     private Command twitch() {
         OptionParser parser = new OptionParser();
-        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by space").ofType(String.class);
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Twitch IDs separated by spaces").ofType(String.class);
         OptionSpec<Void> addSpec = parser.accepts("add", "Add streamers, separated by spaces");
         OptionSpec<Void> removeSpec = parser.accepts("remove", "Remove streamers, separated by spaces");
         OptionSpec<Void> listSpec = parser.accepts("list", "List all registered streamers");

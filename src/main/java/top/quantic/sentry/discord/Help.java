@@ -160,9 +160,9 @@ public class Help implements CommandSupplier {
             builder.append(command.getExamples());
         } else {
             builder.append("No examples defined for this command, check `help ")
-                .append(command.getName()).append("`");
+                .append(command.getName()).append("`\n");
         }
-        return builder;
+        return builder.append('\n');
     }
 
     private StringBuilder appendHelp(StringBuilder builder, Command command) {
