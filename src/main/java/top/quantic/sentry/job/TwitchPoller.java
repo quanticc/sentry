@@ -92,14 +92,20 @@ public class TwitchPoller implements Job {
                         if (!wasRecentlyPublished(stream, expireMinutes)) {
                             CompletableFuture.runAsync(() -> {
                                 limiter.acquire();
-                                TwitchStreamEvent event = new TwitchStreamEvent(stream);
-                                event.getMetadata().putAll(streamerMap(subList.stream()
-                                    .filter(setting -> stream.getChannel().getName().equalsIgnoreCase(setting.getValue()))
+                                List<Setting> streamerSettings = subList.stream()
+                                    .filter(setting -> stream.getChannel().getName()
+                                        .equalsIgnoreCase(setting.getValue()))
                                     .distinct()
-                                    .findAny()
-                                    .orElse(null)
-                                ));
-                                publisher.publishEvent(event);
+                                    .collect(Collectors.toList());
+                                if (streamerSettings.isEmpty()) {
+                                    publisher.publishEvent(new TwitchStreamEvent(stream));
+                                } else {
+                                    for (Setting setting : streamerSettings) {
+                                        TwitchStreamEvent event = new TwitchStreamEvent(stream);
+                                        event.getMetadata().putAll(streamerMap(setting));
+                                        publisher.publishEvent(event);
+                                    }
+                                }
                             });
                         } else {
                             recent++;
