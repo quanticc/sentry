@@ -169,7 +169,7 @@ public class Help implements CommandSupplier {
         builder.append("• Help for **").append(command.getName()).append("**: ")
             .append(command.getDescription()).append('\n');
         if (!isBlank(command.getExamples())) {
-            builder.append("\n*Examples*\n").append(command.getExamples());
+            builder.append("\n*Examples*\n").append(command.getExamples()).append("\n");
         }
         if (command.getParser() != null) {
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
