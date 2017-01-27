@@ -84,7 +84,8 @@ public class StreamerService {
      */
     public void publishStreams(long expireMinutes, double eventsPerSecond) {
         // Twitch
-        List<Streamer> twitchStreamers = findExpiredStreamers("Twitch", expireMinutes).stream()
+        List<Streamer> twitchStreamers = findEnabledByProvider("Twitch").stream()
+            .filter(streamer -> streamer.getLastAnnouncement().isBefore(ZonedDateTime.now().minusMinutes(expireMinutes)))
             .sorted(Comparator.comparing(Streamer::getName))
             .collect(Collectors.toList());
 
@@ -106,6 +107,7 @@ public class StreamerService {
                     .distinct()
                     .collect(Collectors.joining(","));
                 twitchApiLimiter.acquire();
+                log.debug("Checking for: {}", channels);
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Client-ID", sentryProperties.getTwitch().getClientId());
                 ResponseEntity<TwitchStreamResponse> responseEntity = restTemplate.exchange(
@@ -138,9 +140,8 @@ public class StreamerService {
 
     }
 
-    private List<Streamer> findExpiredStreamers(String provider, long minutesSinceLastAnnouncement) {
-        return streamerRepository.findByEnabledIsTrueAndProviderAndLastAnnouncementBefore(provider,
-            ZonedDateTime.now().minusMinutes(minutesSinceLastAnnouncement));
+    private List<Streamer> findEnabledByProvider(String provider) {
+        return streamerRepository.findByEnabledIsTrueAndProvider(provider);
     }
 
     private void logStreamData(TwitchStream stream, Streamer streamer) {

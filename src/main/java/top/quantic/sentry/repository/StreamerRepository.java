@@ -3,7 +3,6 @@ package top.quantic.sentry.repository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import top.quantic.sentry.domain.Streamer;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -13,8 +12,6 @@ import java.util.List;
 public interface StreamerRepository extends MongoRepository<Streamer, String> {
 
     List<Streamer> findByEnabledIsTrueAndProvider(String provider);
-
-    List<Streamer> findByEnabledIsTrueAndProviderAndLastAnnouncementBefore(String provider, ZonedDateTime date);
 
     List<Streamer> deleteByName(String name);
 }
