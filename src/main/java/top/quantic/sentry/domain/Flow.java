@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -45,7 +45,7 @@ public class Flow extends AbstractAuditingEntity implements Serializable {
     private Boolean enabled = true;
 
     @Field("variables")
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Object> variables = new LinkedHashMap<>();
 
     public String getId() {
         return id;
