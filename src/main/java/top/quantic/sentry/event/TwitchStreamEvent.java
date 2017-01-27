@@ -63,7 +63,7 @@ public class TwitchStreamEvent extends SentryEvent {
     @Override
     public String asContent(Map<String, Object> dataMap) {
         TwitchStream stream = getSource();
-        if (announcement.contains("{{") || announcement.contains("}}")) {
+        if (announcement != null && (announcement.contains("{{") || announcement.contains("}}"))) {
             log.warn("Announcement appears to be badly formatted: {}", announcement);
             announcement = null;
         }
