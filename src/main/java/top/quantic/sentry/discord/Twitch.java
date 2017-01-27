@@ -10,8 +10,7 @@ import sx.blah.discord.handle.obj.IMessage;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
-import top.quantic.sentry.domain.Setting;
-import top.quantic.sentry.service.SettingService;
+import top.quantic.sentry.service.StreamerService;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,11 +22,11 @@ import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 @Component
 public class Twitch implements CommandSupplier {
 
-    private final SettingService settingService;
+    private final StreamerService streamerService;
 
     @Autowired
-    public Twitch(SettingService settingService) {
-        this.settingService = settingService;
+    public Twitch(StreamerService streamerService) {
+        this.streamerService = streamerService;
     }
 
     @Override
@@ -45,6 +44,8 @@ public class Twitch implements CommandSupplier {
             .withRequiredArg().defaultsTo("all").describedAs("game");
         OptionSpec<String> divSpec = parser.acceptsAll(asList("div", "division"), "When adding a stream, use to assign division info")
             .requiredIf(leagueSpec).withRequiredArg().defaultsTo("none").describedAs("name");
+        OptionSpec<String> titleSpec = parser.accepts("title", "When adding a stream, use to assign a title filter")
+            .withRequiredArg().defaultsTo("").describedAs("name");
         parser.mutuallyExclusive((OptionSpecBuilder) addSpec, (OptionSpecBuilder) removeSpec);
         return CommandBuilder.of("twitch")
             .describedAs("Manage twitch tracked streamers")
@@ -56,22 +57,24 @@ public class Twitch implements CommandSupplier {
                 IMessage message = context.getMessage();
                 OptionSet o = context.getOptionSet();
                 List<String> ids = o.valuesOf(nonOptSpec);
-                String league = o.valueOf(leagueSpec);
-                String div = o.valueOf(divSpec);
-                String key = "twitch." + league.replace(".", "_") + "." + div.replace(".", "_");
+                String league = o.has(leagueSpec) ? o.valueOf(leagueSpec) : null;
+                String div = o.has(divSpec) ? o.valueOf(divSpec) : null;
+                String title = o.has(titleSpec) ? o.valueOf(titleSpec) : null;
                 if (o.has(addSpec)) {
-                    ids.forEach(id -> settingService.createSetting(guild(message), key, id));
-                    answer(message, "Added" + (league.equals("all") ? "" : " to **" + league + "** league")
-                        + (div.equals("none") ? "" : " and **" + div + "** division ") + ": "
+                    ids.forEach(id -> streamerService.createStreamer("twitch", id, league, div, title));
+                    answer(message, "Added" + (league == null ? "" : " to **" + league + "** league")
+                        + (div == null ? "" : " and **" + div + "** division ") + ": "
                         + ids.stream().collect(Collectors.joining(", ")));
                 } else if (o.has(removeSpec)) {
-                    settingService.findByGuildAndKey(guild(message), key)
-                        .forEach(setting -> settingService.delete(setting.getId()));
-                    answer(message, "Removed *" + ids.stream().collect(Collectors.joining(", ")) + "*");
+                    answer(message, "__Removed streamers__\n" + ids.stream()
+                        .map(streamerService::deleteStreamer)
+                        .flatMap(List::stream)
+                        .map(streamer -> "• " + streamer.toShortString())
+                        .collect(Collectors.joining("\n")));
                 } else if (o.has(listSpec)) {
-                    answer(message,
-                        "Streamers: " + settingService.findByGuildAndKeyStartingWith(guild(message),
-                            "twitch.").stream().map(this::streamerInfo).collect(Collectors.joining(", ")));
+                    answer(message, "__Current streamers__\n" + streamerService.getStreamers().stream()
+                        .map(streamer -> "• " + streamer.toShortString())
+                        .collect(Collectors.joining("\n")));
                 }
             })
             .onAuthorDenied(CommandBuilder.noPermission())
@@ -82,39 +85,12 @@ public class Twitch implements CommandSupplier {
         return "- Add streams: `.twitch add streamerId1 streamerId2`\n"
             + "- Remove stream: `.twitch remove streamerId streamerId2`\n"
             + "- List streams: `.twitch list`\n\n"
-            + "You can also assign a **league** and **division** value when adding streams:\n\n"
+            + "You can also set some values and filters when adding streams:\n\n"
             + "- With league info: `.twitch add league TF2 streamerId`\n"
             + "- With division info: `.twitch add league TF2 division Plat streamerId`\n"
+            + "- With a title filter: `.twitch add league TF2 title UGC streamerId`\n"
             + "- This format is also allowed: `.twitch add league=TF2 division=Plat streamerId`\n"
-            + "Each of the above supports multiple number of streamers defined, separated by spaces\n";
-    }
-
-    private String streamerInfo(Setting setting) {
-        String[] parts = setting.getKey().split("\\.");
-        String league = null;
-        String div = null;
-        if (parts.length == 3) {
-            league = parts[1];
-            div = parts[2];
-        } else if (parts.length == 2) {
-            league = parts[1];
-        }
-        String result = "**" + setting.getValue() + "**";
-        if (league != null) {
-            result += " (" + league;
-            if (div != null) {
-                result += " " + div;
-            }
-            result += ")";
-        }
-        return result;
-    }
-
-    private String guild(IMessage message) {
-        if (message.getChannel().isPrivate()) {
-            return "*";
-        } else {
-            return message.getGuild().getID();
-        }
+            + "Each of the above supports multiple number of streamers defined, separated by spaces.\n"
+            + "If you need to use spaces in any field, surround in 'quotes' or \"quotes\" to count as a single argument.\n";
     }
 }

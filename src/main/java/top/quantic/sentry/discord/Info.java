@@ -63,7 +63,8 @@ public class Info implements CommandSupplier {
                 String content = "Hey! I'm here to help with **UGC support**.\n\n" +
                     "**Version:** " + version + '\n' +
                     "**Discord4J:** " + Discord4J.VERSION + '\n' +
-                    "**Uptime:** " + humanize(Duration.ofMillis(uptime), false, true) + '\n';
+                    "**Uptime:** " + humanize(Duration.ofMillis(uptime), false, true) + '\n' +
+                    "**Website:** https://sentry.quantic.top/" + '\n';
                 answer(message, content);
             }).build();
     }

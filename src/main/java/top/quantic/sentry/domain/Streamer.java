@@ -212,6 +212,24 @@ public class Streamer extends AbstractAuditingEntity implements Serializable {
         return Objects.hashCode(id);
     }
 
+    public String toShortString() {
+        String result = "**" + provider + ":" + name + "**";
+        if (league != null) {
+            result += " (" + league;
+            if (division != null) {
+                result += " " + division;
+            }
+            result += ")";
+        }
+        if (titleFilter != null) {
+            result += " with title containing: " + titleFilter;
+        }
+        if (!enabled) {
+            result += " [disabled]";
+        }
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Streamer{" +

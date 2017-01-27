@@ -15,4 +15,6 @@ public interface StreamerRepository extends MongoRepository<Streamer, String> {
     List<Streamer> findByEnabledIsTrueAndProvider(String provider);
 
     List<Streamer> findByEnabledIsTrueAndProviderAndLastAnnouncementBefore(String provider, ZonedDateTime date);
+
+    List<Streamer> deleteByName(String name);
 }

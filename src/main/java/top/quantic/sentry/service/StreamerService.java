@@ -226,6 +226,23 @@ public class StreamerService {
         publisher.publishEvent(event);
     }
 
+    public List<Streamer> getStreamers() {
+        return streamerRepository.findAll();
+    }
+
+    public Streamer createStreamer(String provider, String name, String league, String division, String title) {
+        return streamerRepository.save(new Streamer()
+            .provider(provider)
+            .name(name)
+            .league(league)
+            .division(division)
+            .titleFilter(title));
+    }
+
+    public List<Streamer> deleteStreamer(String name) {
+        return streamerRepository.deleteByName(name);
+    }
+
     /**
      * Save a streamer.
      *
