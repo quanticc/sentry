@@ -19,4 +19,6 @@ public interface SettingRepository extends MongoRepository<Setting,String> {
     List<Setting> findByKeyStartingWith(String key);
 
     List<Setting> findByGuildAndKeyStartingWith(String guild, String key);
+
+    List<Setting> findByGuild(String guild);
 }

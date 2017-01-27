@@ -122,6 +122,10 @@ public class SettingService {
         return settingRepository.findByKey(key);
     }
 
+    public List<Setting> findByGuild(String guild) {
+        return settingRepository.findByGuild(guild);
+    }
+
     public List<Setting> findByGuildAndKey(String guild, String key) {
         return settingRepository.findByGuildAndKey(guild, key);
     }
