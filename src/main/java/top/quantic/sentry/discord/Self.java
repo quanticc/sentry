@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
@@ -214,7 +213,6 @@ public class Self implements CommandSupplier {
                     }
                     RequestBuffer.request(() -> {
                         try {
-                            acquireDelete();
                             delete.delete();
                         } catch (MissingPermissionsException | DiscordException e) {
                             log.warn("Could not delete message - aborting", e);

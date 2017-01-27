@@ -16,12 +16,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static top.quantic.sentry.discord.util.DiscordLimiter.acquire;
-import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 
 public class DiscordUtil {
 
@@ -128,7 +125,6 @@ public class DiscordUtil {
     public static void deleteMessage(IMessage message) {
         RequestBuffer.request(() -> {
             try {
-                acquireDelete();
                 message.delete();
             } catch (MissingPermissionsException | DiscordException e) {
                 log.warn("Could not delete message", e);
@@ -145,7 +141,6 @@ public class DiscordUtil {
                 List<IMessage> subList = toDelete.subList(x * 100, Math.min(toDelete.size(), (x + 1) * 100));
                 RequestBuffer.request(() -> {
                     try {
-                        acquireDelete();
                         channel.getMessages().bulkDelete(subList);
                     } catch (MissingPermissionsException | DiscordException e) {
                         log.warn("Failed to delete message", e);
@@ -283,13 +278,6 @@ public class DiscordUtil {
         }
     }
 
-    public static <T> CompletableFuture<RequestBuffer.RequestFuture<T>> request(IChannel channel, RequestBuffer.IRequest<T> request) {
-        return CompletableFuture.supplyAsync(() -> {
-            acquire(channel);
-            return RequestBuffer.request(request);
-        });
-    }
-
     public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content) {
         return sendMessage(channel, content, null, false);
     }
@@ -303,7 +291,6 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, EmbedObject embedObject, boolean tts) {
-        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendMessage(content, embedObject, tts);
@@ -320,7 +307,6 @@ public class DiscordUtil {
 
     private static void innerReply(IMessage message, String content) {
         if (!content.isEmpty()) {
-            acquire(message);
             RequestBuffer.request(() -> {
                 try {
                     message.reply(content);
@@ -336,7 +322,6 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, File file) {
-        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendFile(content, file);
@@ -352,7 +337,6 @@ public class DiscordUtil {
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, InputStream stream, String fileName) {
-        acquire(channel);
         return RequestBuffer.request(() -> {
             try {
                 return channel.sendFile(content, false, stream, fileName);

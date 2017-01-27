@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static top.quantic.sentry.discord.util.DiscordLimiter.acquireDelete;
 import static top.quantic.sentry.discord.util.DiscordUtil.humanize;
 
 @Component
@@ -130,7 +129,6 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                     if (command.get().isDeleteRequest()) {
                         RequestBuffer.request(() -> {
                             try {
-                                acquireDelete();
                                 message.delete();
                             } catch (MissingPermissionsException e) {
                                 log.warn("[{}] Missing permissions in {}: {}",
