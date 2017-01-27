@@ -60,9 +60,9 @@
 
         function prettyBoolText(value) {
             if (value) {
-                return 'YES';
+                return 'Inclusive';
             } else {
-                return 'NO';
+                return 'Exclusive';
             }
         }
 
