@@ -171,6 +171,10 @@ public class DateUtil {
         return then == Instant.MAX ? "never" : prettyTime.format(Date.from(then));
     }
 
+    public static String withRelative(Instant time) {
+        return time.toString() + " (" + formatRelative(time) + ")";
+    }
+
     public static String formatAbsolute(Instant then) {
         PrettyTime prettyTime = new PrettyTime(Locale.ENGLISH);
         prettyTime.removeUnit(JustNow.class);

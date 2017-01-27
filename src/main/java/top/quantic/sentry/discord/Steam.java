@@ -22,7 +22,7 @@ import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.discord.util.DiscordUtil.appendOrAnswer;
-import static top.quantic.sentry.service.util.DateUtil.formatRelative;
+import static top.quantic.sentry.service.util.DateUtil.withRelative;
 import static top.quantic.sentry.service.util.SteamIdConverter.steam2To3;
 import static top.quantic.sentry.service.util.SteamIdConverter.steamId64To2;
 
@@ -119,9 +119,7 @@ public class Steam implements CommandSupplier {
         return result;
     }
 
-    private String withRelative(Instant time) {
-        return time.toString() + " (" + formatRelative(time) + ")";
-    }
+
 
     private boolean isPublic(int communityVisibilityState) {
         return communityVisibilityState == 3;
