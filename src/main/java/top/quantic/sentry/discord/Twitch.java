@@ -61,7 +61,7 @@ public class Twitch implements CommandSupplier {
                 String div = o.has(divSpec) ? o.valueOf(divSpec) : null;
                 String title = o.has(titleSpec) ? o.valueOf(titleSpec) : null;
                 if (o.has(addSpec)) {
-                    ids.forEach(id -> streamerService.createStreamer("twitch", id, league, div, title));
+                    ids.forEach(id -> streamerService.createStreamer("Twitch", id, league, div, title));
                     answer(message, "Added" + (league == null ? "" : " to **" + league + "** league")
                         + (div == null ? "" : " and **" + div + "** division ") + ": "
                         + ids.stream().collect(Collectors.joining(", ")));
