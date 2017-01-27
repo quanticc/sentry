@@ -10,7 +10,7 @@ import java.util.Map;
 public class TwitchStream {
 
     @JsonProperty("_id")
-    private long id;
+    private Long id;
     private String game;
     private long viewers;
     @JsonProperty("video_height")
@@ -25,11 +25,11 @@ public class TwitchStream {
     private Map<String, String> preview;
     private Channel channel;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -103,6 +103,15 @@ public class TwitchStream {
 
     public void setChannel(Channel channel) {
         this.channel = channel;
+    }
+
+    public String toShortString() {
+        return "TwitchStreamResponse{" +
+            "id=" + id +
+            ", game='" + game + '\'' +
+            ", createdAt=" + createdAt +
+            ", channel=" + channel.toShortString() +
+            '}';
     }
 
     @Override
@@ -291,6 +300,18 @@ public class TwitchStream {
 
         public void setFollowers(long followers) {
             this.followers = followers;
+        }
+
+        public String toShortString() {
+            return "Channel{" +
+                "id=" + id +
+                ", status='" + status + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", game='" + game + '\'' +
+                ", name='" + name + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
         }
 
         @Override

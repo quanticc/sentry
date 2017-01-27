@@ -1,0 +1,134 @@
+<form name="editForm" role="form" novalidate ng-submit="vm.save()" show-validation>
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                ng-click="vm.clear()">&times;</button>
+        <h4 class="modal-title" id="myStreamerLabel">Create or edit a Streamer</h4>
+    </div>
+    <div class="modal-body">
+        <jhi-alert-error></jhi-alert-error>
+        <div class="form-group" ng-show="vm.streamer.id">
+            <label for="id">ID</label>
+            <input type="text" class="form-control" id="id" name="id"
+                   ng-model="vm.streamer.id" readonly/>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_provider">Provider</label>
+            <select class="form-control" name="provider" id="field_provider" ng-model="vm.streamer.provider"
+                    ng-options="provider for provider in vm.providerTypes" required>
+            </select>
+            <div ng-show="editForm.provider.$invalid">
+                <p class="help-block"
+                   ng-show="editForm.provider.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_name">Name (Channel)</label>
+            <input type="text" class="form-control" name="name" id="field_name"
+                   ng-model="vm.streamer.name"
+                   required/>
+            <div ng-show="editForm.name.$invalid">
+                <p class="help-block"
+                   ng-show="editForm.name.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_league">League (double click for options or enter a custom one)</label>
+            <i class="help-toggle fa fa-lg fa-question-circle" ng-click="leagueHelp = !leagueHelp"></i>
+            <div class="alert alert-info" ng-show="leagueHelp">
+                Stream game must match the league for it to be announced.<br/>
+                Disable this filter with: *, any, all, none, or just leave blank.<br/>
+                To match more than one game but not all of them, you need to create a separate streamer entity.
+            </div>
+            <input type="text" class="form-control" name="league" id="field_league"
+                   list="leagueTypes" ng-model="vm.streamer.league"/>
+            <datalist id="leagueTypes">
+                <option ng-repeat="type in vm.leagueTypes" ng-value="{{type}}">{{type}}</option>
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_division">Division (double click for options or enter a custom one)</label>
+            <input type="text" class="form-control" name="division" id="field_division"
+                   list="divisionTypes" ng-model="vm.streamer.division"/>
+            <datalist id="divisionTypes">
+                <option ng-repeat="type in vm.divisionTypes" ng-value="{{type}}">{{type}}</option>
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_titleFilter">Title Filter</label>
+            <i class="help-toggle fa fa-lg fa-question-circle" ng-click="titleFilterHelp = !titleFilterHelp"></i>
+            <div class="alert alert-info" ng-show="titleFilterHelp">
+                Stream title must contain this word for it to be announced. Leave blank to disable this filter.
+            </div>
+            <input type="text" class="form-control" name="titleFilter" id="field_titleFilter"
+                   ng-model="vm.streamer.titleFilter"
+            />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_announcement">Announcement Template (double-click for options or leave blank for a default message)</label>
+            <i class="help-toggle fa fa-lg fa-question-circle" ng-click="announcementHelp = !announcementHelp"></i>
+            <div class="alert alert-info" ng-show="announcementHelp">
+                A text message is included with the embed that can be used to mention groups of people.<br/>
+                <strong>Note:</strong> Leaving this field blank won't disable the text message.<br/>
+                Template variables supported in the following syntax: <code ng-non-bindable>{{variable}}</code>.
+                For example: <code ng-non-bindable>{{name}}</code> will include the streamer channel name.<br/>
+                Supported variables: <code>name, league, division, url, stream.id, stream.game, stream.viewers, stream.videoHeight, stream.averageFps,
+                stream.delay, stream.createdAt, stream.playlist, stream.preview.small, stream.preview.medium,
+                stream.preview.large, stream.channel.id, stream.channel.mature, stream.channel.status,
+                stream.channel.broadcasterLanguage, stream.channel.displayName, stream.channel.game,
+                stream.channel.language, stream.channel.name, stream.channel.createdAt, stream.channel.updatedAt,
+                stream.channel.partner, stream.channel.logo, stream.channel.videoBanner, stream.channel.profileBanner,
+                stream.channel.profileBannerBackgroundColor, stream.channel.url, stream.channel.views,
+                stream.channel.followers</code>
+            </div>
+            <input type="text" class="form-control" name="announcement" id="field_announcement"
+                   list="announcementTypes" ng-model="vm.streamer.announcement"/>
+            <datalist id="announcementTypes">
+                <option ng-repeat="type in vm.announcementTypes" ng-value="{{type}}">{{type}}</option>
+            </datalist>
+        </div>
+        <div class="form-group">
+            <label class="control-label">Additional Embed Fields</label>
+            <i class="help-toggle fa fa-lg fa-question-circle" ng-click="embedFieldHelp = !embedFieldHelp"></i>
+            <div class="alert alert-info" ng-show="embedFieldHelp">
+                Include additional fields in the announcement embed. Game, viewer count, league and division are included by default.<br/>
+                Template variables supported in the following syntax: <code ng-non-bindable>{{variable}}</code>.
+                For example: <code ng-non-bindable>{{stream.channel.url}}</code> will include the channel's URL.<br/>
+                Supported variables: <code>name, league, division, url, stream.id, stream.game, stream.viewers, stream.videoHeight, stream.averageFps,
+                stream.delay, stream.createdAt, stream.playlist, stream.preview.small, stream.preview.medium,
+                stream.preview.large, stream.channel.id, stream.channel.mature, stream.channel.status,
+                stream.channel.broadcasterLanguage, stream.channel.displayName, stream.channel.game,
+                stream.channel.language, stream.channel.name, stream.channel.createdAt, stream.channel.updatedAt,
+                stream.channel.partner, stream.channel.logo, stream.channel.videoBanner, stream.channel.profileBanner,
+                stream.channel.profileBannerBackgroundColor, stream.channel.url, stream.channel.views,
+                stream.channel.followers</code>
+            </div>
+            <key-value-editor entries="vm.entries" cannot-sort></key-value-editor>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_enabled">Enabled</label>
+            <input type="checkbox" class="form-control" name="enabled" id="field_enabled"
+                   ng-model="vm.streamer.enabled"
+            />
+            <div ng-show="editForm.enabled.$invalid">
+                <p class="help-block"
+                   ng-show="editForm.enabled.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="vm.clear()">
+            <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;<span>Cancel</span>
+        </button>
+        <button type="submit" ng-disabled="editForm.$invalid || vm.isSaving" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span>&nbsp;<span>Save</span>
+        </button>
+    </div>
+</form>

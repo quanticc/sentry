@@ -36,6 +36,10 @@ body {
     padding-left: 10px;
 }
 
+.help-toggle {
+    color: #39c;
+}
+
 /* ==========================================================================
 Hide ng-cloak on page load, https://docs.angularjs.org/api/ng/directive/ngCloak
 ========================================================================== */

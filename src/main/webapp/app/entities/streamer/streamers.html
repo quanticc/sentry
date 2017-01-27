@@ -1,0 +1,86 @@
+<div>
+    <h2>Streamers</h2>
+    <jhi-alert></jhi-alert>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-4 no-padding-left">
+                <button class="btn btn-primary" ui-sref="streamer.new" >
+                    <span class="glyphicon glyphicon-plus"></span>
+                    <span >
+                        Create new Streamer
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="table-responsive">
+        <table class="jh-table table table-striped">
+            <thead>
+                <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
+                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="provider"><span>Provider</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="league"><span>League</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="division"><span>Division</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="titleFilter"><span>Title Filter</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="announcement"><span>Announcement</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th><span>Embed Fields</span></th>
+                    <th jh-sort-by="lastAnnouncement"><span>Last Announcement</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th jh-sort-by="enabled"><span>Enabled</span> <span class="glyphicon glyphicon-sort"></span></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="streamer in vm.streamers track by streamer.id">
+                    <td><a ui-sref="streamer-detail({id:streamer.id})">{{streamer.id}}</a></td>
+                    <td>{{streamer.provider}}</td>
+                    <td>{{streamer.name}}</td>
+                    <td>{{streamer.league}}</td>
+                    <td>{{streamer.division}}</td>
+                    <td>{{streamer.titleFilter}}</td>
+                    <td>{{streamer.announcement}}</td>
+                    <td>
+                        <div ng-repeat="(key, value) in streamer.embedFields">
+                            <span class="badge">{{key}}</span> {{value}}
+                        </div>
+                    </td>
+                    <td ng-attr-title="{{streamer.lastAnnouncement | date:'medium'}}">
+                        {{streamer.lastAnnouncement | relativeDate}}
+                    </td>
+                    <td>
+                        <span class="label" ng-class="vm.prettyBoolClass(streamer.enabled)">
+                            {{vm.prettyBoolText(streamer.enabled)}}
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <div class="btn-group flex-btn-group-container">
+                            <button type="submit"
+                                    ui-sref="streamer-detail({id:streamer.id})"
+                                    class="btn btn-info btn-sm">
+                                <span class="glyphicon glyphicon-eye-open"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                            <button type="submit"
+                                    ui-sref="streamer.edit({id:streamer.id})"
+                                    class="btn btn-primary btn-sm">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                            <button type="submit"
+                                    ui-sref="streamer.delete({id:streamer.id})"
+                                    class="btn btn-danger btn-sm">
+                                <span class="glyphicon glyphicon-remove-circle"></span>
+                                <span class="hidden-xs hidden-sm"></span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center">
+        <jhi-item-count page="vm.page" total="vm.queryCount" items-per-page="vm.itemsPerPage"></jhi-item-count>
+        <uib-pagination class="pagination-sm" total-items="vm.totalItems" items-per-page="vm.itemsPerPage" ng-model="vm.page" ng-change="vm.transition()"></uib-pagination>
+    </div>
+</div>

@@ -1,0 +1,61 @@
+
+<div>
+    <h2><span>Streamer</span> {{vm.streamer.id}}</h2>
+    <hr>
+    <jhi-alert-error></jhi-alert-error>
+    <dl class="dl-horizontal jh-entity-details">
+        <dt><span>Provider</span></dt>
+        <dd>
+            <span>{{vm.streamer.provider}}</span>
+        </dd>
+        <dt><span>Name</span></dt>
+        <dd>
+            <span>{{vm.streamer.name}}</span>
+        </dd>
+        <dt><span>League</span></dt>
+        <dd>
+            <span>{{vm.streamer.league}}</span>
+        </dd>
+        <dt><span>Division</span></dt>
+        <dd>
+            <span>{{vm.streamer.division}}</span>
+        </dd>
+        <dt><span>Title Filter</span></dt>
+        <dd>
+            <span>{{vm.streamer.titleFilter}}</span>
+        </dd>
+        <dt><span>Announcement</span></dt>
+        <dd>
+            <span>{{vm.streamer.announcement}}</span>
+        </dd>
+        <dt><span>Embed Fields</span></dt>
+        <dd>
+            <div ng-repeat="(key, value) in vm.streamer.embedFields">
+                <span class="badge">{{key}}</span> {{value}}
+            </div>
+        </dd>
+        <dt><span>Last Announcement</span></dt>
+        <dd>
+            <span>{{vm.streamer.lastAnnouncement | date:'medium'}}</span>
+        </dd>
+        <dt><span>Last Stream Id</span></dt>
+        <dd>
+            <span>{{vm.streamer.lastStreamId}}</span>
+        </dd>
+        <dt><span>Enabled</span></dt>
+        <dd>
+            <span>{{vm.streamer.enabled}}</span>
+        </dd>
+    </dl>
+
+    <button type="submit"
+            ui-sref="{{ vm.previousState }}"
+            class="btn btn-info">
+        <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;<span> Back</span>
+    </button>
+
+    <button type="button" ui-sref="streamer-detail.edit({id:vm.streamer.id})" class="btn btn-primary">
+        <span class="glyphicon glyphicon-pencil"></span>
+        <span class="hidden-xs hidden-sm"> Edit</span>
+    </button>
+</div>
