@@ -213,7 +213,7 @@ public class Streamer extends AbstractAuditingEntity implements Serializable {
     }
 
     public String toShortString() {
-        String result = "**" + provider + ":" + name + "**";
+        String result = provider + " channel **" + name + "**";
         if (league != null) {
             result += " (" + league;
             if (division != null) {
