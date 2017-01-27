@@ -173,9 +173,6 @@ dependencies {
     compile("io.dropwizard.metrics:metrics-servlets:${dropwizard_metrics_version}") {
         exclude(module: 'metrics-healthchecks')
     }
-    compile "io.prometheus:simpleclient:${prometheus_simpleclient_version}"
-    compile "io.prometheus:simpleclient_servlet:${prometheus_simpleclient_version}"
-    compile "io.prometheus:simpleclient_dropwizard:${prometheus_simpleclient_version}"
     compile("net.logstash.logback:logstash-logback-encoder:${logstash_logback_encoder_version}") {
         exclude(module: 'ch.qos.logback')
     }
@@ -223,9 +220,6 @@ dependencies {
     compile "org.mapstruct:mapstruct-jdk8:${mapstruct_version}"
     compile "org.apache.httpcomponents:httpclient"
     compile "org.springframework.social:spring-social-security"
-    compile "org.springframework.social:spring-social-google:${spring_social_google_version}"
-    compile "org.springframework.social:spring-social-facebook"
-    compile "org.springframework.social:spring-social-twitter"
     testCompile "com.jayway.awaitility:awaitility:${awaility_version}"
     testCompile "com.jayway.jsonpath:json-path"
     testCompile "org.springframework.boot:spring-boot-starter-test"
