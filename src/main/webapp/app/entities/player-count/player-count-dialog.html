@@ -1,0 +1,78 @@
+
+<form name="editForm" role="form" novalidate ng-submit="vm.save()" show-validation>
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                ng-click="vm.clear()">&times;</button>
+        <h4 class="modal-title" id="myPlayerCountLabel">Create or edit a Player Count</h4>
+    </div>
+    <div class="modal-body">
+        <jhi-alert-error></jhi-alert-error>
+        <div class="form-group" ng-show="vm.playerCount.id">
+            <label for="id">ID</label>
+            <input type="text" class="form-control" id="id" name="id"
+                    ng-model="vm.playerCount.id" readonly />
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_region">Region</label>
+            <input type="text" class="form-control" name="region" id="field_region"
+                    ng-model="vm.playerCount.region"
+                    required />
+            <div ng-show="editForm.region.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.region.$error.required">
+                    This field is required.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_value">Value</label>
+            <input type="number" class="form-control" name="value" id="field_value"
+                    ng-model="vm.playerCount.value"
+                    required min="0" />
+            <div ng-show="editForm.value.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.value.$error.required">
+                    This field is required.
+                </p>
+                <p class="help-block"
+                    ng-show="editForm.value.$error.min" translate-value-min="0">
+                    This field should be more than 0.
+                </p>
+                <p class="help-block"
+                    ng-show="editForm.value.$error.number">
+                    This field should be a number.
+                </p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label" for="field_timestamp">Timestamp</label>
+                <div class="input-group">
+                    <input id="field_timestamp" type="text" class="form-control" name="timestamp" datetime-picker="{{dateformat}}" ng-model="vm.playerCount.timestamp" is-open="vm.datePickerOpenStatus.timestamp"
+                    required  />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="vm.openCalendar('timestamp')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </div>
+            <div ng-show="editForm.timestamp.$invalid">
+                <p class="help-block"
+                    ng-show="editForm.timestamp.$error.required">
+                    This field is required.
+                </p>
+                <p class="help-block"
+                    ng-show="editForm.timestamp.$error.ZonedDateTimelocal">
+                    This field should be a date and time.
+                </p>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="vm.clear()">
+            <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;<span>Cancel</span>
+        </button>
+        <button type="submit" ng-disabled="editForm.$invalid || vm.isSaving" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span>&nbsp;<span>Save</span>
+        </button>
+    </div>
+</form>

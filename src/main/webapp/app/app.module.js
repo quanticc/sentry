@@ -18,7 +18,8 @@
             'relativeDate',
             'patternfly',
             //'patternfly.charts',
-            'key-value-editor'
+            'key-value-editor',
+            'nvd3'
         ])
         .run(run);
 
