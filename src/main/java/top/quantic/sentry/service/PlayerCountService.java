@@ -61,11 +61,11 @@ public class PlayerCountService {
                 .addAndGet((Integer) entry.getValue().getValue()));
 
         aggregations.entrySet().stream()
-            .filter(entry -> entry.getValue().get() > 0 || lastValueMap.get(entry.getKey()) != 0)
+            .filter(entry -> entry.getValue().get() > 0 || lastValueMap.getOrDefault(entry.getKey(), 0L) != 0)
             .forEach(entry -> {
                 String region = entry.getKey();
                 Long value = entry.getValue().get();
-                if (lastValueMap.get(entry.getKey()) == 0) {
+                if (lastValueMap.getOrDefault(entry.getKey(), 0L) == 0) {
                     if (playerCountRepository.countByRegionAndValueAndTimestamp(region, value, timestamp) == 0) {
                         // add a 0 to the previous minute
                         playerCountRepository.save(new PlayerCount()
