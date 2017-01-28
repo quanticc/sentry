@@ -212,6 +212,9 @@ dependencies {
     compile "org.springframework.security:spring-security-data:${spring_security_version}"
     compile "org.springframework.security:spring-security-web:${spring_security_version}"
     compile "org.springframework.security:spring-security-messaging:${spring_security_version}"
+    compile "org.springframework.social:spring-social-core"
+    compile "org.springframework.social:spring-social-web"
+    compile "org.springframework.social:spring-social-config"
     compile "com.github.mongobee:mongobee:${mongobee_version}"
     compile("io.springfox:springfox-swagger2:${springfox_version}") {
         exclude module: 'mapstruct'
