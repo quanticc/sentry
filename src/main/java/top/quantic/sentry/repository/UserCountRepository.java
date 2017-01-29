@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import top.quantic.sentry.domain.UserCount;
 
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Spring Data MongoDB repository for the UserCount entity.
@@ -12,9 +12,9 @@ import java.util.List;
 @SuppressWarnings("unused")
 public interface UserCountRepository extends MongoRepository<UserCount, String> {
 
-    List<UserCount> findByTimestampAfter(ZonedDateTime dateTime);
+    UserCount findFirstByBotAndGuildAndTimestampAfter(String bot, String guild, ZonedDateTime dateTime);
 
-    List<UserCount> findByBotAndGuildAndTimestampAfter(String bot, String guild, ZonedDateTime dateTime);
+    Stream<UserCount> findByBotAndGuildAndTimestampAfter(String bot, String guild, ZonedDateTime dateTime);
 
-    List<UserCount> findByBotAndGuildAndTimestampAfterAndTimestampBefore(String bot, String guild, ZonedDateTime after, ZonedDateTime before);
+    Stream<UserCount> findByBotAndGuildAndTimestampAfterAndTimestampBefore(String bot, String guild, ZonedDateTime after, ZonedDateTime before);
 }

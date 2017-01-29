@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.UserCountService;
+import top.quantic.sentry.service.util.ChartUtil;
 import top.quantic.sentry.web.rest.vm.Series;
 
 import javax.inject.Inject;
@@ -39,26 +40,26 @@ public class UserCountResource {
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<Map<String, List<Series>>> getUserCounts(@RequestParam String bot,
-                                                                   @RequestParam String guild)
-        throws URISyntaxException {
-        log.debug("REST request to get all UserCounts from {}/{} as time-grouped Series", bot, guild);
-        Map<String, List<Series>> series = userCountService.getGroupedPointsAfter(bot, guild, ZonedDateTime.now().minusYears(1));
+                                                                   @RequestParam String guild) throws URISyntaxException {
+        log.debug("GET UserCounts from {}/{}", bot, guild);
+        Map<String, List<Series>> series = userCountService.getGroupedPoints(bot, guild);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 
     @GetMapping("/user-counts/between")
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
-    public ResponseEntity<Map<String, List<Series>>> getUserCountsBetween(@RequestParam String bot,
-                                                                            @RequestParam String guild,
-                                                                            @RequestParam Long after,
-                                                                            @RequestParam Long before)
-        throws URISyntaxException {
-        ZonedDateTime afterDateTime = Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
-        ZonedDateTime beforeDateTime = Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
-        log.debug("REST request to get UserCounts from {}/{} between {} and {} as time-grouped Series",
-            bot, guild, afterDateTime, beforeDateTime);
-        Map<String, List<Series>> series = userCountService.getGroupedPointsBetween(bot, guild, afterDateTime, beforeDateTime);
+    public ResponseEntity<List<Series>> getUserCountsBetween(@RequestParam String bot,
+                                                             @RequestParam String guild,
+                                                             @RequestParam(required = false) Long after,
+                                                             @RequestParam(required = false) Long before,
+                                                             @RequestParam int resolution) throws URISyntaxException {
+        ZonedDateTime afterDateTime = after == null ? Instant.EPOCH.atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
+        ZonedDateTime beforeDateTime = before == null ? Instant.now().atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
+        // limit resolution by period duration
+        resolution = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
+        log.debug("GET UserCounts from {}/{} between {} and {} with resolution of {} minutes", bot, guild, afterDateTime, beforeDateTime, resolution);
+        List<Series> series = userCountService.getGroupedPointsBetween(bot, guild, afterDateTime, beforeDateTime, resolution);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 
@@ -66,10 +67,9 @@ public class UserCountResource {
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
     public ResponseEntity<List<Series>> getMostRecentUserCount(@RequestParam String bot,
-                                                               @RequestParam String guild)
-        throws URISyntaxException {
-        log.debug("REST request to get most recent UserCount from {}/{} as Series", bot, guild);
-        List<Series> series = userCountService.getMostRecentPoint();
+                                                               @RequestParam String guild) throws URISyntaxException {
+        log.debug("GET most recent UserCount from {}/{}", bot, guild);
+        List<Series> series = userCountService.getMostRecentPoint(bot, guild);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 

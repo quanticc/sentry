@@ -22,13 +22,15 @@
                 }
             },
             'update': {method: 'PUT'},
-            'all': {method: 'GET', url: 'api/user-counts/all'},
+            'all': {
+                method: 'GET',
+                url: 'api/user-counts/all'
+            },
             'between': {
                 method: 'GET',
                 url: 'api/user-counts/between',
                 params: {
-                    after: 0,
-                    before: new Date()
+                    resolution: 30
                 }
             },
             'last': {method: 'GET', isArray: true, url: 'api/user-counts/last'}

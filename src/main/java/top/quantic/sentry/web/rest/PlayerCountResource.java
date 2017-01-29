@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import top.quantic.sentry.security.AuthoritiesConstants;
 import top.quantic.sentry.service.PlayerCountService;
+import top.quantic.sentry.service.util.ChartUtil;
 import top.quantic.sentry.web.rest.vm.Series;
 
 import javax.inject.Inject;
@@ -37,31 +38,31 @@ public class PlayerCountResource {
     @GetMapping("/player-counts/all")
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
-    public ResponseEntity<Map<String, List<Series>>> getPlayerCounts()
-        throws URISyntaxException {
-        log.debug("REST request to get all PlayerCounts as time-grouped Series");
-        Map<String, List<Series>> series = playerCountService.getGroupedPointsAfter(ZonedDateTime.now().minusYears(1));
+    public ResponseEntity<Map<String, List<Series>>> getPlayerCounts() throws URISyntaxException {
+        log.debug("GET PlayerCounts");
+        Map<String, List<Series>> series = playerCountService.getGroupedPoints();
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 
     @GetMapping("/player-counts/between")
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
-    public ResponseEntity<Map<String, List<Series>>> getPlayerCountsBetween(@RequestParam Long after, @RequestParam Long before)
-        throws URISyntaxException {
-        ZonedDateTime afterDateTime = Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
-        ZonedDateTime beforeDateTime = Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
-        log.debug("REST request to get PlayerCounts between {} and {} as time-grouped Series", afterDateTime, beforeDateTime);
-        Map<String, List<Series>> series = playerCountService.getGroupedPointsBetween(afterDateTime, beforeDateTime);
+    public ResponseEntity<List<Series>> getPlayerCountsBetween(@RequestParam(required = false) Long after,
+                                                               @RequestParam(required = false) Long before,
+                                                               @RequestParam Integer resolution) throws URISyntaxException {
+        ZonedDateTime afterDateTime = after == null ? Instant.EPOCH.atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
+        ZonedDateTime beforeDateTime = before == null ? Instant.now().atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
+        resolution = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
+        log.debug("GET PlayerCounts between {} and {} with resolution of {} minutes", afterDateTime, beforeDateTime, resolution);
+        List<Series> series = playerCountService.getGroupedPointsBetween(afterDateTime, beforeDateTime, resolution);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 
     @GetMapping("/player-counts/last")
     @Timed
     @Secured(AuthoritiesConstants.SUPPORT)
-    public ResponseEntity<List<Series>> getMostRecentPlayerCount()
-        throws URISyntaxException {
-        log.debug("REST request to get most recent PlayerCount as Series");
+    public ResponseEntity<List<Series>> getMostRecentPlayerCount() throws URISyntaxException {
+        log.debug("GET most recent PlayerCount");
         List<Series> series = playerCountService.getMostRecentPoint();
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }

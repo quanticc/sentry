@@ -146,7 +146,6 @@
                         pushPoint($scope.pastYearData, point, 'year');
 
                         console.log('Refreshing chart');
-                        // $scope.api.refresh();
                         updateDomains();
                     }
                 }
@@ -207,6 +206,15 @@
             $scope.weekOptions.chart.xDomain = [moment().subtract(1, "weeks").toDate(), new Date()];
             $scope.monthOptions.chart.xDomain = [moment().subtract(1, "months").toDate(), new Date()];
             $scope.yearOptions.chart.xDomain = [moment().subtract(1, "years").toDate(), new Date()];
+        }
+
+        clearTooltip();
+
+        function clearTooltip() {
+            if ($scope.chart && $scope.chart.tooltip){
+                d3.select("#" + $scope.chart.tooltip.id()).remove();
+            }
+            $scope.chart = null;
         }
     }
 })();
