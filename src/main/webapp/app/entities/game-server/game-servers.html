@@ -31,7 +31,7 @@
                         </a>
                     </td>
                     <td><a ui-sref="game-server-detail({id:gameServer.id})">{{gameServer.address}}</a></td>
-                    <td ng-class="vm.grayIfZero(gameServer.players)"><span class="fa fa-male"></span>
+                    <td ng-class="vm.grayIfZero(gameServer.players)">
                         {{gameServer.players}}/{{gameServer.maxPlayers}}{{vm.formatMap(gameServer.map)}}
                     </td>
                     <td>{{gameServer.svPassword}}</td>
