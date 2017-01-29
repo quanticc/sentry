@@ -117,6 +117,20 @@ public class SettingResource {
             .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @GetMapping("/settings/find")
+    @Timed
+    @Secured(AuthoritiesConstants.SUPPORT)
+    public ResponseEntity<SettingDTO> findSetting(@RequestParam String guild,
+                                                  @RequestParam String key) {
+        log.debug("REST request to get Setting by ({}, {})", guild, key);
+        SettingDTO settingDTO = settingService.mappedFindOneByGuildAndKey(guild, key);
+        return Optional.ofNullable(settingDTO)
+            .map(result -> new ResponseEntity<>(
+                result,
+                HttpStatus.OK))
+            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
     /**
      * DELETE  /settings/:id : delete the "id" setting.
      *

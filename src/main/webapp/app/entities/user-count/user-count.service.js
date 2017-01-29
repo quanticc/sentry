@@ -2,12 +2,12 @@
     'use strict';
     angular
         .module('sentryApp')
-        .factory('PlayerCount', PlayerCount);
+        .factory('UserCount', UserCount);
 
-    PlayerCount.$inject = ['$resource', 'DateUtils'];
+    UserCount.$inject = ['$resource', 'DateUtils'];
 
-    function PlayerCount($resource, DateUtils) {
-        var resourceUrl = 'api/player-counts/:id';
+    function UserCount($resource, DateUtils) {
+        var resourceUrl = 'api/user-counts/:id';
 
         return $resource(resourceUrl, {}, {
             'query': {method: 'GET', isArray: true},
@@ -22,9 +22,16 @@
                 }
             },
             'update': {method: 'PUT'},
-            'all': {method: 'GET', url: 'api/player-counts/all'},
-            'between': {method: 'GET', url: 'api/player-counts/between'},
-            'last': {method: 'GET', isArray: true, url: 'api/player-counts/last'}
+            'all': {method: 'GET', url: 'api/user-counts/all'},
+            'between': {
+                method: 'GET',
+                url: 'api/user-counts/between',
+                params: {
+                    after: 0,
+                    before: new Date()
+                }
+            },
+            'last': {method: 'GET', isArray: true, url: 'api/user-counts/last'}
         });
     }
 })();

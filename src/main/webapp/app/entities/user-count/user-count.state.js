@@ -9,17 +9,17 @@
 
     function stateConfig($stateProvider) {
         $stateProvider
-        .state('player-count', {
+        .state('user-count', {
             parent: 'entity',
-            url: '/player-count',
+            url: '/user-count',
             data: {
                 authorities: ['ROLE_SUPPORT'],
-                pageTitle: 'PlayerCounts'
+                pageTitle: 'UserCounts'
             },
             views: {
                 'content@': {
-                    templateUrl: 'app/entities/player-count/player-counts.html',
-                    controller: 'PlayerCountController',
+                    templateUrl: 'app/entities/user-count/user-counts.html',
+                    controller: 'UserCountController',
                     controllerAs: 'vm'
                 }
             },

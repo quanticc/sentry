@@ -1,4 +1,4 @@
-(function() {
+(function () {
     'use strict';
     angular
         .module('sentryApp')
@@ -6,11 +6,11 @@
 
     Setting.$inject = ['$resource'];
 
-    function Setting ($resource) {
-        var resourceUrl =  'api/settings/:id';
+    function Setting($resource) {
+        var resourceUrl = 'api/settings/:id';
 
         return $resource(resourceUrl, {}, {
-            'query': { method: 'GET', isArray: true},
+            'query': {method: 'GET', isArray: true},
             'get': {
                 method: 'GET',
                 transformResponse: function (data) {
@@ -20,7 +20,8 @@
                     return data;
                 }
             },
-            'update': { method:'PUT' }
+            'update': {method: 'PUT'},
+            'find': {method: 'GET', url: 'api/settings/find'}
         });
     }
 })();

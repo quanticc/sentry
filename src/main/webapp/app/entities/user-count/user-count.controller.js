@@ -1,18 +1,21 @@
-(function () {
+(function() {
     'use strict';
 
     angular
         .module('sentryApp')
-        .controller('PlayerCountController', PlayerCountController);
+        .controller('UserCountController', UserCountController);
 
-    PlayerCountController.$inject = ['$scope', '$state', '$interval', 'PlayerCount', 'ParseLinks', 'AlertService'];
+    UserCountController.$inject = ['$scope', '$state', '$interval', 'UserCount', 'Setting', 'ParseLinks', 'AlertService', 'paginationConstants', 'pagingParams'];
 
-    function PlayerCountController($scope, $state, $interval, PlayerCount, ParseLinks, AlertService) {
+    function UserCountController ($scope, $state, $interval, UserCount, Setting, ParseLinks, AlertService, paginationConstants, pagingParams) {
         var vm = this;
 
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
+
+        vm.bot = '...';
+        vm.guild = '...';
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
@@ -29,7 +32,19 @@
         loadAll();
 
         function loadAll() {
-            PlayerCount.all({}, onSuccess, onError);
+            Setting.find({guild: 'userCount', key: 'defaultBot'}, onBotFound, onNotFound);
+
+            function onBotFound(botData) {
+                Setting.find({guild: 'userCount', key: 'defaultGuild'}, function (guildData) {
+                    vm.bot = botData.value;
+                    vm.guild = guildData.value;
+                    UserCount.all({bot: botData.value, guild: guildData.value}, onSuccess, onError);
+                }, onNotFound);
+            }
+
+            function onNotFound(error) {
+                AlertService.error('Settings userCount:defaultBot and/or userCount:defaultGuild not found, create them!');
+            }
 
             function onSuccess(data) {
                 $scope.pastDayData = data.day;
@@ -101,7 +116,19 @@
         }
 
         function loadLast() {
-            PlayerCount.last({}, onSuccess, onError);
+            Setting.find({guild: 'userCount', key: 'defaultBot'}, onBotFound, onNotFound);
+
+            function onBotFound(botData) {
+                Setting.find({guild: 'userCount', key: 'defaultGuild'}, function (guildData) {
+                    vm.bot = botData.value;
+                    vm.guild = guildData.value;
+                    UserCount.last({bot: botData.value, guild: guildData.value}, onSuccess, onError);
+                }, onNotFound);
+            }
+
+            function onNotFound(error) {
+                AlertService.error('Settings userCount:defaultBot and/or userCount:defaultGuild not found, create them!');
+            }
 
             function onSuccess(data) {
                 for (var newSeries in data) {
@@ -119,7 +146,7 @@
                         pushPoint($scope.pastYearData, point, 'year');
 
                         console.log('Refreshing chart');
-                        $scope.api.refresh();
+                        // $scope.api.refresh();
                         updateDomains();
                     }
                 }

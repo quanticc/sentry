@@ -142,6 +142,13 @@ public class SettingService {
         return settingRepository.findByGuildAndKey(guild, key).stream().findAny();
     }
 
+    public SettingDTO mappedFindOneByGuildAndKey(String guild, String key) {
+        return settingMapper.settingToSettingDTO(
+            settingRepository.findByGuildAndKey(guild, key).stream()
+                .findAny()
+                .orElse(null));
+    }
+
     public Optional<Setting> findMostRecentByGuildAndKey(String guild, String key) {
         return settingRepository.findByGuildAndKey(guild, key).stream()
             .sorted(Comparator.comparing(AbstractAuditingEntity::getLastModifiedDate).reversed())
