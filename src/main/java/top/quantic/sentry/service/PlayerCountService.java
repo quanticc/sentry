@@ -1,13 +1,13 @@
 package top.quantic.sentry.service;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.PlayerCount;
@@ -15,14 +15,15 @@ import top.quantic.sentry.repository.PlayerCountRepository;
 import top.quantic.sentry.web.rest.vm.Series;
 
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
-import static com.google.common.collect.Multimaps.flatteningToMultimap;
 import static com.google.common.collect.Multimaps.toMultimap;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static top.quantic.sentry.service.util.ChartUtil.getSeriesFromData;
+import static top.quantic.sentry.service.util.ChartUtil.getTimeGroupedSeriesFromData;
 
 /**
  * Service Implementation for managing PlayerCount.
@@ -34,17 +35,20 @@ public class PlayerCountService {
 
     private final PlayerCountRepository playerCountRepository;
     private final MetricRegistry metricRegistry;
+    private final MongoTemplate mongoTemplate;
 
     private final Map<String, Long> lastValueMap = new ConcurrentHashMap<>();
 
     @Autowired
-    public PlayerCountService(PlayerCountRepository playerCountRepository, MetricRegistry metricRegistry) {
+    public PlayerCountService(PlayerCountRepository playerCountRepository, MetricRegistry metricRegistry,
+                              MongoTemplate mongoTemplate) {
         this.playerCountRepository = playerCountRepository;
         this.metricRegistry = metricRegistry;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @Scheduled(cron = "10 * * * * ?")
-    void reportMetrics() {
+    void storePlayerCountMetrics() {
         ZonedDateTime timestamp = ZonedDateTime.now().truncatedTo(MINUTES);
 
         Map<String, AtomicLong> aggregations = new ConcurrentHashMap<>();
@@ -86,61 +90,20 @@ public class PlayerCountService {
         return key.replaceAll("^.*\\[region:(\\w+),game:(\\w+)]$", "$1");
     }
 
-    public List<PlayerCount> findAllFromPastDay() {
-        return playerCountRepository.findByTimestampAfter(ZonedDateTime.now().minusDays(1));
+    public Map<String, List<Series>> getGroupedPointsAfter(ZonedDateTime dateTime) {
+        return getTimeGroupedSeriesFromData(playerCountRepository.findByTimestampAfter(dateTime),
+            PlayerCount::getRegion, PlayerCount::getTimestamp, PlayerCount::getValue);
     }
 
-    public List<Series> getPointsFromPastDay() {
-        List<PlayerCount> counts = findAllFromPastDay();
-        // x-axis is normalized between entities but some values could be missing
-        // in those cases, use y = 0
-        // create a map of categories to x-y pairs
-        Multimap<String, Pair> byRegion = counts.stream()
-            .collect(toMultimap(
-                PlayerCount::getRegion,
-                count -> new Pair(count.getTimestamp().toEpochSecond(), count.getValue()),
-                MultimapBuilder.treeKeys().hashSetValues()::build));
-        // build a list of default values x-0 for each category
-        Set<Long> timestamps = counts.stream()
-            .map(count -> count.getTimestamp().toEpochSecond())
-            .collect(Collectors.toSet());
-        Multimap<String, Pair> defaults = byRegion.keySet().stream()
-            .collect(flatteningToMultimap(
-                region -> region,
-                region -> timestamps.stream().map(timestamp -> new Pair(timestamp, 0)),
-                MultimapBuilder.treeKeys().hashSetValues()::build));
-        byRegion.putAll(defaults);
-        // convert to expected structure
-        return byRegion.asMap().entrySet().stream()
-            .map(entry -> new Series(entry.getKey()).values(
-                entry.getValue().stream()
-                    .map(pair -> Arrays.asList(pair.x, pair.y))
-                    .sorted(Comparator.comparingInt(o -> o.get(0).intValue()))
-                    .collect(Collectors.toList())))
-            .collect(Collectors.toList());
+    public Map<String, List<Series>> getGroupedPointsBetween(ZonedDateTime after, ZonedDateTime before) {
+        return getTimeGroupedSeriesFromData(playerCountRepository.findByTimestampAfterAndTimestampBefore(after, before),
+            PlayerCount::getRegion, PlayerCount::getTimestamp, PlayerCount::getValue);
     }
 
-    private static class Pair {
-        private final Number x;
-        private final Number y;
-
-        Pair(Number x, Number y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Pair pair = (Pair) o;
-            return Objects.equals(x, pair.x);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x);
-        }
+    public List<Series> getMostRecentPoint() {
+        // simple heuristic to get the most recent point
+        return getSeriesFromData(playerCountRepository.findByTimestampAfter(ZonedDateTime.now().minusSeconds(70)),
+            PlayerCount::getRegion, PlayerCount::getTimestamp, PlayerCount::getValue, null, null);
     }
 
     /**

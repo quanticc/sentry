@@ -14,5 +14,7 @@ public interface PlayerCountRepository extends MongoRepository<PlayerCount, Stri
 
     List<PlayerCount> findByTimestampAfter(ZonedDateTime dateTime);
 
+    List<PlayerCount> findByTimestampAfterAndTimestampBefore(ZonedDateTime after, ZonedDateTime before);
+
     Long countByRegionAndValueAndTimestamp(String region, Long value, ZonedDateTime timestamp);
 }
