@@ -45,11 +45,16 @@ public class BotCheck implements Job {
                     long online = guild.getUsers().stream()
                         .filter(user -> user.getPresence().getStatus() == StatusType.ONLINE)
                         .count();
-                    long other = guild.getUsers().size() - online;
+                    long connected = guild.getUsers().stream()
+                        .filter(user -> user.getPresence().getStatus() != StatusType.OFFLINE)
+                        .count();
+                    long joined = guild.getUsers().size();
                     String onlineMetric = "discord.ws.users[" + botTag + "," + guildTag + "," + "status:online]";
-                    String otherMetric = "discord.ws.users[" + botTag + "," + guildTag + "," + "status:other]";
+                    String connectedMetric = "discord.ws.users[" + botTag + "," + guildTag + "," + "status:connected]";
+                    String joinedMetric = "discord.ws.users[" + botTag + "," + guildTag + "," + "status:joined]";
                     metricRegistry.histogram(onlineMetric).update(online);
-                    metricRegistry.histogram(otherMetric).update(other);
+                    metricRegistry.histogram(connectedMetric).update(connected);
+                    metricRegistry.histogram(joinedMetric).update(joined);
                 }
             }
         }
