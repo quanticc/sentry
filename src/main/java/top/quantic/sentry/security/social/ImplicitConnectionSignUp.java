@@ -45,8 +45,21 @@ public class ImplicitConnectionSignUp implements ConnectionSignUp {
         Set<Authority> authorities;
         if (sentryProperties.getDiscord().getAdministrators().contains(login)) {
             log.info("Giving administrative role to {} ({})", userProfile.getUsername(), userProfile.getId());
-            authorities = new HashSet<>(2);
+            authorities = new HashSet<>(4);
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.ADMIN));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.MANAGER));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.SUPPORT));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));
+        } else if (sentryProperties.getDiscord().getAdministrators().contains(login)) {
+            log.info("Giving manager role to {} ({})", userProfile.getUsername(), userProfile.getId());
+            authorities = new HashSet<>(3);
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.MANAGER));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.SUPPORT));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));
+        } else if (sentryProperties.getDiscord().getAdministrators().contains(login)) {
+            log.info("Giving support role to {} ({})", userProfile.getUsername(), userProfile.getId());
+            authorities = new HashSet<>(2);
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.SUPPORT));
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));
         } else {
             authorities = new HashSet<>(1);
