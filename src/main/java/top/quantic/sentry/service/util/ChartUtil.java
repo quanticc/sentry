@@ -23,32 +23,17 @@ public class ChartUtil {
     private static final Logger log = LoggerFactory.getLogger(ChartUtil.class);
 
     public static <T> List<Series> getAggregatedSeriesFromData(Stream<T> stream,
-                                                               int minutesResolution,
+                                                               int resolution,
                                                                Function<T, String> seriesMapper,
                                                                Function<T, ZonedDateTime> timeMapper,
                                                                Function<T, Long> valueMapper,
                                                                Function<Map.Entry<Pair<ZonedDateTime, String>, Adder>, T> objectMapper) {
         try (Stream<T> _stream = stream) {
-            int resolution = Math.max(1, Math.min(60, minutesResolution));
             return getSeriesFromData(
                 aggregate(_stream, resolution, seriesMapper, timeMapper, valueMapper, objectMapper),
                 seriesMapper, timeMapper, valueMapper);
         }
     }
-
-//    public static <T> Map<String, List<Series>> getAggregateGroupedSeriesFromData(Stream<T> stream,
-//                                                                                  int minutesResolution,
-//                                                                                  Function<T, String> seriesMapper,
-//                                                                                  Function<T, ZonedDateTime> timeMapper,
-//                                                                                  Function<T, Long> valueMapper,
-//                                                                                  Function<Map.Entry<Pair<ZonedDateTime, String>, Adder>, T> objectMapper) {
-//        try (Stream<T> _stream = stream) {
-//            int resolution = Math.max(1, Math.min(60, minutesResolution));
-//            return getTimeGroupedSeriesFromData(
-//                aggregate(_stream, resolution, seriesMapper, timeMapper, valueMapper, objectMapper),
-//                seriesMapper, timeMapper, valueMapper);
-//        }
-//    }
 
     private static <T> List<T> aggregate(Stream<T> stream,
                                          int resolution,
@@ -58,11 +43,22 @@ public class ChartUtil {
                                          Function<Map.Entry<Pair<ZonedDateTime, String>, Adder>, T> objectMapper) {
         return stream
             .map(count -> {
-                // map to intermediate aggregation object
-                int minute = timeMapper.apply(count).getMinute() / resolution * resolution;
-                return Pair.of(
-                    Pair.of(timeMapper.apply(count).withMinute(minute), seriesMapper.apply(count)),
-                    new Adder(valueMapper.apply(count)));
+                // hackish way to map to intermediate aggregation object
+                ZonedDateTime key = timeMapper.apply(count);
+                int dayResolution = resolution / 1440;
+                int hourResolution = resolution / 60;
+                if (dayResolution > 0) {
+                    int yearModulo = dayResolution % 365;
+                    key = key.withMinute(0)
+                        .withHour(0)
+                        .withDayOfYear(((key.getDayOfYear() - 1) / yearModulo * yearModulo) + 1);
+                } else if (hourResolution > 0) {
+                    key = key.withMinute(0)
+                        .withHour(key.getHour() / hourResolution * hourResolution);
+                } else {
+                    key = key.withMinute(key.getMinute() / resolution * resolution);
+                }
+                return Pair.of(Pair.of(key, seriesMapper.apply(count)), new Adder(valueMapper.apply(count)));
             })
             .collect(Collectors.toMap(Pair::getKey, Pair::getValue, Adder::sum))
             .entrySet().stream()
@@ -119,11 +115,11 @@ public class ChartUtil {
         if (days == 0) {
             return Math.max(1, resolution);
         } else if (days < 7) {
-            return Math.max(10, resolution);
-        } else if (days < 30) {
-            return Math.max(30, resolution);
-        } else {
             return Math.max(60, resolution);
+        } else if (days < 30) {
+            return Math.max(60 * 24, resolution);
+        } else {
+            return Math.max(60 * 24 * 7, resolution);
         }
     }
 }

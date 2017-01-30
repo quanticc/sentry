@@ -78,16 +78,16 @@ public class UserCountService {
         Map<String, List<Series>> map = new LinkedHashMap<>();
         ZonedDateTime pastDay = ZonedDateTime.now().minusDays(1);
         ZonedDateTime pastWeek = ZonedDateTime.now().minusWeeks(1);
-        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
-        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
+//        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
+//        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
         map.put("day", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastDay), 1,
             seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("week", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastWeek), 10,
+        map.put("week", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastWeek), 60,
             seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("month", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastMonth), 30,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("year", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastYear), 60,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
+//        map.put("month", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastMonth), 60 * 24,
+//            seriesMapper, timeMapper, valueMapper, objectMapper));
+//        map.put("year", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastYear), 60 * 24 * 7,
+//            seriesMapper, timeMapper, valueMapper, objectMapper));
         return map;
     }
 

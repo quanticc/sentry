@@ -13,10 +13,12 @@
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
+        vm.tooltipKiller = $interval(clearTooltip, 5000);
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
             $interval.cancel(vm.clock);
+            $interval.cancel(vm.tooltipKiller);
         });
 
         function updateTime() {
@@ -180,8 +182,6 @@
             $scope.monthOptions.chart.xDomain = [moment().subtract(1, "months").toDate(), new Date()];
             $scope.yearOptions.chart.xDomain = [moment().subtract(1, "years").toDate(), new Date()];
         }
-
-        clearTooltip();
 
         function clearTooltip() {
             if ($scope.chart && $scope.chart.tooltip){

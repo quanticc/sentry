@@ -104,16 +104,16 @@ public class PlayerCountService {
         Map<String, List<Series>> map = new LinkedHashMap<>();
         ZonedDateTime pastDay = ZonedDateTime.now().minusDays(1);
         ZonedDateTime pastWeek = ZonedDateTime.now().minusWeeks(1);
-        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
-        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
+//        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
+//        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
         map.put("day", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastDay), 1,
             seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("week", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastWeek), 10,
+        map.put("week", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastWeek), 60,
             seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("month", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastMonth), 30,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("year", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastYear), 60,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
+//        map.put("month", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastMonth), 60 * 24,
+//            seriesMapper, timeMapper, valueMapper, objectMapper));
+//        map.put("year", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastYear), 60 * 24 * 7,
+//            seriesMapper, timeMapper, valueMapper, objectMapper));
         return map;
     }
 

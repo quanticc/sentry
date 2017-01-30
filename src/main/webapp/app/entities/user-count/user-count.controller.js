@@ -13,6 +13,7 @@
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
+        vm.tooltipKiller = $interval(clearTooltip, 5000);
 
         vm.bot = '...';
         vm.guild = '...';
@@ -20,6 +21,7 @@
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
             $interval.cancel(vm.clock);
+            $interval.cancel(vm.tooltipKiller);
         });
 
         function updateTime() {
