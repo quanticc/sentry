@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.IListener;
@@ -58,6 +59,7 @@ public class BotService {
 
     @EventListener
     public void onApplicationReady(ApplicationReadyEvent event) {
+        Discord4J.enableJettyLogging();
         autoLoginBots();
     }
 

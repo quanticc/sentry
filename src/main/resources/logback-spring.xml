@@ -24,6 +24,7 @@
     <logger name="top.quantic.sentry" level="#logback.loglevel#"/>
 
     <logger name="org.mongodb.driver.cluster" level="INFO"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
 
     <logger name="javax.activation" level="WARN"/>
     <logger name="javax.mail" level="WARN"/>
