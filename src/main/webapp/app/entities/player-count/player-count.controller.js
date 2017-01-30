@@ -5,20 +5,19 @@
         .module('sentryApp')
         .controller('PlayerCountController', PlayerCountController);
 
-    PlayerCountController.$inject = ['$scope', '$state', '$interval', 'PlayerCount', 'ParseLinks', 'AlertService'];
+    PlayerCountController.$inject = ['$scope', '$state', '$interval', '$timeout', 'PlayerCount', 'ParseLinks', 'AlertService'];
 
-    function PlayerCountController($scope, $state, $interval, PlayerCount, ParseLinks, AlertService) {
+    function PlayerCountController($scope, $state, $interval, $timeout, PlayerCount, ParseLinks, AlertService) {
         var vm = this;
 
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
-        vm.tooltipKiller = $interval(clearTooltip, 5000);
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
             $interval.cancel(vm.clock);
-            $interval.cancel(vm.tooltipKiller);
+            clearTooltip();
         });
 
         function updateTime() {
@@ -122,6 +121,7 @@
 
                         console.log('Refreshing chart');
                         updateDomains();
+                        clearTooltip();
                     }
                 }
             }
@@ -183,11 +183,15 @@
             $scope.yearOptions.chart.xDomain = [moment().subtract(1, "years").toDate(), new Date()];
         }
 
+        clearTooltip();
+
         function clearTooltip() {
-            if ($scope.chart && $scope.chart.tooltip){
-                d3.select("#" + $scope.chart.tooltip.id()).remove();
-            }
-            $scope.chart = null;
+            $timeout(function() {
+                $scope.dropdownOpen = false;
+                $timeout(function() {
+                    d3.selectAll('.nvtooltip').remove();
+                });
+            }, 500);
         }
     }
 })();

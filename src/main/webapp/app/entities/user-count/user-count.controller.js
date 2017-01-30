@@ -5,15 +5,14 @@
         .module('sentryApp')
         .controller('UserCountController', UserCountController);
 
-    UserCountController.$inject = ['$scope', '$state', '$interval', 'UserCount', 'Setting', 'ParseLinks', 'AlertService', 'paginationConstants', 'pagingParams'];
+    UserCountController.$inject = ['$scope', '$state', '$interval', '$timeout', 'UserCount', 'Setting', 'ParseLinks', 'AlertService', 'paginationConstants', 'pagingParams'];
 
-    function UserCountController ($scope, $state, $interval, UserCount, Setting, ParseLinks, AlertService, paginationConstants, pagingParams) {
+    function UserCountController ($scope, $state, $interval, $timeout, UserCount, Setting, ParseLinks, AlertService, paginationConstants, pagingParams) {
         var vm = this;
 
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
-        vm.tooltipKiller = $interval(clearTooltip, 5000);
 
         vm.bot = '...';
         vm.guild = '...';
@@ -21,7 +20,7 @@
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
             $interval.cancel(vm.clock);
-            $interval.cancel(vm.tooltipKiller);
+            clearTooltip();
         });
 
         function updateTime() {
@@ -149,6 +148,7 @@
 
                         console.log('Refreshing chart');
                         updateDomains();
+                        clearTooltip();
                     }
                 }
             }
@@ -213,10 +213,12 @@
         clearTooltip();
 
         function clearTooltip() {
-            if ($scope.chart && $scope.chart.tooltip){
-                d3.select("#" + $scope.chart.tooltip.id()).remove();
-            }
-            $scope.chart = null;
+            $timeout(function() {
+                $scope.dropdownOpen = false;
+                $timeout(function() {
+                    d3.selectAll('.nvtooltip').remove();
+                });
+            }, 500);
         }
     }
 })();
