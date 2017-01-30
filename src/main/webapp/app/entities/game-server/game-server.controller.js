@@ -154,10 +154,14 @@
             }
         }
 
-        function expireWarning(end) {
-            var duration = moment.duration(moment().diff(moment(end)));
+        function expireWarning(endTime) {
+            var now = moment();
+            var end = moment(endTime);
+            var duration = moment.duration(now.diff(end));
             var minutes = duration.asMinutes();
-            if (minutes <= 30) {
+            if (end.isBefore(now)) {
+                return 'gray';
+            } else if (minutes <= 30) {
                 return 'red';
             } else {
                 return '';
