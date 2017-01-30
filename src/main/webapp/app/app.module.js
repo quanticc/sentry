@@ -16,7 +16,7 @@
             // jhipster-needle-angularjs-add-module JHipster will add new module here
             'angular-loading-bar',
             'relativeDate',
-            'patternfly',
+            // 'patternfly',
             //'patternfly.charts',
             'key-value-editor',
             'nvd3'

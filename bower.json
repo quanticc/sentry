@@ -48,13 +48,32 @@
       "main": [
         "dist/css/bootstrap.css"
       ]
+    },
+    "angular-key-value-editor": {
+      "main": [
+        "dist/angular-key-value-editor.css",
+        "dist/angular-key-value-editor.js",
+        "dist/compiled-templates.js"
+      ],
+      "dependencies": {
+        "ng-sortable": "~1.3.4"
+      }
+    },
+    "angular-nvd3": {
+      "dependencies": {
+        "d3": "^3.3.13",
+        "nvd3": "https://github.com/labcodes/nvd3.git#c181f7c92c3788f9a3819cfac2baea151752b2c3"
+      }
+    },
+    "angular-patternfly": {
+      "dependencies": {
+        "moment": "~2.14.1"
+      }
     }
   },
   "resolutions": {
     "angular": "1.5.8",
     "angular-bootstrap": "1.3.3",
-    "jquery": "3.1.0",
-    "patternfly": "~3.18.1",
-    "patternfly-bootstrap-treeview": "~2.1.0"
+    "jquery": "3.1.0"
   }
 }
