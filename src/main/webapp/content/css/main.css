@@ -24,6 +24,10 @@ body {
     color: gray;
 }
 
+.red {
+    color: #880000;
+}
+
 .no-padding > tbody > tr > td {
     padding: 0;
 }

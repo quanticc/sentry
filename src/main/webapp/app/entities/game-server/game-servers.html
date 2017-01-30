@@ -35,9 +35,13 @@
                         {{gameServer.players}}/{{gameServer.maxPlayers}}{{vm.formatMap(gameServer.map)}}
                     </td>
                     <td>{{gameServer.svPassword}}</td>
-                    <td ng-class="vm.grayIfFalse(gameServer.expires)" ng-attr-title="Last checked {{gameServer.expirationCheckDate | relativeDate}}">{{gameServer.expirationDate | relativeDate}}</td>
-                    <td>{{gameServer.lastValidPing | relativeDate}}</td>
-                    <td ng-attr-title="Last updated {{gameServer.lastRconDate | relativeDate}}">{{gameServer.rconPassword}}</td>
+                    <td ng-class="vm.expireWarning(gameServer.expirationDate)" ng-attr-title="Last checked {{gameServer.expirationCheckDate | relativeDate}}">{{gameServer.expirationDate | relativeDate}}</td>
+                    <td ng-class="vm.pingWarning(gameServer.lastValidPing)">{{gameServer.lastValidPing | relativeDate}}</td>
+                    <td>
+                        <span ng-class="vm.rconWarning(gameServer.rconPassword)" ng-attr-title="Last updated {{gameServer.lastRconDate | relativeDate}}">
+                            {{vm.rconWarningText(gameServer.rconPassword)}}
+                        </span>
+                    </td>
                     <td ng-attr-title="Last updated {{gameServer.lastGameUpdate | relativeDate}}">v{{gameServer.version}}</td>
                     <td>
                         <span class="label" ng-class="vm.prettyBoolClass(gameServer.updating)">

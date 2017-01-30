@@ -30,6 +30,11 @@
         vm.prettyBoolText = prettyBoolText;
         vm.prettyBoolClass = prettyBoolClass;
 
+        vm.expireWarning = expireWarning;
+        vm.pingWarning = pingWarning;
+        vm.rconWarning = rconWarning;
+        vm.rconWarningText = rconWarningText;
+
         loadAll();
 
         vm.refresher = $interval(loadAll, 60000);
@@ -116,8 +121,10 @@
         }
 
         function pingToClass(ping) {
-            if (ping > 0) {
+            if (ping > 0 && ping < 1000) {
                 return 'label-success';
+            } else if (ping < 2000) {
+                return 'label-warning';
             } else {
                 return 'label-danger';
             }
@@ -144,6 +151,42 @@
                 return 'label-warning';
             } else {
                 return 'label-info';
+            }
+        }
+
+        function expireWarning(end) {
+            var duration = moment.duration(moment().diff(moment(end)));
+            var minutes = duration.asMinutes();
+            if (minutes <= 30) {
+                return 'red';
+            } else {
+                return '';
+            }
+        }
+
+        function pingWarning(end) {
+            var duration = moment.duration(moment(end).diff(moment()));
+            var minutes = duration.asMinutes();
+            if (minutes > 2) {
+                return 'red';
+            } else {
+                return '';
+            }
+        }
+
+        function rconWarning(rcon) {
+            if (!rcon) {
+                return 'label label-warning';
+            } else {
+                return '';
+            }
+        }
+
+        function rconWarningText(rcon) {
+            if (!rcon) {
+                return 'Missing RCON!';
+            } else {
+                return rcon;
             }
         }
     }
