@@ -82,6 +82,7 @@ public class Self implements CommandSupplier {
         OptionParser parser = new OptionParser();
         OptionSpec<String> nameSpec = parser.accepts("name", "New name for this bot").withRequiredArg();
         OptionSpec<String> avatarSpec = parser.accepts("avatar", "URL to the new avatar for this bot").withRequiredArg();
+        OptionSpec<String> formatSpec = parser.accepts("format", "Image format").withRequiredArg().defaultsTo("png");
         OptionSpec<String> gameSpec = parser.accepts("game", "Set a new game status message").withRequiredArg();
         OptionSpec<String> streamSpec = parser.accepts("stream", "Set a new stream status message").withRequiredArg();
         OptionSpec<String> urlSpec = parser.accepts("url", "Set a new stream status URL").requiredIf(streamSpec).withRequiredArg();
@@ -115,7 +116,7 @@ public class Self implements CommandSupplier {
                         }
                         RequestBuffer.request(() -> {
                             try {
-                                client.changeAvatar(Image.forStream("jpeg", newStream));
+                                client.changeAvatar(Image.forStream(o.valueOf(formatSpec), newStream));
                             } catch (DiscordException e) {
                                 log.warn("Could not change avatar", e);
                                 answerPrivately(message, "Could not change avatar: " + e.getErrorMessage());
