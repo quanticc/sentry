@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class DiscordUtil {
@@ -105,6 +106,13 @@ public class DiscordUtil {
 
     public static String humanize(IRole role) {
         return String.format("%s/%s (%s)", role.getGuild().getName(), role.getName().replace("@", "@\u200B"), role.getID());
+    }
+
+    public static String humanizeShort(IUser user) {
+        if (user == null) {
+            return "";
+        }
+        return "• " + user.getName() + " <" + user.getID() + ">\n";
     }
 
     public static boolean equalsAnyName(IUser user, String name, IGuild guild) {
@@ -229,15 +237,14 @@ public class DiscordUtil {
         });
     }
 
-    public static void answerPrivatelyWithFile(IMessage to, String content, InputStream stream, String fileName) {
-        RequestBuffer.request(() -> {
-            try {
-                answerToChannelWithFile(to.getAuthor().getOrCreatePMChannel(), content, stream, fileName);
-            } catch (DiscordException e) {
-                log.warn("[{}] Failed to send PM to {}: {}", to.getClient().getOurUser().getName(),
-                    humanize(to.getAuthor()), e);
-            }
-        });
+    public static RequestBuffer.RequestFuture<IMessage> answerPrivatelyWithFile(IMessage to, String content, InputStream stream, String fileName) {
+        try {
+            return answerToChannelWithFile(to.getAuthor().getOrCreatePMChannel(), content, stream, fileName);
+        } catch (DiscordException e) {
+            log.warn("[{}] Failed to send PM to {}: {}", to.getClient().getOurUser().getName(),
+                humanize(to.getAuthor()), e);
+        }
+        return RequestBuffer.request(() -> null);
     }
 
     private static void answerToChannel(IChannel channel, String content, boolean tts) {
@@ -265,16 +272,16 @@ public class DiscordUtil {
         }
     }
 
-    private static void answerToChannelWithFile(IChannel channel, String content, InputStream stream, String fileName) {
+    private static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, InputStream stream, String fileName) {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
             for (int i = 0; i < splits.size() - 1; i++) {
                 sendMessage(channel, splits.get(i), null, false);
             }
-            sendFile(channel, splits.get(splits.size() - 1), stream, fileName);
+            return sendFile(channel, splits.get(splits.size() - 1), stream, fileName);
         } else {
-            sendFile(channel, content, stream, fileName);
+            return sendFile(channel, content, stream, fileName);
         }
     }
 
@@ -353,5 +360,17 @@ public class DiscordUtil {
 
 
     private DiscordUtil() {
+    }
+
+    public static List<IUser> awareUserList(boolean aware, IMessage message) {
+        IDiscordClient client = message.getClient();
+        IChannel channel = message.getChannel();
+        if (aware) {
+            return client.getUsers();
+        } else if (!channel.isPrivate()) {
+            return channel.getGuild().getUsers();
+        } else {
+            return asList(message.getAuthor(), client.getOurUser());
+        }
     }
 }

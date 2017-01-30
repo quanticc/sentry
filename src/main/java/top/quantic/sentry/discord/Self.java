@@ -3,6 +3,7 @@ package top.quantic.sentry.discord;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +11,14 @@ import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.Status;
+import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.*;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
+import top.quantic.sentry.discord.util.DiscordUtil;
+import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.service.SettingService;
 
 import java.io.IOException;
@@ -29,6 +32,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static top.quantic.sentry.config.Operations.QUERY_ALL_GUILDS;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
@@ -38,10 +43,12 @@ public class Self implements CommandSupplier {
     private static final Logger log = LoggerFactory.getLogger(Self.class);
 
     private final SettingService settingService;
+    private final PermissionService permissionService;
 
     @Autowired
-    public Self(SettingService settingService) {
+    public Self(SettingService settingService, PermissionService permissionService) {
         this.settingService = settingService;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -81,13 +88,13 @@ public class Self implements CommandSupplier {
     private Command profile() {
         OptionParser parser = new OptionParser();
         OptionSpec<String> nameSpec = parser.accepts("name", "New name for this bot").withRequiredArg();
-        OptionSpec<String> avatarSpec = parser.accepts("avatar", "URL to the new avatar for this bot").withRequiredArg();
-        OptionSpec<String> formatSpec = parser.accepts("format", "Image format").withRequiredArg().defaultsTo("png");
+        OptionSpec<String> avatarSpec = parser.accepts("avatar", "URL or User ID, name, or mention to the new avatar for this bot").withRequiredArg();
+        OptionSpec<String> formatSpec = parser.accepts("format", "Override the format of a supplied image").withRequiredArg();
         OptionSpec<String> gameSpec = parser.accepts("game", "Set a new game status message").withRequiredArg();
         OptionSpec<String> streamSpec = parser.accepts("stream", "Set a new stream status message").withRequiredArg();
         OptionSpec<String> urlSpec = parser.accepts("url", "Set a new stream status URL").requiredIf(streamSpec).withRequiredArg();
         OptionSpec<String> presenceSpec = parser.acceptsAll(asList("as", "presence"), "Set the new presence of this bot (online, idle)").withRequiredArg();
-        OptionSpec<Void> emptySpec = parser.accepts("empty", "Reset the current status to empty");
+        OptionSpec<Void> emptySpec = parser.accepts("empty", "Reset the status message");
         return CommandBuilder.of("profile")
             .describedAs("Edit this bot's profile")
             .in("Bot")
@@ -108,46 +115,88 @@ public class Self implements CommandSupplier {
                     });
                 }
                 if (o.has(avatarSpec)) {
-                    try (InputStream newStream = avatarAsInputStream(o.valueOf(avatarSpec))) {
+                    if (client.getOurUser().getAvatar() != null) {
                         try (InputStream oldStream = avatarAsInputStream(client.getOurUser().getAvatarURL())) {
-                            answerPrivatelyWithFile(message, "Old avatar for backup purposes", oldStream, "avatar.jpg");
+                            answerPrivatelyWithFile(message, "Old avatar for backup purposes", oldStream,
+                                "avatar.png").get();
                         } catch (IOException e) {
                             log.warn("Could not send previous avatar", e);
                         }
+                    } else {
+                        log.debug("Default avatar found - no backup done");
+                    }
+
+                    String query = o.valueOf(avatarSpec);
+                    boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                    IChannel channel = message.getChannel();
+
+                    String id = query.replaceAll("<@!?(\\d+)>", "$1");
+                    List<IUser> users = awareUserList(aware, message);
+                    List<IUser> matching = users.stream()
+                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
+                        .distinct()
+                        .collect(Collectors.toList());
+                    if (matching.size() == 1) {
+                        IUser user = matching.get(0);
+                        log.debug("Getting avatar from {}", humanize(user));
                         RequestBuffer.request(() -> {
                             try {
-                                client.changeAvatar(Image.forStream(o.valueOf(formatSpec), newStream));
+                                client.changeAvatar(Image.forUser(user));
                             } catch (DiscordException e) {
                                 log.warn("Could not change avatar", e);
                                 answerPrivately(message, "Could not change avatar: " + e.getErrorMessage());
                             }
                         });
-                    } catch (IOException e) {
-                        log.warn("Could not set new avatar", e);
-                        answerPrivately(message, "Could not change avatar: " + e.getMessage());
+                    } else if (matching.size() > 1) {
+                        answerPrivately(message, "Multiple user matches for " + query + "\n"
+                            + matching.stream()
+                            .map(DiscordUtil::humanizeShort)
+                            .collect(Collectors.joining("\n")));
+                    } else {
+                        // try as URL
+                        RequestBuffer.request(() -> {
+                            try {
+                                String format = getFormat(query, o.valueOf(formatSpec));
+                                client.changeAvatar(Image.forUrl(format, query));
+                            } catch (DiscordException e) {
+                                log.warn("Could not change avatar", e);
+                                answerPrivately(message, "Could not change avatar: " + e.getErrorMessage());
+                            }
+                        });
                     }
                 }
                 if (o.has(gameSpec)) {
-                    client.changeStatus(Status.game(o.valueOf(gameSpec)));
+                    client.online(o.valueOf(gameSpec));
                 } else if (o.has(urlSpec)) {
-                    client.changeStatus(Status.stream(o.valueOf(streamSpec), o.valueOf(urlSpec)));
+                    client.streaming(o.valueOf(streamSpec), o.valueOf(urlSpec));
                 } else if (o.has(emptySpec)) {
-                    client.changeStatus(Status.empty());
+                    client.online();
                 }
                 if (o.has(presenceSpec)) {
                     String presence = o.valueOf(presenceSpec);
                     switch (presence.toLowerCase()) {
                         case "online":
-                            client.changePresence(false);
+                            client.online();
                             break;
                         case "idle":
-                            client.changePresence(true);
+                            client.idle();
                             break;
                         default:
                             answerPrivately(message, "Invalid presence - use either online or idle");
                     }
                 }
             }).build();
+    }
+
+    private String getFormat(String avatar, String format) {
+        String result = format;
+        if (format == null) {
+            result = FilenameUtils.getExtension(avatar);
+            if (isBlank(result)) {
+                result = "png";
+            }
+        }
+        return result;
     }
 
     private InputStream avatarAsInputStream(String urlStr) throws IOException {

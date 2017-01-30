@@ -13,6 +13,7 @@ import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
+import top.quantic.sentry.discord.util.DiscordUtil;
 import top.quantic.sentry.service.PermissionService;
 
 import java.awt.*;
@@ -86,14 +87,7 @@ public class Info implements CommandSupplier {
                 Set<IUser> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<@!?(\\d+)>", "$1");
-                    List<IUser> users;
-                    if (aware) {
-                        users = client.getUsers();
-                    } else if (!channel.isPrivate()) {
-                        users = channel.getGuild().getUsers();
-                    } else {
-                        users = asList(message.getAuthor(), client.getOurUser());
-                    }
+                    List<IUser> users = awareUserList(aware, message);
                     List<IUser> matching = users.stream()
                         .filter(u -> !matched.contains(u))
                         .filter(u -> u.getID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
@@ -106,7 +100,7 @@ public class Info implements CommandSupplier {
                     } else if (matching.size() > 1) {
                         builder.append("Multiple matches for ").append(query).append("\n")
                             .append(matching.stream()
-                                .map(this::getShortUserInfo)
+                                .map(DiscordUtil::humanizeShort)
                                 .collect(Collectors.joining("\n")));
                     } else {
                         builder.append("No users matching ").append(id).append("\n");
@@ -147,13 +141,6 @@ public class Info implements CommandSupplier {
         } else {
             return names;
         }
-    }
-
-    private String getShortUserInfo(IUser user) {
-        if (user == null) {
-            return "";
-        }
-        return "• " + user.getName() + " <" + user.getID() + ">\n";
     }
 
     private Command role() {
