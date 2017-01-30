@@ -53,7 +53,7 @@ public class SettingResource {
         }
         SettingDTO result = settingService.save(settingDTO);
         return ResponseEntity.created(new URI("/api/settings/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("setting", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("setting", result.getId()))
             .body(result);
     }
 
@@ -76,7 +76,7 @@ public class SettingResource {
         }
         SettingDTO result = settingService.save(settingDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("setting", settingDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("setting", settingDTO.getId()))
             .body(result);
     }
 
@@ -143,7 +143,7 @@ public class SettingResource {
     public ResponseEntity<Void> deleteSetting(@PathVariable String id) {
         log.debug("REST request to delete Setting : {}", id);
         settingService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("setting", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("setting", id)).build();
     }
 
 }

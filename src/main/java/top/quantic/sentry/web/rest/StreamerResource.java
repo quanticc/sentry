@@ -50,7 +50,7 @@ public class StreamerResource {
         }
         StreamerDTO result = streamerService.save(streamerDTO);
         return ResponseEntity.created(new URI("/api/streamers/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("streamer", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("streamer", result.getId()))
             .body(result);
     }
 
@@ -72,7 +72,7 @@ public class StreamerResource {
         }
         StreamerDTO result = streamerService.save(streamerDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("streamer", streamerDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("streamer", streamerDTO.getId()))
             .body(result);
     }
 
@@ -122,7 +122,7 @@ public class StreamerResource {
     public ResponseEntity<Void> deleteStreamer(@PathVariable String id) {
         log.debug("REST request to delete Streamer : {}", id);
         streamerService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("streamer", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("streamer", id)).build();
     }
 
 }

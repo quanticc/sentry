@@ -57,9 +57,9 @@ public class UserCountResource {
         ZonedDateTime afterDateTime = after == null ? Instant.EPOCH.atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
         ZonedDateTime beforeDateTime = before == null ? Instant.now().atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
         // limit resolution by period duration
-        resolution = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
-        log.debug("GET UserCounts from {}/{} between {} and {} with resolution of {} minutes", bot, guild, afterDateTime, beforeDateTime, resolution);
-        List<Series> series = userCountService.getGroupedPointsBetween(bot, guild, afterDateTime, beforeDateTime, resolution);
+        int res = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
+        log.debug("GET UserCounts from {}/{} between {} and {} with resolution of {} minutes", bot, guild, afterDateTime, beforeDateTime, res);
+        List<Series> series = userCountService.getGroupedPointsBetween(bot, guild, afterDateTime, beforeDateTime, res);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 

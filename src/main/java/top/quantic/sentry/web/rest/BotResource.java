@@ -54,7 +54,7 @@ public class BotResource {
         }
         BotDTO result = botService.save(botDTO);
         return ResponseEntity.created(new URI("/api/bots/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("bot", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("bot", result.getId()))
             .body(result);
     }
 
@@ -77,7 +77,7 @@ public class BotResource {
         }
         BotDTO result = botService.save(botDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("bot", botDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("bot", botDTO.getId()))
             .body(result);
     }
 
@@ -130,7 +130,7 @@ public class BotResource {
     public ResponseEntity<Void> deleteBot(@PathVariable String id) {
         log.debug("REST request to delete Bot : {}", id);
         botService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("bot", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("bot", id)).build();
     }
 
     private ResponseEntity<Void> loginBot(@PathVariable String id) {

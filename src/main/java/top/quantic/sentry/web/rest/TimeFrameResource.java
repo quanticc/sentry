@@ -53,7 +53,7 @@ public class TimeFrameResource {
         }
         TimeFrameDTO result = timeFrameService.save(timeFrameDTO);
         return ResponseEntity.created(new URI("/api/time-frames/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("timeFrame", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("timeFrame", result.getId()))
             .body(result);
     }
 
@@ -76,7 +76,7 @@ public class TimeFrameResource {
         }
         TimeFrameDTO result = timeFrameService.save(timeFrameDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("timeFrame", timeFrameDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("timeFrame", timeFrameDTO.getId()))
             .body(result);
     }
 
@@ -129,7 +129,7 @@ public class TimeFrameResource {
     public ResponseEntity<Void> deleteTimeFrame(@PathVariable String id) {
         log.debug("REST request to delete TimeFrame : {}", id);
         timeFrameService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("timeFrame", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("timeFrame", id)).build();
     }
 
 }

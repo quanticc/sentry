@@ -55,7 +55,7 @@ public class PrivilegeResource {
         }
         Privilege result = privilegeRepository.save(privilege);
         return ResponseEntity.created(new URI("/api/privileges/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("privilege", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("privilege", result.getId()))
             .body(result);
     }
 
@@ -78,7 +78,7 @@ public class PrivilegeResource {
         }
         Privilege result = privilegeRepository.save(privilege);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("privilege", privilege.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("privilege", privilege.getId()))
             .body(result);
     }
 
@@ -131,7 +131,7 @@ public class PrivilegeResource {
     public ResponseEntity<Void> deletePrivilege(@PathVariable String id) {
         log.debug("REST request to delete Privilege : {}", id);
         privilegeRepository.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("privilege", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("privilege", id)).build();
     }
 
 }

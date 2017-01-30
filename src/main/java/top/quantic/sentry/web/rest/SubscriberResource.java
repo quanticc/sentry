@@ -53,7 +53,7 @@ public class SubscriberResource {
         }
         SubscriberDTO result = subscriberService.save(subscriberDTO);
         return ResponseEntity.created(new URI("/api/subscribers/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("subscriber", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("subscriber", result.getId()))
             .body(result);
     }
 
@@ -76,7 +76,7 @@ public class SubscriberResource {
         }
         SubscriberDTO result = subscriberService.save(subscriberDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("subscriber", subscriberDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("subscriber", subscriberDTO.getId()))
             .body(result);
     }
 
@@ -129,7 +129,7 @@ public class SubscriberResource {
     public ResponseEntity<Void> deleteSubscriber(@PathVariable String id) {
         log.debug("REST request to delete Subscriber : {}", id);
         subscriberService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("subscriber", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("subscriber", id)).build();
     }
 
 }

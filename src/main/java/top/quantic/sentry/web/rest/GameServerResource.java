@@ -54,7 +54,7 @@ public class GameServerResource {
         }
         GameServerDTO result = gameServerService.save(gameServerDTO);
         return ResponseEntity.created(new URI("/api/game-servers/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("gameServer", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("gameServer", result.getId()))
             .body(result);
     }
 
@@ -77,7 +77,7 @@ public class GameServerResource {
         }
         GameServerDTO result = gameServerService.save(gameServerDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("gameServer", gameServerDTO.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("gameServer", gameServerDTO.getId()))
             .body(result);
     }
 
@@ -130,7 +130,7 @@ public class GameServerResource {
     public ResponseEntity<Void> deleteGameServer(@PathVariable String id) {
         log.debug("REST request to delete GameServer : {}", id);
         gameServerService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("gameServer", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("gameServer", id)).build();
     }
 
     @PostMapping("/game-servers/refresh")

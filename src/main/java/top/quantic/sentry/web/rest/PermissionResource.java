@@ -54,7 +54,7 @@ public class PermissionResource {
         }
         Permission result = permissionService.save(permission);
         return ResponseEntity.created(new URI("/api/permissions/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("permission", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert("permission", result.getId()))
             .body(result);
     }
 
@@ -77,7 +77,7 @@ public class PermissionResource {
         }
         Permission result = permissionService.save(permission);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("permission", permission.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert("permission", permission.getId()))
             .body(result);
     }
 
@@ -130,7 +130,7 @@ public class PermissionResource {
     public ResponseEntity<Void> deletePermission(@PathVariable String id) {
         log.debug("REST request to delete Permission : {}", id);
         permissionService.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("permission", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("permission", id)).build();
     }
 
 }

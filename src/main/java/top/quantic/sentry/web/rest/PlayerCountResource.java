@@ -52,9 +52,9 @@ public class PlayerCountResource {
                                                                @RequestParam Integer resolution) throws URISyntaxException {
         ZonedDateTime afterDateTime = after == null ? Instant.EPOCH.atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(after).atZone(ZoneId.systemDefault());
         ZonedDateTime beforeDateTime = before == null ? Instant.now().atZone(ZoneId.systemDefault()) : Instant.ofEpochMilli(before).atZone(ZoneId.systemDefault());
-        resolution = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
-        log.debug("GET PlayerCounts between {} and {} with resolution of {} minutes", afterDateTime, beforeDateTime, resolution);
-        List<Series> series = playerCountService.getGroupedPointsBetween(afterDateTime, beforeDateTime, resolution);
+        int res = ChartUtil.truncateResolution(resolution, afterDateTime, beforeDateTime);
+        log.debug("GET PlayerCounts between {} and {} with resolution of {} minutes", afterDateTime, beforeDateTime, res);
+        List<Series> series = playerCountService.getGroupedPointsBetween(afterDateTime, beforeDateTime, res);
         return new ResponseEntity<>(series, null, HttpStatus.OK);
     }
 
