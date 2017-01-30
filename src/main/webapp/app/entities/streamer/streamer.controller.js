@@ -19,6 +19,8 @@
         vm.prettyBoolText = prettyBoolText;
         vm.prettyBoolClass = prettyBoolClass;
 
+        vm.humanize = humanize;
+
         loadAll();
 
         function loadAll () {
@@ -72,6 +74,14 @@
                 return 'label-success';
             } else {
                 return 'label-danger';
+            }
+        }
+
+        function humanize(date) {
+            if (date == null) {
+                return '';
+            } else {
+                return moment.duration(moment(date).diff(moment())).humanize(true);
             }
         }
     }

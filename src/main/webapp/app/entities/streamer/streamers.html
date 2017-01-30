@@ -46,7 +46,7 @@
                         </div>
                     </td>
                     <td ng-attr-title="{{streamer.lastAnnouncement | date:'medium'}}">
-                        {{streamer.lastAnnouncement | relativeDate}}
+                        {{vm.humanize(streamer.lastAnnouncement)}}
                     </td>
                     <td>
                         <span class="label" ng-class="vm.prettyBoolClass(streamer.enabled)">

@@ -35,6 +35,8 @@
         vm.rconWarning = rconWarning;
         vm.rconWarningText = rconWarningText;
 
+        vm.humanize = humanize;
+
         loadAll();
 
         vm.refresher = $interval(loadAll, 60000);
@@ -191,6 +193,14 @@
                 return 'Missing RCON!';
             } else {
                 return rcon;
+            }
+        }
+
+        function humanize(date) {
+            if (date == null) {
+                return '';
+            } else {
+                return moment.duration(moment(date).diff(moment())).humanize(true);
             }
         }
     }
