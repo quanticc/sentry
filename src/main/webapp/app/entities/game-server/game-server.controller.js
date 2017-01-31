@@ -159,7 +159,7 @@
         function expireWarning(endTime) {
             var now = moment();
             var end = moment(endTime);
-            var duration = moment.duration(now.diff(end));
+            var duration = moment.duration(end.diff(now));
             var minutes = duration.asMinutes();
             if (end.isBefore(now)) {
                 return 'gray';
@@ -170,8 +170,10 @@
             }
         }
 
-        function pingWarning(end) {
-            var duration = moment.duration(moment(end).diff(moment()));
+        function pingWarning(endTime) {
+            var now = moment();
+            var end = moment(endTime);
+            var duration = moment.duration(now.diff(end));
             var minutes = duration.asMinutes();
             if (minutes > 2) {
                 return 'red';
