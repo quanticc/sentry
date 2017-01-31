@@ -55,4 +55,10 @@
   /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
 }
 
-.icon-discord:before { content: '\e800'; } /* '' */
+.icon-discord:before { content: '\e800'; }
+
+.icon-discord-alt:before {
+    content: '\e800';
+    margin: 0;
+    font-size: 120%;
+}
