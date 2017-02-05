@@ -189,12 +189,13 @@ public class StreamerService {
         String announcementTemplate = streamer.getAnnouncement();
         Map<String, Object> embedFields = streamer.getEmbedFields();
         Context context = Context.newBuilder(streamer)
-            .combine("stream", stream)
-            .combine("url", stream.getChannel().getUrl())
             .resolver(
                 MapValueResolver.INSTANCE,
                 JavaBeanValueResolver.INSTANCE
             )
+            .combine("stream", stream)
+            .combine("url", stream.getChannel().getUrl())
+            .combine("name", streamer.getName().replace("_", "\\_"))
             .build();
         if (announcementTemplate != null) {
             try {
