@@ -1,13 +1,12 @@
 package top.quantic.sentry.repository;
 
-import top.quantic.sentry.config.audit.AuditEventConverter;
-import top.quantic.sentry.domain.PersistentAuditEvent;
-
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import top.quantic.sentry.config.audit.AuditEventConverter;
+import top.quantic.sentry.domain.PersistentAuditEvent;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -55,8 +54,18 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 
     @Override
     public List<AuditEvent> find(String principal, Date after, String type) {
-        Iterable<PersistentAuditEvent> persistentAuditEvents =
-            persistenceAuditEventRepository.findByPrincipalAndAuditEventDateAfterAndAuditEventType(principal, LocalDateTime.from(after.toInstant()), type);
+        Iterable<PersistentAuditEvent> persistentAuditEvents;
+        if (principal == null && after == null) {
+            persistentAuditEvents = persistenceAuditEventRepository.findAll();
+        } else if (after == null) {
+            persistentAuditEvents = persistenceAuditEventRepository.findByPrincipal(principal);
+        } else if (type == null) {
+            persistentAuditEvents =
+                persistenceAuditEventRepository.findByPrincipalAndAuditEventDateAfter(principal, LocalDateTime.from(after.toInstant()));
+        } else {
+            persistentAuditEvents =
+                persistenceAuditEventRepository.findByPrincipalAndAuditEventDateAfterAndAuditEventType(principal, LocalDateTime.from(after.toInstant()), type);
+        }
         return auditEventConverter.convertToAuditEvent(persistentAuditEvents);
     }
 

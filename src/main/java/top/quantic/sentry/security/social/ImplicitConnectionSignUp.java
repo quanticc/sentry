@@ -45,8 +45,9 @@ public class ImplicitConnectionSignUp implements ConnectionSignUp {
         Set<Authority> authorities;
         if (sentryProperties.getDiscord().getAdministrators().contains(login)) {
             log.info("Giving administrative role to {} ({})", userProfile.getUsername(), userProfile.getId());
-            authorities = new HashSet<>(4);
+            authorities = new HashSet<>(5);
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.ADMIN));
+            authorities.add(authorityRepository.findOne(AuthoritiesConstants.ACTUATOR));
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.MANAGER));
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.SUPPORT));
             authorities.add(authorityRepository.findOne(AuthoritiesConstants.USER));

@@ -98,4 +98,13 @@ public class InitialSetupMigration {
                 .get());
     }
 
+    @ChangeSet(order = "05", author = "user", id = "05-addAuthorities-3")
+    public void addAuthorities3(DB db) {
+        DBCollection authorityCollection = db.getCollection("jhi_authority");
+        authorityCollection.insert(
+            BasicDBObjectBuilder.start()
+                .add("_id", "ROLE_ACTUATOR")
+                .get());
+    }
+
 }

@@ -244,23 +244,4 @@ public class UserService {
             userRepository.delete(user);
         }
     }
-
-    ///////////////////
-    // Added methods //
-    ///////////////////
-
-    void changePassword(String login, String password) {
-        userRepository.findOneByLogin(login).ifPresent(user -> {
-            String encryptedPassword = passwordEncoder.encode(password);
-            user.setPassword(encryptedPassword);
-            userRepository.save(user);
-            log.debug("Changed password for User: {}", user);
-        });
-    }
-
-    long getAdminCount() {
-        return userRepository.findByAuthoritiesContaining(authorityRepository.findOne(AuthoritiesConstants.ADMIN)).stream()
-            .filter(u -> !u.getLogin().equals("admin") && !u.getLogin().equals("system"))
-            .count();
-    }
 }
