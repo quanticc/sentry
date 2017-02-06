@@ -1,5 +1,13 @@
 package top.quantic.sentry.service.util;
 
+import de.androidpit.colorthief.ColorThief;
+import de.androidpit.colorthief.MMCQ;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+
 import static top.quantic.sentry.service.util.Inflection.pluralize;
 import static top.quantic.sentry.service.util.Inflection.singularize;
 
@@ -15,6 +23,19 @@ public class MiscUtil {
 
     public static String inflect(long value, String label) {
         return value + " " + (value == 1 ? singularize(label) : pluralize(label));
+    }
+
+    public static Color getDominantColor(String urlStr, Color fallback) {
+        try {
+            URL url = new URL(urlStr);
+            BufferedImage image = ImageIO.read(url);
+            MMCQ.CMap result = ColorThief.getColorMap(image, 5);
+            MMCQ.VBox vBox = result.vboxes.get(0);
+            int[] rgb = vBox.avg(false);
+            return new Color(rgb[0], rgb[1], rgb[2]);
+        } catch (Exception ignore) {
+        }
+        return fallback;
     }
 
     private MiscUtil() {}

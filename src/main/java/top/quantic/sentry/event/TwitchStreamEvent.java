@@ -1,7 +1,5 @@
 package top.quantic.sentry.event;
 
-import de.androidpit.colorthief.ColorThief;
-import de.androidpit.colorthief.MMCQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
@@ -9,12 +7,11 @@ import sx.blah.discord.util.EmbedBuilder;
 import top.quantic.sentry.domain.Streamer;
 import top.quantic.sentry.web.rest.vm.TwitchStream;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
 public class TwitchStreamEvent extends SentryEvent {
 
@@ -120,10 +117,11 @@ public class TwitchStreamEvent extends SentryEvent {
 
         TwitchStream stream = getSource();
         EmbedBuilder builder = new EmbedBuilder()
+            .setLenient(true)
             .withAuthorIcon(stream.getChannel().getLogo())
             .withAuthorName(stream.getChannel().getDisplayName())
             .withTitle(stream.getChannel().getStatus())
-            .withColor(getDominantColor(stream.getChannel().getLogo()))
+            .withColor(getDominantColor(stream.getChannel().getLogo(), new Color(0x6441A4)))
             .withThumbnail(stream.getChannel().getLogo())
             .withUrl(stream.getChannel().getUrl())
             .withImage(stream.getPreview().get("medium"))
@@ -131,7 +129,6 @@ public class TwitchStreamEvent extends SentryEvent {
             .withFooterText("twitch.tv")
             .appendField("Playing", stream.getGame(), true)
             .appendField("Viewers", stream.getViewers() + "", true)
-            .ignoreNullEmptyFields()
             .appendField("League", league, true)
             .appendField("Division", division, true);
         if (resolvedFields != null) {
@@ -161,19 +158,5 @@ public class TwitchStreamEvent extends SentryEvent {
         map.put("league", streamer.getLeague());
         map.put("division", streamer.getDivision());
         return map;
-    }
-
-    private Color getDominantColor(String urlStr) {
-        try {
-            URL url = new URL(urlStr);
-            BufferedImage image = ImageIO.read(url);
-            MMCQ.CMap result = ColorThief.getColorMap(image, 5);
-            MMCQ.VBox vBox = result.vboxes.get(0);
-            int[] rgb = vBox.avg(false);
-            return new Color(rgb[0], rgb[1], rgb[2]);
-        } catch (Exception e) {
-            log.warn("Could not analyze image", e);
-        }
-        return new Color(0x6441A4);
     }
 }
