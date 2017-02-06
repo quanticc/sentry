@@ -27,6 +27,18 @@ public class DateUtil {
         return humanize(duration, false, false);
     }
 
+    public static String humanizeShort(Duration duration) {
+        return humanize(duration, false, true);
+    }
+
+    public static String humanizeCompact(Duration duration) {
+        return humanize(duration, true, false);
+    }
+
+    public static String humanizeShortCompact(Duration duration) {
+        return humanize(duration, true, true);
+    }
+
     public static String humanize(Duration duration, boolean compact, boolean elide) {
         Duration abs = duration.abs();
         long totalSeconds = abs.getSeconds();

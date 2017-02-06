@@ -11,7 +11,7 @@ public class Key<T> {
     private static final Logger log = LoggerFactory.getLogger(Key.class);
 
     // GameServer
-    public static final Key<Integer> RCON_SAY_INTERVAL_MINUTES = key("gameServer", "rconSayIntervalMinutes", 20);
+    public static final Key<Integer> RCON_SAY_INTERVAL_MINUTES = key("gameServer", "rconSayIntervalMinutes", 10);
     public static final Key<Integer> UPDATE_ATTEMPTS_ALERT_THRESHOLD = key("gameServer", "updateAttemptsAlertThreshold", 5);
     public static final Key<Integer> UPDATE_ATTEMPTS_INTERVAL_MINUTES = key("gameServer", "updateAttemptIntervalMinutes", 5);
     public static final Key<Integer> PING_ALERT_THRESHOLD = key("gameServer", "pingAlertThreshold", 1000);

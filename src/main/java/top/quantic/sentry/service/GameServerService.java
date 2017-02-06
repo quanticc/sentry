@@ -31,6 +31,7 @@ import top.quantic.sentry.service.util.Result;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -45,6 +46,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static top.quantic.sentry.service.util.DateUtil.formatRelative;
+import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 /**
@@ -251,6 +253,18 @@ public class GameServerService implements InitializingBean {
                 int seconds = expirationSeconds.get(server.getId());
                 if (seconds != 0) {
                     server.setExpirationDate(now.plusSeconds(seconds));
+                    if (seconds < 60 * 15) {
+                        ZonedDateTime lastRconAnnounce = Optional.ofNullable(server.getLastRconAnnounce())
+                            .orElse(Instant.EPOCH.atZone(ZoneId.systemDefault()));
+                        // announce only once per interval to avoid spamming
+                        if (lastRconAnnounce.plusMinutes(getRconSayIntervalMinutes()).isBefore(ZonedDateTime.now())) {
+                            Result<String> result = tryRcon(server,
+                                "[GameServers] Server will expire in " + humanizeShort(Duration.ofSeconds(seconds)));
+                            if (result.isSuccessful()) {
+                                server.setLastRconAnnounce(ZonedDateTime.now());
+                            }
+                        }
+                    }
                 }
                 server.setExpirationCheckDate(now);
                 return server;
@@ -509,7 +523,8 @@ public class GameServerService implements InitializingBean {
                 .orElse(Instant.EPOCH.atZone(ZoneId.systemDefault()));
             // announce only once per interval to avoid spamming
             if (lastRconAnnounce.plusMinutes(getRconSayIntervalMinutes()).isBefore(ZonedDateTime.now())) {
-                Result<String> result = tryRcon(server, "Game update on hold until all players leave the server");
+                Result<String> result = tryRcon(server,
+                    "[GameServers] Game update on hold until all players leave the server");
                 if (result.isSuccessful()) {
                     server.setLastRconAnnounce(ZonedDateTime.now());
                 }
@@ -519,13 +534,13 @@ public class GameServerService implements InitializingBean {
             // TODO: consider upgrading anyway after a certain attempt # threshold
             log.info("[{}] Server update is on hold. Current state: {}", server, getStatusMonitor(server).getState());
         } else {
-            log.debug("[{}] Starting update attempt {}", server.getUpdateAttempts() + 1);
+            log.debug("[{}] Starting update attempt {}", server, server.getUpdateAttempts() + 1);
             try {
                 if (gameAdminService.upgrade(server.getId()) == GameAdminService.Result.INSTALLING) {
                     server.setLastGameUpdate(ZonedDateTime.now());
                 }
             } catch (IOException e) {
-                log.warn("Could not perform game update: {}", e.toString());
+                log.warn("[{}] Could not perform game update: {}", server, e.toString());
             }
         }
 
