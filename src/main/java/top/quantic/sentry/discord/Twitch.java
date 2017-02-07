@@ -48,7 +48,7 @@ public class Twitch implements CommandSupplier {
             .withRequiredArg().defaultsTo("").describedAs("name");
         parser.mutuallyExclusive((OptionSpecBuilder) addSpec, (OptionSpecBuilder) removeSpec);
         return CommandBuilder.of("twitch")
-            .describedAs("Manage twitch tracked streamers")
+            .describedAs("Manage Twitch tracked streamers")
             .withExamples(twitchExamples())
             .in("Integrations")
             .parsedBy(parser)
