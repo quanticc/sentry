@@ -109,16 +109,18 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                             }
                             forHelp = context.getOptionSet().has("help");
                         } catch (OptionException e) {
-                            log.info("User {} executing command {}{} failed parsing: {}", humanize(message.getAuthor()),
-                                command.get().getName(), args == null ? "" : " with args: " + args, e.toString());
+                            log.info("[{}] User {} executing command {}{} failed parsing: {}",
+                                message.getClient().getOurUser().getName(),
+                                humanize(message.getAuthor()), command.get().getName(),
+                                args == null ? "" : " with args: " + args, e.toString());
                             help.replyWithHelp(command.get(), context, e.getMessage());
                             parseError = true;
                         }
                     }
 
                     // finally, execute the command
-                    log.info("User {} executing command {}{}", humanize(message.getAuthor()), command.get().getName(),
-                        args == null ? "" : " with args: " + args);
+                    log.info("[{}] User {} executing command {}{}", message.getClient().getOurUser().getName(),
+                        humanize(message.getAuthor()), command.get().getName(), args == null ? "" : " with args: " + args);
 
                     // intercept with help if parse failed or was explicitly requested
                     if (forHelp) {
@@ -142,8 +144,11 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                             }
                         });
                     }
+                    log.info("[{}] User {} completed execution of command {}{}", message.getClient().getOurUser().getName(),
+                        humanize(message.getAuthor()), command.get().getName(), args == null ? "" : " with args: " + args);
                 } else {
-                    log.info("User {} was denied command execution: {}", humanize(message.getAuthor()), command.get().getName());
+                    log.info("[{}] User {} was denied command execution: {}", message.getClient().getOurUser().getName(),
+                        humanize(message.getAuthor()), command.get().getName());
                     command.get().onAuthorDenied().accept(context);
                 }
             }
