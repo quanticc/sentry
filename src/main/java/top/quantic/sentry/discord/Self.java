@@ -268,7 +268,7 @@ public class Self implements CommandSupplier {
                             log.warn("Could not delete message - aborting", e);
                             abort.set(true);
                         }
-                    });
+                    }).get();
                 }
             } else {
                 deleteInBatch(c, toDelete);
