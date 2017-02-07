@@ -6,6 +6,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,10 +112,10 @@ public class GameFiles implements CommandSupplier {
                 if (o.has(sizeRangeSpec)) {
                     range = sanitizeRange(o.valueOf(sizeRangeSpec));
                 }
-                String mirror = "\"mirror -v -r -c -I '" + glob + "' --size-range='" + range + "'"
-                    + " --newer-than='" + o.valueOf(afterSpec) + "'";
+                String mirror = "${out}mirror -v -r -c -I ${in}" + glob + "${in} --size-range=${in}" + range + "${in}"
+                    + " --newer-than=${in}" + o.valueOf(afterSpec) + "${in}";
                 if (o.has(beforeSpec)) {
-                    mirror += " --older-than='" + o.valueOf(beforeSpec) + "'";
+                    mirror += " --older-than=${in}" + o.valueOf(beforeSpec) + "${in}";
                 }
                 if (o.has(dryRunSpec)) {
                     mirror += " --dry-run";
@@ -139,7 +140,9 @@ public class GameFiles implements CommandSupplier {
                 for (GameServer target : targets) {
                     String key = target.getShortName();
                     List<String> commands = new ArrayList<>(command);
-                    String targetMirror = mirror + " " + job + "/" + key + ";bye\"";
+                    String targetMirror = mirror + " " + job + "/" + key + ";bye${out}";
+                    targetMirror = targetMirror.replace("${out}", SystemUtils.IS_OS_WINDOWS ? "\"" : "'")
+                        .replace("${in}", SystemUtils.IS_OS_WINDOWS ? "'" : "\"");
                     commands.add(targetMirror);
                     commands.add(getIPAddress(target.getAddress()));
                     log.debug("Retrieving files from {} server using: {}", target.getShortName(), commands.stream()
@@ -149,8 +152,9 @@ public class GameFiles implements CommandSupplier {
                         RequestBuffer.request(() -> (IMessage)
                             msg.edit("Retrieving files from **" + target.getShortName() + "** (" +
                                 target.getAddress() + ") ...")).get());
+                    Process process = null;
                     try {
-                        Process process = new ProcessBuilder(commands)
+                        process = new ProcessBuilder(commands)
                             .directory(local.toFile())
                             .start();
                         startErrorReader(process, target);
@@ -178,6 +182,10 @@ public class GameFiles implements CommandSupplier {
                         log.warn("Process was interrupted", e);
                         answerPrivately(message, "Process was interrupted");
                         return;
+                    } finally {
+                        if (process != null && process.isAlive()) {
+                            process.destroyForcibly();
+                        }
                     }
                 }
                 if (!o.has(dryRunSpec)) {
@@ -186,9 +194,16 @@ public class GameFiles implements CommandSupplier {
                     answerPrivately(message, "Operation completed " + (code > 0 ? "with errors" : "successfully"));
                 }
                 long millis = System.currentTimeMillis() - start;
-                String size = humanizeBytes(FileUtils.sizeOf(local.resolve(job).toFile()));
                 statusFuture.thenApply(msg -> RequestBuffer.request(
-                    () -> (IMessage) msg.edit("Done. Got " + size + " in " + humanizeShort(Duration.ofMillis(millis)))
+                    () -> {
+                        Path dir = local.resolve(job);
+                        if (Files.exists(dir)) {
+                            String size = humanizeBytes(FileUtils.sizeOf(dir.toFile()));
+                            return msg.edit("Got " + size + " in " + humanizeShort(Duration.ofMillis(millis)));
+                        } else {
+                            return msg.edit("Completed in " + humanizeShort(Duration.ofMillis(millis)));
+                        }
+                    }
                 ));
             })
             .onAuthorDenied(CommandBuilder.noPermission())
