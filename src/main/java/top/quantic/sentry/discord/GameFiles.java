@@ -141,7 +141,7 @@ public class GameFiles implements CommandSupplier {
                     String key = target.getShortName();
                     List<String> commands = new ArrayList<>(command);
                     String targetMirror = mirror + " " + job + "/" + key + ";bye${out}";
-                    targetMirror = targetMirror.replace("${out}", "\"")
+                    targetMirror = targetMirror.replace("${out}", SystemUtils.IS_OS_WINDOWS ? "\"" : "'")
                         .replace("${in}", SystemUtils.IS_OS_WINDOWS ? "'" : "\"");
                     commands.add(targetMirror);
                     commands.add(getIPAddress(target.getAddress()));
