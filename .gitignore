@@ -5,6 +5,7 @@
 /build/www/**
 /application*.yml
 /logs
+/downloads
 /version.properties
 /quartz.properties
 app.constants.js
