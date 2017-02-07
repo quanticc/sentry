@@ -51,7 +51,7 @@ public class GameServers implements CommandSupplier {
 
     private Command server() {
         return CommandBuilder.of("server")
-            .describedAs("Get all UGC managed GameServers")
+            .describedAs("Perform operations on UGC managed GameServers")
             .in("Integrations")
             .withExamples(serverExamples())
             .nonParsed()
