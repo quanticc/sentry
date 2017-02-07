@@ -401,9 +401,19 @@ public class GameServer extends AbstractAuditingEntity implements Serializable {
             name.trim().replaceAll("(^[A-Za-z]{3})[^0-9]*([0-9]+).*", "$1$2").toLowerCase();
     }
 
+    public String getRegion() {
+        return name == null ? "Unknown" :
+            name.trim().replaceAll("(^[A-Za-z]+).*", "$1");
+    }
+
     public String getShortRegion() {
         return name == null ? toHexString(hashCode()) :
             name.trim().replaceAll("(^[A-Za-z]{3}).*", "$1").toLowerCase();
+    }
+
+    public int getRegionNumber() {
+        return name == null ? hashCode() :
+            Integer.parseInt(name.trim().replaceAll("(^[A-Za-z]{3})[^0-9]*([0-9]+).*", "$2"));
     }
 
     @Override

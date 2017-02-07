@@ -6,6 +6,7 @@ import de.androidpit.colorthief.MMCQ;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.net.InetSocketAddress;
 import java.net.URL;
 
 import static top.quantic.sentry.service.util.Inflection.pluralize;
@@ -36,6 +37,19 @@ public class MiscUtil {
         } catch (Exception ignore) {
         }
         return fallback;
+    }
+
+    public static InetSocketAddress getSourceServerAddress(String address) {
+        int port = 0;
+        if (address.indexOf(':') >= 0) {
+            String[] tmpAddress = address.split(":", 2);
+            port = Integer.parseInt(tmpAddress[1]);
+            address = tmpAddress[0];
+        }
+        if (port == 0) {
+            port = 27015;
+        }
+        return new InetSocketAddress(address, port);
     }
 
     private MiscUtil() {}

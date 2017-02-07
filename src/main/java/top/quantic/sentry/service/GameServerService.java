@@ -5,6 +5,7 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.ibasco.agql.core.exceptions.ReadTimeoutException;
+import com.ibasco.agql.protocols.valve.source.query.SourceRconAuthStatus;
 import com.ibasco.agql.protocols.valve.source.query.pojos.SourceServer;
 import com.ibasco.agql.protocols.valve.steam.webapi.pojos.ServerUpdateStatus;
 import org.slf4j.Logger;
@@ -24,10 +25,7 @@ import top.quantic.sentry.event.UpdateDelayedEvent;
 import top.quantic.sentry.repository.GameServerRepository;
 import top.quantic.sentry.service.dto.GameServerDTO;
 import top.quantic.sentry.service.mapper.GameServerMapper;
-import top.quantic.sentry.service.util.Key;
-import top.quantic.sentry.service.util.LoggingMonitorListener;
-import top.quantic.sentry.service.util.Monitor;
-import top.quantic.sentry.service.util.Result;
+import top.quantic.sentry.service.util.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -39,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -279,75 +276,28 @@ public class GameServerService implements InitializingBean {
         String command = cleanCommand(cmd);
 
         if (!gameQueryService.isAuthenticated(address)) {
-            gameQueryService.authenticate(address, password)
-                .handle((status, error) -> {
-                    if (error != null) {
-                        return gameQueryService.authenticate(address, refreshPasswordAndGet(server));
-                    } else {
-                        return status;
-                    }
-                }).join();
-        }
-        return gameQueryService.execute(address, command)
-            // even if we are already authenticated the command can still fail due to a variety of reasons
-            // one of them is the RCON password becoming invalid - so we need to retry at least once
-            // with a refreshed password
-            .handle((response, error) -> {
-                if (error != null) {
-                    log.warn("Could not execute command", error);
-                    return gameQueryService.authenticate(address, refreshPasswordAndGet(server))
-                        .thenCompose(status -> {
-                            if (status.isAuthenticated()) {
-                                return gameQueryService.execute(address, command);
-                            } else {
-                                return CompletableFuture.completedFuture("Unable to authenticate to server");
-                            }
-                        }).join();
-                } else {
-                    return response;
+            SourceRconAuthStatus authStatus = gameQueryService.authenticate(address, password).join();
+            if (!authStatus.isAuthenticated()) {
+                authStatus = gameQueryService.authenticate(address, refreshPasswordAndGet(server)).join();
+                if (!authStatus.isAuthenticated()) {
+                    return null;
                 }
-            }).join();
-    }
-
-    public String rcon(String address, String command) {
-        GameServer server = gameServerRepository.findByAddress(address)
-            .orElseThrow(() -> new IllegalArgumentException("Bad address: " + address));
-        return rcon(server, command);
-    }
-
-    public String rcon(String rawAddress, String password, String cmd) {
-        InetSocketAddress address = getInetSocketAddress(rawAddress);
-        String command = cleanCommand(cmd);
-
-        if (!gameQueryService.isAuthenticated(address)) {
-            gameQueryService.authenticate(address, password).join();
+            }
         }
+
         return gameQueryService.execute(address, command).join();
     }
 
     public Result<String> tryRcon(GameServer server, String command) {
         try {
-            return Result.ok(rcon(server, command));
+            String response = rcon(server, command);
+            if (response == null) {
+                return Result.error("Could not authenticate to server");
+            } else {
+                return Result.ok(response);
+            }
         } catch (Exception e) {
             log.warn("Could not execute RCON command '{}' on {}", server, command, e);
-            return Result.error(e.getMessage(), e);
-        }
-    }
-
-    public Result<String> tryRcon(String serverAddress, String command) {
-        try {
-            return Result.ok(rcon(serverAddress, command));
-        } catch (Exception e) {
-            log.warn("Could not execute RCON command '{}' on {}", serverAddress, command, e);
-            return Result.error(e.getMessage(), e);
-        }
-    }
-
-    public Result<String> tryRcon(String serverAddress, String password, String command) {
-        try {
-            return Result.ok(rcon(serverAddress, password, command));
-        } catch (Exception e) {
-            log.warn("Could not execute RCON command '{}' on {}", serverAddress, command, e);
             return Result.error(e.getMessage(), e);
         }
     }
@@ -477,21 +427,8 @@ public class GameServerService implements InitializingBean {
         return server;
     }
 
-    public InetSocketAddress getInetSocketAddress(GameServer server) {
-        return getInetSocketAddress(server.getAddress());
-    }
-
-    public InetSocketAddress getInetSocketAddress(String address) {
-        int port = 0;
-        if (address.indexOf(':') >= 0) {
-            String[] tmpAddress = address.split(":", 2);
-            port = Integer.parseInt(tmpAddress[1]);
-            address = tmpAddress[0];
-        }
-        if (port == 0) {
-            port = 27015;
-        }
-        return new InetSocketAddress(address, port);
+    private InetSocketAddress getInetSocketAddress(GameServer server) {
+        return MiscUtil.getSourceServerAddress(server.getAddress());
     }
 
     private GameServer executeGameUpdate(GameServer server) {
@@ -621,6 +558,10 @@ public class GameServerService implements InitializingBean {
     /////////////////////////////////
     // Server search helper method //
     /////////////////////////////////
+
+    public List<GameServer> findServers() {
+        return gameServerRepository.findAll();
+    }
 
     public List<GameServer> findServers(String k) {
         String key = k.trim().toLowerCase();
