@@ -52,5 +52,13 @@ public class MiscUtil {
         return new InetSocketAddress(address, port);
     }
 
+    public static String getIPAddress(String address) {
+        if (address.indexOf(':') >= 0) {
+            String[] tmpAddress = address.split(":", 2);
+            address = tmpAddress[0];
+        }
+        return address;
+    }
+
     private MiscUtil() {}
 }
