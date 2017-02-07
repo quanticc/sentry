@@ -633,6 +633,15 @@ public class GameServerService implements InitializingBean {
         return gameAdminService.getServerConsole(server.getId());
     }
 
+    public Result<String> tryGetConsole(GameServer server) {
+        try {
+            return Result.ok(getServerConsole(server));
+        } catch (IOException e) {
+            log.warn("Could not get server console");
+            return Result.error("Could not get console: " + e.getMessage(), e);
+        }
+    }
+
     public Result<Void> tryRestart(GameServer server) {
         if (!isEmptyAfterRefresh(server)) {
             int count = server.getPlayers();
@@ -647,28 +656,48 @@ public class GameServerService implements InitializingBean {
                     return Result.error("Could not restart: " + response);
                 }
             } catch (IOException e) {
-                log.warn("Could not restart server: {}", e.toString());
+                log.warn("Could not restart server {}: {}", server, e.toString());
                 return Result.error("Could not restart due to an internal error", e);
             }
         }
     }
 
-    public Result<Void> tryUpgrade(GameServer server) {
+    public Result<Void> tryStop(GameServer server) {
         if (!isEmptyAfterRefresh(server)) {
             int count = server.getPlayers();
-            log.info("Not upgrading server due to players present: {}", count);
-            return Result.error("Not upgrading due to players present: " + count);
+            log.info("Not stopping server {} due to players present: {}", server, count);
+            return Result.error("Not stopping due to players present: " + count);
+        } else {
+            try {
+                GameAdminService.Result response = gameAdminService.stop(server.getId());
+                if (response == GameAdminService.Result.STOPPED) {
+                    return Result.empty("Server is stopping...");
+                } else {
+                    return Result.error("Could not stop: " + response);
+                }
+            } catch (IOException e) {
+                log.warn("Could not stop server {}: {}", server, e.toString());
+                return Result.error("Could not stop due to an internal error", e);
+            }
+        }
+    }
+
+    public Result<Void> tryUpdate(GameServer server) {
+        if (!isEmptyAfterRefresh(server)) {
+            int count = server.getPlayers();
+            log.info("Not updating game version server on {} due to players present: {}", server, count);
+            return Result.error("Not updating game version due to players present: " + count);
         } else {
             try {
                 GameAdminService.Result response = gameAdminService.upgrade(server.getId());
                 if (response == GameAdminService.Result.INSTALLING) {
-                    return Result.empty("Server is upgrading...");
+                    return Result.empty("Server is updating game version...");
                 } else {
-                    return Result.error("Could not upgrade: " + response);
+                    return Result.error("Could not update game version: " + response);
                 }
             } catch (IOException e) {
-                log.warn("Could not upgrade server: {}", e.toString());
-                return Result.error("Could not upgrade due to an internal error", e);
+                log.warn("Could not update game version of server {}: {}", server, e.toString());
+                return Result.error("Could not update game version due to an internal error", e);
             }
         }
     }
@@ -681,7 +710,7 @@ public class GameServerService implements InitializingBean {
         }
         if (!isEmptyAfterRefresh(server)) {
             int count = server.getPlayers();
-            log.info("Not installing mod due to players present: {}", count);
+            log.info("Not installing mod on {} due to players present: {}", server, count);
             return Result.error("Not installing mod due to players present: " + count);
         } else {
             try {
@@ -692,7 +721,7 @@ public class GameServerService implements InitializingBean {
                     return Result.error("Could not install mod: " + response);
                 }
             } catch (IOException e) {
-                log.warn("Could not install mod to server: {}", e.toString());
+                log.warn("Could not install mod to server {}: {}", server, e.toString());
                 return Result.error("Could not install mod due to an internal error", e);
             }
         }
