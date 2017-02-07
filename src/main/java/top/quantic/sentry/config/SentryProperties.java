@@ -254,7 +254,8 @@ public class SentryProperties {
 
         private String username;
         private String password;
-        private String downloadsDir = "downloads";
+        private String downloadsDir;
+        private String configFile;
 
         public String getUsername() {
             return username;
@@ -278,6 +279,14 @@ public class SentryProperties {
 
         public void setDownloadsDir(String downloadsDir) {
             this.downloadsDir = downloadsDir;
+        }
+
+        public String getConfigFile() {
+            return configFile;
+        }
+
+        public void setConfigFile(String configFile) {
+            this.configFile = configFile;
         }
     }
 
