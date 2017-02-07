@@ -256,7 +256,11 @@ public class GameFiles implements CommandSupplier {
 
     private List<String> baseCommand() {
         SentryProperties.GameAdmin settings = sentryProperties.getGameAdmin();
-        return Lists.newArrayList("lftp", "--rcfile", settings.getConfigFile(), "-u", settings.getUsername() + "," + settings.getPassword(), "-e");
+        if (settings.getConfigFile() == null) {
+            return Lists.newArrayList("lftp", "-u", settings.getUsername() + "," + settings.getPassword(), "-e");
+        } else {
+            return Lists.newArrayList("lftp", "--rcfile", settings.getConfigFile(), "-u", settings.getUsername() + "," + settings.getPassword(), "-e");
+        }
     }
 
     private boolean containsPublicInfo(String str) {
