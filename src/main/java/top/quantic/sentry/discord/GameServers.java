@@ -91,7 +91,7 @@ public class GameServers implements CommandSupplier {
                     }
                     String mod = args[2];
                     Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(Constants.ANY, mod);
-                    String modName =  setting.isPresent() ? setting.get().getValue() : mod;
+                    String modName = setting.isPresent() ? setting.get().getValue() : mod;
                     String response = "Installing mod " + modName + " on servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
                         response = resultLine(target, gameServerService.tryModInstall(target, modName));
@@ -108,24 +108,18 @@ public class GameServers implements CommandSupplier {
                     if (targets.size() == 1) {
                         GameServer target = targets.get(0);
                         Result<String> result = gameServerService.tryRcon(target, "status");
-                        if (result.isSuccessful() && result.getContent().length() > EmbedBuilder.FIELD_CONTENT_LIMIT) {
+                        if (result.isSuccessful()) {
                             answer(message, "**" + target.getShortNameAndAddress() + "**\n```\n" +
                                 result.getContent() + "\n```");
                         } else {
-                            EmbedBuilder builder = new EmbedBuilder()
+                            log.debug("Unsuccessful response from {} for command status: {}", target, result.getContent());
+                            sendMessage(message.getChannel(), new EmbedBuilder()
                                 .setLenient(true)
-                                .withTitle("Status of " + target.getShortNameAndAddress());
-                            if (result.isSuccessful()) {
-                                log.debug("RCON response from {} for command status is: {}", target, result.getContent());
-                                builder.appendField("Response", "```\n" + result.getContent() + "\n```", false)
-                                    .withColor(new Color(0x00aa00));
-                            } else {
-                                log.debug("Unsuccessful response from {} for command status: {}", target, result.getContent());
-                                builder.appendField("Response", result.getMessage() +
+                                .withTitle("Status of " + target.getShortNameAndAddress())
+                                .appendField("Response", result.getMessage() +
                                     (result.getError() != null ? "(" + result.getError().getMessage() + ")" : ""), false)
-                                    .withColor(new Color(0xaa0000));
-                            }
-                            sendMessage(message.getChannel(), builder.build());
+                                .withColor(new Color(0xaa0000))
+                                .build());
                         }
                     }
                 } else if (action.equals("console")) {
