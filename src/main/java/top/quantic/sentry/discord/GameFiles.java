@@ -161,8 +161,7 @@ public class GameFiles implements CommandSupplier {
                                     log.debug("[" + target + "] " + line);
                                     if (line.startsWith("Transferring file")) {
                                         String filename = line.replaceAll("^.*`(.+)'$", "$1");
-                                        String humanSize = humanizeBytes(FileUtils.sizeOf(local.resolve(job).resolve(key).resolve(filename).toFile()));
-                                        files.computeIfAbsent(key, k -> new ArrayList<>()).add(filename + " (" + humanSize + ")");
+                                        files.computeIfAbsent(key, k -> new ArrayList<>()).add(filename);
                                         filesFuture = refreshFiles(filesFuture, files);
                                     }
                                 }
