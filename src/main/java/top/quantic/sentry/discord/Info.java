@@ -81,7 +81,6 @@ public class Info implements CommandSupplier {
                 List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
-                IDiscordClient client = message.getClient();
                 boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
                 StringBuilder builder = new StringBuilder();
                 Set<IUser> matched = new HashSet<>();
