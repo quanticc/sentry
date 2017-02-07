@@ -22,9 +22,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
+import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
 import static top.quantic.sentry.service.util.DateUtil.withRelative;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 import static top.quantic.sentry.service.util.SteamIdConverter.steam2To3;
 import static top.quantic.sentry.service.util.SteamIdConverter.steamId64To2;
 
@@ -58,6 +60,7 @@ public class Steam implements CommandSupplier {
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
+                answer(message, "Retrieving user data of " + inflect(queries.size(), "user") + "...");
                 for (String query : queries) {
                     Long steamId64 = gameQueryService.getSteamId64(query)
                         .exceptionally(t -> {
@@ -67,7 +70,8 @@ public class Steam implements CommandSupplier {
                     if (steamId64 == null) {
                         sendMessage(message.getChannel(), baseEmbed()
                             .withColor(new Color(0xaa0000))
-                            .appendField("Error", "Could not resolve " + query + " to a valid Steam ID", false)
+                            .withTitle("Error")
+                            .appendDescription("Could not resolve " + query + " to a valid Steam ID")
                             .build());
                         continue;
                     }
@@ -99,13 +103,13 @@ public class Steam implements CommandSupplier {
         if (profile == null) {
             return baseEmbed()
                 .withColor(new Color(0xaa0000))
-                .appendField("Error", "Could not get profile information for " + steamId64, false)
+                .withTitle("Error")
+                .appendDescription("Could not get profile information for " + steamId64)
                 .build();
         }
 
         String steam2Id = steamId64To2(steamId64);
         String steam3Id = steam2To3(steam2Id);
-        String steam3IdClean = steam3Id.replace("[", "").replace("]", "");
 
         EmbedBuilder builder = baseEmbed()
             .withTitle(profile.getName())
@@ -118,7 +122,7 @@ public class Steam implements CommandSupplier {
         if (isPublic(profile.getCommunityVisibilityState())) {
             builder.appendField("Status", personaState(profile.getPersonaState()), true)
                 .appendField("Last Logoff", withRelative(Instant.ofEpochSecond(profile.getLastLogOff())), true)
-                .appendField("Joined", withRelative(Instant.ofEpochSecond(profile.getTimeCreated())), true);
+                .appendField("Joined", withRelative(Instant.ofEpochSecond(profile.getTimeCreated())), false);
         } else {
             builder.appendField("Status", "Private", true)
                 .appendField("Last Logoff", withRelative(Instant.ofEpochSecond(profile.getLastLogOff())), true);
@@ -127,7 +131,7 @@ public class Steam implements CommandSupplier {
         if (bans != null) {
             SteamBanStatus status = bans.stream().findAny().orElse(null);
             if (status != null && (!"none".equals(status.getEconomyBan()) || status.isVacBanned() || status.isCommunityBanned())) {
-                builder.withColor(getDominantColor(profile.getAvatarUrl(), new Color(0xaa0000)))
+                builder.withColor(new Color(0xaa0000))
                     .appendField("Trade Ban", capitalizeFully(status.getEconomyBan()), true)
                     .appendField("VAC Ban", (status.isVacBanned() ? "Banned" : "None"), true)
                     .appendField("Community Ban", (status.isCommunityBanned() ? "Banned" : "None"), true);
