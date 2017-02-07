@@ -101,7 +101,7 @@ public class GameServers implements CommandSupplier {
                     String response = "Retrieving status for servers matching " + serverQuery + "\n```\n";
                     for (GameServer target : targets) {
                         GameServer server = gameServerService.refreshStatus(target);
-                        response += server.getSummary();
+                        response += server.getSummary() + "\n";
                     }
                     response += "\n```";
                     answerPrivately(message, response);
