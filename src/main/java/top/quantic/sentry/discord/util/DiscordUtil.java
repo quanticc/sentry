@@ -130,6 +130,18 @@ public class DiscordUtil {
             || name.equalsIgnoreCase(user.getName() + "#" + user.getDiscriminator());
     }
 
+    public static List<IUser> awareUserList(boolean aware, IMessage message) {
+        IDiscordClient client = message.getClient();
+        IChannel channel = message.getChannel();
+        if (aware) {
+            return client.getUsers();
+        } else if (!channel.isPrivate()) {
+            return channel.getGuild().getUsers();
+        } else {
+            return asList(message.getAuthor(), client.getOurUser());
+        }
+    }
+
     public static void deleteMessage(IMessage message) {
         RequestBuffer.request(() -> {
             try {
@@ -163,6 +175,10 @@ public class DiscordUtil {
         return client.getOurUser().getID();
     }
 
+    public static String[] safeSplit(String[] args, int limit) {
+        return args == null ? null : args[0].split(" ", limit);
+    }
+
     public static StringBuilder appendOrAnswer(IMessage message, StringBuilder builder, String content) {
         if (content != null) {
             if (shouldSplit(builder, content)) {
@@ -186,20 +202,6 @@ public class DiscordUtil {
         return answerToChannel(to.getChannel(), content, tts);
     }
 
-    public static RequestBuffer.RequestFuture<Void> reply(IMessage to, String content) {
-        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
-            MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
-            RequestBuffer.RequestFuture<Void> response = null;
-            for (String split : splits) {
-                response = innerReply(to, split);
-            }
-            return response;
-        } else {
-            return innerReply(to, content);
-        }
-    }
-
     public static RequestBuffer.RequestFuture<IMessage> answerPrivately(IMessage to, String content) {
         return answerPrivately(to, content, false);
     }
@@ -215,16 +217,13 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerWithFile(IMessage to, String content, File file) {
-        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
-            MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
-            for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(to.getChannel(), splits.get(i), null, false);
-            }
-            return sendFile(to.getChannel(), splits.get(splits.size() - 1), file);
-        } else {
-            return sendFile(to.getChannel(), content, file);
+        try {
+            return answerToChannelWithFile(to.getChannel(), content, file);
+        } catch (DiscordException e) {
+            log.warn("[{}] Failed to send PM to {}: {}", to.getClient().getOurUser().getName(),
+                humanize(to.getAuthor()), e);
         }
+        return null;
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerPrivatelyWithFile(IMessage to, String content, File file) {
@@ -251,11 +250,13 @@ public class DiscordUtil {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
-            RequestBuffer.RequestFuture<IMessage> response = null;
-            for (String split : splits) {
-                response = sendMessage(channel, split, null, false);
-            }
-            return response;
+            return RequestBuffer.request(() -> {
+                IMessage last = null;
+                for (String split : splits) {
+                    last = sendMessage(channel, split, null, tts).get();
+                }
+                return last;
+            });
         } else {
             return sendMessage(channel, content, null, tts);
         }
@@ -265,10 +266,12 @@ public class DiscordUtil {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
-            for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(channel, splits.get(i), null, false);
-            }
-            return sendFile(channel, splits.get(splits.size() - 1), file);
+            return RequestBuffer.request(() -> {
+                for (int i = 0; i < splits.size() - 1; i++) {
+                    sendMessage(channel, splits.get(i), null, false).get();
+                }
+                return sendFile(channel, splits.get(splits.size() - 1), file).get();
+            });
         } else {
             return sendFile(channel, content, file);
         }
@@ -278,10 +281,12 @@ public class DiscordUtil {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
-            for (int i = 0; i < splits.size() - 1; i++) {
-                sendMessage(channel, splits.get(i), null, false);
-            }
-            return sendFile(channel, splits.get(splits.size() - 1), stream, fileName);
+            return RequestBuffer.request(() -> {
+                for (int i = 0; i < splits.size() - 1; i++) {
+                    sendMessage(channel, splits.get(i), null, false).get();
+                }
+                return sendFile(channel, splits.get(splits.size() - 1), stream, fileName).get();
+            });
         } else {
             return sendFile(channel, content, stream, fileName);
         }
@@ -300,80 +305,57 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content, EmbedObject embedObject, boolean tts) {
-        return RequestBuffer.request(() -> {
-            try {
-                return channel.sendMessage(content, embedObject, tts);
-            } catch (MissingPermissionsException e) {
-                log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            } catch (DiscordException e) {
-                log.warn("[{}] Failed to send message to {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            }
-            return null;
-        });
-    }
-
-    private static RequestBuffer.RequestFuture<Void> innerReply(IMessage message, String content) {
-        if (!content.isEmpty()) {
-            return RequestBuffer.request(() -> {
-                try {
-                    message.reply(content);
-                } catch (MissingPermissionsException e) {
-                    log.warn("[{}] Missing permissions in {}: {}", message.getClient().getOurUser().getName(),
-                        humanize(message.getChannel()), e);
-                } catch (DiscordException e) {
-                    log.warn("[{}] Failed to send message to {}: {}", message.getClient().getOurUser().getName(),
-                        humanize(message.getChannel()), e);
-                }
-            });
-        }
-        return RequestBuffer.request(() -> null);
+        return RequestBuffer.request(() -> (IMessage) sendUnbufferedMessage(channel, content, embedObject, tts));
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, File file) {
-        return RequestBuffer.request(() -> {
-            try {
-                return channel.sendFile(content, file);
-            } catch (MissingPermissionsException e) {
-                log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            } catch (DiscordException | FileNotFoundException e) {
-                log.warn("[{}] Failed to send file to {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            }
-            return null;
-        });
+        return RequestBuffer.request(() -> (IMessage) sendUnbufferedFile(channel, content, file));
     }
 
     private static RequestBuffer.RequestFuture<IMessage> sendFile(IChannel channel, String content, InputStream stream, String fileName) {
-        return RequestBuffer.request(() -> {
-            try {
-                return channel.sendFile(content, false, stream, fileName);
-            } catch (MissingPermissionsException e) {
-                log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            } catch (DiscordException e) {
-                log.warn("[{}] Failed to send file to {}: {}", channel.getClient().getOurUser().getName(),
-                    humanize(channel), e);
-            }
-            return null;
-        });
+        return RequestBuffer.request(() -> (IMessage) sendUnbufferedFile(channel, content, stream, fileName));
+    }
+
+    private static IMessage sendUnbufferedMessage(IChannel channel, String content, EmbedObject embedObject, boolean tts) {
+        try {
+            return channel.sendMessage(content, embedObject, tts);
+        } catch (MissingPermissionsException e) {
+            log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        } catch (DiscordException e) {
+            log.warn("[{}] Failed to send message to {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        }
+        return null;
+    }
+
+    private static IMessage sendUnbufferedFile(IChannel channel, String content, File file) {
+        try {
+            return channel.sendFile(content, file);
+        } catch (MissingPermissionsException e) {
+            log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        } catch (DiscordException | FileNotFoundException e) {
+            log.warn("[{}] Failed to send file to {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        }
+        return null;
+    }
+
+    private static IMessage sendUnbufferedFile(IChannel channel, String content, InputStream stream, String fileName) {
+        try {
+            return channel.sendFile(content, false, stream, fileName);
+        } catch (MissingPermissionsException e) {
+            log.warn("[{}] Missing permissions in {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        } catch (DiscordException e) {
+            log.warn("[{}] Failed to send file to {}: {}", channel.getClient().getOurUser().getName(),
+                humanize(channel), e);
+        }
+        return null;
     }
 
 
     private DiscordUtil() {
-    }
-
-    public static List<IUser> awareUserList(boolean aware, IMessage message) {
-        IDiscordClient client = message.getClient();
-        IChannel channel = message.getChannel();
-        if (aware) {
-            return client.getUsers();
-        } else if (!channel.isPrivate()) {
-            return channel.getGuild().getUsers();
-        } else {
-            return asList(message.getAuthor(), client.getOurUser());
-        }
     }
 }
