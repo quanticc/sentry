@@ -60,7 +60,7 @@ public class Steam implements CommandSupplier {
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
-                answer(message, "Retrieving user data of " + inflect(queries.size(), "user") + "...");
+                answer(message, "Retrieving " + inflect(queries.size(), "profile") + "...");
                 for (String query : queries) {
                     Long steamId64 = gameQueryService.getSteamId64(query)
                         .exceptionally(t -> {
