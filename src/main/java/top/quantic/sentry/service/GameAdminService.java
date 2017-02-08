@@ -252,7 +252,7 @@ public class GameAdminService implements InitializingBean {
         Elements mods = document.select("td.section_tabs table[style=\"margin-top: 10px;\"] tr");
         mods.stream().skip(1).filter(el -> {
             Elements cols = el.children();
-            return cols.size() == 3 && cols.get(0).text().equals("Server Update");
+            return cols.size() == 3 && "Server Update".equals(cols.get(0).text());
         }).forEach(el -> map.put("latest-update", extractDate(el.children().get(1).text())));
         log.debug("Latest available update: {}", map.getOrDefault("latest-update", "Not found!"));
         Elements history = document.select("span.page_subtitle + table tr");

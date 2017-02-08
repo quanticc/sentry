@@ -133,7 +133,7 @@ public class Info implements CommandSupplier {
     private String formatRoles(List<IRole> roles) {
         String names = roles.stream()
             .map(IRole::getName)
-            .filter(s -> !s.equals("@everyone"))
+            .filter(s -> !"@everyone".equals(s))
             .collect(Collectors.joining(", "));
         if (names.isEmpty()) {
             return "<none>";

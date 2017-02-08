@@ -71,25 +71,25 @@ public class GameServers implements CommandSupplier {
                 String action = args[0];
                 String serverQuery = args[1];
                 List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split(",|;")));
-                if (action.equals("restart")) {
+                if ("restart".equals(action)) {
                     String response = "Restarting servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
                         response = resultLine(target, gameServerService.tryRestart(target));
                     }
                     answer(message, response);
-                } else if (action.equals("stop")) {
+                } else if ("stop".equals(action)) {
                     String response = "Stopping servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
                         response = resultLine(target, gameServerService.tryStop(target));
                     }
                     answer(message, response);
-                } else if (action.equals("update")) {
+                } else if ("update".equals(action)) {
                     String response = "Updating game version on servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
                         response = resultLine(target, gameServerService.tryUpdate(target));
                     }
                     answer(message, response);
-                } else if (action.equals("install-mod")) {
+                } else if ("install-mod".equals(action)) {
                     if (args.length < 3) {
                         answer(message, "You must add an extra argument with the mod ID or name");
                         return;
@@ -102,7 +102,7 @@ public class GameServers implements CommandSupplier {
                         response = resultLine(target, gameServerService.tryModInstall(target, modName));
                     }
                     answerPrivately(message, response);
-                } else if (action.equals("status")) {
+                } else if ("status".equals(action)) {
                     answerPrivately(message, "Retrieving status for servers matching " + serverQuery);
                     int latest = gameServerService.getLatestVersion();
                     for (GameServer target : targets) {
@@ -168,7 +168,7 @@ public class GameServers implements CommandSupplier {
                                 .build());
                         }
                     }
-                } else if (action.equals("console")) {
+                } else if ("console".equals(action)) {
                     String response = "Retrieving console for servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
                         Result<String> result = gameServerService.tryGetConsole(target);

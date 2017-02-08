@@ -95,11 +95,11 @@ public class GameFiles implements CommandSupplier {
                 String mode = nonOptions.get(0).toLowerCase();
                 List<String> command = baseCommand();
                 String remote, glob, range;
-                if (mode.equals("logs") || mode.equals("log")) {
+                if ("logs".equals(mode) || "log".equals(mode)) {
                     remote = "/orangebox/tf/logs";
                     glob = "*.log";
                     range = "100k-10m";
-                } else if (mode.equals("stv") || mode.equals("sourcetv")) {
+                } else if ("stv".equals(mode) || "sourcetv".equals(mode)) {
                     remote = "/orangebox/tf";
                     glob = "*.dem";
                     range = "0-50m";

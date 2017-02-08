@@ -19,7 +19,7 @@ public class SteamIdConverter {
     }
 
     public static long steam2To64(String steamId32) {
-        if (steamId32.equals("STEAM_ID_LAN") || steamId32.equals("BOT")) {
+        if ("STEAM_ID_LAN".equals(steamId32) || "BOT".equals(steamId32)) {
             return 0;
         }
         if (steamId32.matches("^STEAM_[0-1]:[0-1]:[0-9]+$")) {

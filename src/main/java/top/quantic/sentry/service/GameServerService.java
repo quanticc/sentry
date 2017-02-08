@@ -580,24 +580,24 @@ public class GameServerService implements InitializingBean {
 
     private boolean isUnclaimedCase(GameServer s, List<String> keys) {
         ZonedDateTime now = ZonedDateTime.now();
-        return keys.stream().anyMatch(k -> k.equals("unclaimed"))
+        return keys.stream().anyMatch("unclaimed"::equals)
             && now.isAfter(s.getExpirationDate());
     }
 
     private boolean isClaimedCase(GameServer s, List<String> keys) {
         ZonedDateTime now = ZonedDateTime.now();
-        return keys.stream().anyMatch(k -> k.equals("claimed"))
+        return keys.stream().anyMatch("claimed"::equals)
             && now.isBefore(s.getExpirationDate());
     }
 
     private boolean isUnclaimedCase(GameServer s, String key) {
         ZonedDateTime now = ZonedDateTime.now();
-        return key.equals("unclaimed") && now.isAfter(s.getExpirationDate());
+        return "unclaimed".equals(key) && now.isAfter(s.getExpirationDate());
     }
 
     private boolean isClaimedCase(GameServer s, String key) {
         ZonedDateTime now = ZonedDateTime.now();
-        return key.equals("claimed") && now.isBefore(s.getExpirationDate());
+        return "claimed".equals(key) && now.isBefore(s.getExpirationDate());
     }
 
     private boolean containsName(GameServer server, List<String> keys) {
