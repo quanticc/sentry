@@ -10,10 +10,12 @@ Bootstrapped using [JHipster 3.12.2][] (Spring Boot + AngularJS).
 - Exposes a web administration panel with OAuth2 support
 - Manages [Discord][] bots to communicate with general users
 - Delivers server files (maps, config files) and game version updates in batch
-- Retrieves SourceTV and log files and uploads them to Dropbox
+- Retrieves SourceTV and log files from game servers
 - Keeps track of GS server statistics and expire status
 - Matches UGC result data with stats providers
 - Alerts on missing updates and unresponsive servers
+- Forwards metrics and events to Discord webhooks or messages
+- Announces when streamers go live under certain conditions
 
 ## Development
 
