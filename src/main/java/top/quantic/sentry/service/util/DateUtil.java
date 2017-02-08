@@ -177,6 +177,14 @@ public class DateUtil {
         return formatRelative(then.toInstant());
     }
 
+    public static String formatRelativeWithNow(ZonedDateTime then) {
+        return formatRelativeWithNow(then.toInstant());
+    }
+
+    public static String formatRelativeWithNow(Instant then) {
+        return then == Instant.MAX ? "never" : new PrettyTime(Locale.ENGLISH).format(Date.from(then));
+    }
+
     public static String formatRelative(Instant then) {
         PrettyTime prettyTime = new PrettyTime(Locale.ENGLISH);
         prettyTime.removeUnit(JustNow.class);
@@ -184,6 +192,10 @@ public class DateUtil {
     }
 
     public static String withRelative(Instant time) {
+        return time.toString() + " (" + formatRelative(time) + ")";
+    }
+
+    public static String withRelative(ZonedDateTime time) {
         return time.toString() + " (" + formatRelative(time) + ")";
     }
 

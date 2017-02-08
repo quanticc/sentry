@@ -398,11 +398,6 @@ public class GameServerService implements InitializingBean {
             Histogram histogram = getPlayerHistogram(server);
             histogram.update(players);
 
-//            log.debug("[{}] {} {} {} v{}{} ({})", server.getShortName(),
-//                leftPad(server.getAddress(), 25 - Math.min(5, server.getShortName().length())),
-//                rightPad(mapName, 20), leftPad(players + " / " + max, 7),
-//                versionString, tvPort > 0 ? " with SourceTV @ port " + tvPort : "", delay);
-
             server.setStatusCheckDate(ZonedDateTime.now());
             server.setMap(mapName);
             server.setPlayers(players);
@@ -506,6 +501,10 @@ public class GameServerService implements InitializingBean {
     public Map<String, String> getSummary() {
         return gameServerRepository.findAll().stream()
             .collect(Collectors.toMap(GameServer::getShortName, GameServer::getSummary));
+    }
+
+    public Monitor.State getState(GameServer server) {
+        return getStatusMonitor(server).getState();
     }
 
     /////////////////////////////////
@@ -653,7 +652,7 @@ public class GameServerService implements InitializingBean {
                 if (response == GameAdminService.Result.RESTARTED) {
                     return Result.empty("Server is restarting...");
                 } else {
-                    return Result.error("Could not restart: " + response);
+                    return Result.error("Error: " + response);
                 }
             } catch (IOException e) {
                 log.warn("Could not restart server {}: {}", server, e.toString());

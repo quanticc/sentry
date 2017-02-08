@@ -16,18 +16,23 @@ import top.quantic.sentry.domain.GameServer;
 import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.service.GameServerService;
 import top.quantic.sentry.service.SettingService;
+import top.quantic.sentry.service.util.Monitor;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.Multimaps.toMultimap;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.service.util.DateUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
+import static top.quantic.sentry.service.util.MiscUtil.getIPAddress;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
@@ -98,13 +103,53 @@ public class GameServers implements CommandSupplier {
                     }
                     answerPrivately(message, response);
                 } else if (action.equals("status")) {
-                    String response = "Retrieving status for servers matching " + serverQuery + "\n```\n";
+                    answerPrivately(message, "Retrieving status for servers matching " + serverQuery);
+                    int latest = gameServerService.getLatestVersion();
                     for (GameServer target : targets) {
                         GameServer server = gameServerService.refreshStatus(target);
-                        response += server.getSummary() + "\n";
+                        EmbedBuilder builder = new EmbedBuilder()
+                            .setLenient(true)
+                            .withAuthorIcon("https://quantic.top/sentry.png")
+                            .withAuthorName("Sentry")
+                            .withAuthorUrl("https://sentry.quantic.top")
+                            .withTitle("Status of " + target.getShortNameAndAddress())
+                            .withImage("http://cache.gametracker.com/server_info/" + target.getAddress() +
+                                "/b_350_20_692108_381007_FFFFFF_000000.png");
+                        if (gameServerService.getState(server) == Monitor.State.BAD) {
+                            builder.withColor(new Color(0xaa0000))
+                                .withDescription("Server appears to be down since " + formatRelative(server.getLastValidPing()));
+                        } else {
+                            if (server.isUpdating()) {
+                                builder.withColor(new Color(0x0000aa))
+                                    .withDescription("Server is being updated")
+                                    .appendField("Attempts", "" + target.getUpdateAttempts(), true)
+                                    .appendField("Started", formatRelative(target.getLastUpdateStart()), false);
+                            } else if (server.getPing() > 1000) {
+                                builder.withColor(new Color(0xaaaa00))
+                                    .withDescription("Server is experiencing connectivity issues")
+                                    .appendField("Last Ping", formatRelativeWithNow(target.getLastValidPing()), false);
+                            } else {
+                                builder.withColor(new Color(0x00aa00))
+                                    .withDescription(targets.size() > 1 ? "Server is online" : "Get more details with `.rcon " + target.getShortName() + " status`")
+                                    .appendField("Map", target.getMap(), true)
+                                    .appendField("Players", target.getPlayers() + " / " + target.getMaxPlayers(), true)
+                                    .appendField("Connect", "steam://connect/" + target.getAddress() + "/" + target.getSvPassword(), false);
+                                if (target.getTvPort() != null && target.getTvPort() > 0) {
+                                    builder.appendField("SourceTV", "steam://connect/" + getIPAddress(target.getAddress()) + ":" + target.getTvPort() + "/", false);
+                                }
+                                if (target.getExpirationDate().isAfter(ZonedDateTime.now())) {
+                                    builder.appendField("Expires", withRelative(target.getExpirationDate()), false);
+                                }
+                            }
+                            builder.appendField("Version", "v" + target.getVersion(), true);
+                            if (target.getVersion() != latest) {
+                                builder.appendField("Status", "Outdated (Latest: " + latest + ")", true);
+                            } else {
+                                builder.appendField("Status", "Up-to-date", true);
+                            }
+                        }
+                        sendMessage(message.getChannel(), builder.build());
                     }
-                    response += "\n```";
-                    answerPrivately(message, response);
                     if (targets.size() == 1) {
                         GameServer target = targets.get(0);
                         Result<String> result = gameServerService.tryRcon(target, "status");
@@ -116,8 +161,9 @@ public class GameServers implements CommandSupplier {
                             sendMessage(message.getChannel(), new EmbedBuilder()
                                 .setLenient(true)
                                 .withTitle("Status of " + target.getShortNameAndAddress())
-                                .appendField("Response", result.getMessage() +
-                                    (result.getError() != null ? "(" + result.getError().getMessage() + ")" : ""), false)
+                                .appendField("Response", "Could not connect via RCON" +
+                                    (result.getError() != null ? " (" +
+                                        getRootCause(result.getError()).getClass().getSimpleName() + ")" : ""), false)
                                 .withColor(new Color(0xaa0000))
                                 .build());
                         }
