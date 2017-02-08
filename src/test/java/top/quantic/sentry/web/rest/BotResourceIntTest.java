@@ -193,15 +193,15 @@ public class BotResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(bot.getId())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].token").value(hasItem(DEFAULT_TOKEN.toString())))
-            .andExpect(jsonPath("$.[*].autoLogin").value(hasItem(DEFAULT_AUTO_LOGIN.booleanValue())))
-            .andExpect(jsonPath("$.[*].daemon").value(hasItem(DEFAULT_DAEMON.booleanValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].token").value(hasItem(DEFAULT_TOKEN)))
+            .andExpect(jsonPath("$.[*].autoLogin").value(hasItem(DEFAULT_AUTO_LOGIN)))
+            .andExpect(jsonPath("$.[*].daemon").value(hasItem(DEFAULT_DAEMON)))
             .andExpect(jsonPath("$.[*].maxMissedPings").value(hasItem(DEFAULT_MAX_MISSED_PINGS)))
             .andExpect(jsonPath("$.[*].maxReconnectAttempts").value(hasItem(DEFAULT_MAX_RECONNECT_ATTEMPTS)))
             .andExpect(jsonPath("$.[*].shardCount").value(hasItem(DEFAULT_SHARD_COUNT)))
-            .andExpect(jsonPath("$.[*].primary").value(hasItem(DEFAULT_PRIMARY.booleanValue())))
-            .andExpect(jsonPath("$.[*].tags").value(hasItem(DEFAULT_TAGS.toString())));
+            .andExpect(jsonPath("$.[*].primary").value(hasItem(DEFAULT_PRIMARY)))
+            .andExpect(jsonPath("$.[*].tags").value(hasItem(DEFAULT_TAGS)));
     }
 
     @Test
@@ -214,15 +214,15 @@ public class BotResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(bot.getId()))
-            .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
-            .andExpect(jsonPath("$.token").value(DEFAULT_TOKEN.toString()))
-            .andExpect(jsonPath("$.autoLogin").value(DEFAULT_AUTO_LOGIN.booleanValue()))
-            .andExpect(jsonPath("$.daemon").value(DEFAULT_DAEMON.booleanValue()))
+            .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.token").value(DEFAULT_TOKEN))
+            .andExpect(jsonPath("$.autoLogin").value(DEFAULT_AUTO_LOGIN))
+            .andExpect(jsonPath("$.daemon").value(DEFAULT_DAEMON))
             .andExpect(jsonPath("$.maxMissedPings").value(DEFAULT_MAX_MISSED_PINGS))
             .andExpect(jsonPath("$.maxReconnectAttempts").value(DEFAULT_MAX_RECONNECT_ATTEMPTS))
             .andExpect(jsonPath("$.shardCount").value(DEFAULT_SHARD_COUNT))
-            .andExpect(jsonPath("$.primary").value(DEFAULT_PRIMARY.booleanValue()))
-            .andExpect(jsonPath("$.tags").value(DEFAULT_TAGS.toString()));
+            .andExpect(jsonPath("$.primary").value(DEFAULT_PRIMARY))
+            .andExpect(jsonPath("$.tags").value(DEFAULT_TAGS));
     }
 
     // TODO: Test with injected MapStruct decorator

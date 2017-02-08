@@ -1,11 +1,5 @@
 package top.quantic.sentry.web.rest;
 
-import top.quantic.sentry.SentryApp;
-
-import top.quantic.sentry.domain.Permission;
-import top.quantic.sentry.repository.PermissionRepository;
-import top.quantic.sentry.service.PermissionService;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +12,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import top.quantic.sentry.SentryApp;
+import top.quantic.sentry.domain.Permission;
+import top.quantic.sentry.domain.enumeration.PermissionType;
+import top.quantic.sentry.repository.PermissionRepository;
+import top.quantic.sentry.service.PermissionService;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -26,8 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import top.quantic.sentry.domain.enumeration.PermissionType;
 /**
  * Test class for the PermissionResource REST controller.
  *
@@ -198,9 +195,9 @@ public class PermissionResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(permission.getId())))
             .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
-            .andExpect(jsonPath("$.[*].role").value(hasItem(DEFAULT_ROLE.toString())))
-            .andExpect(jsonPath("$.[*].operation").value(hasItem(DEFAULT_OPERATION.toString())))
-            .andExpect(jsonPath("$.[*].resource").value(hasItem(DEFAULT_RESOURCE.toString())));
+            .andExpect(jsonPath("$.[*].role").value(hasItem(DEFAULT_ROLE)))
+            .andExpect(jsonPath("$.[*].operation").value(hasItem(DEFAULT_OPERATION)))
+            .andExpect(jsonPath("$.[*].resource").value(hasItem(DEFAULT_RESOURCE)));
     }
 
     @Test
@@ -214,9 +211,9 @@ public class PermissionResourceIntTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(permission.getId()))
             .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
-            .andExpect(jsonPath("$.role").value(DEFAULT_ROLE.toString()))
-            .andExpect(jsonPath("$.operation").value(DEFAULT_OPERATION.toString()))
-            .andExpect(jsonPath("$.resource").value(DEFAULT_RESOURCE.toString()));
+            .andExpect(jsonPath("$.role").value(DEFAULT_ROLE))
+            .andExpect(jsonPath("$.operation").value(DEFAULT_OPERATION))
+            .andExpect(jsonPath("$.resource").value(DEFAULT_RESOURCE));
     }
 
     @Test

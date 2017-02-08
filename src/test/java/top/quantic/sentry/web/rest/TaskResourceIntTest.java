@@ -239,13 +239,13 @@ public class TaskResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(task.getId())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].group").value(hasItem(DEFAULT_GROUP.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].jobClass").value(hasItem(DEFAULT_JOB_CLASS.toString())))
-            .andExpect(jsonPath("$.[*].dataMap").value(hasItem(DEFAULT_DATA_MAP.toString())))
-            .andExpect(jsonPath("$.[*].triggers").value(hasItem(DEFAULT_TRIGGERS.toString())))
-            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED.booleanValue())));
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].group").value(hasItem(DEFAULT_GROUP)))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
+            .andExpect(jsonPath("$.[*].jobClass").value(hasItem(DEFAULT_JOB_CLASS)))
+            .andExpect(jsonPath("$.[*].dataMap").value(hasItem(DEFAULT_DATA_MAP)))
+            .andExpect(jsonPath("$.[*].triggers").value(hasItem(DEFAULT_TRIGGERS)))
+            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED)));
     }
 
     @Test
@@ -258,13 +258,13 @@ public class TaskResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(task.getId()))
-            .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
-            .andExpect(jsonPath("$.group").value(DEFAULT_GROUP.toString()))
-            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()))
-            .andExpect(jsonPath("$.jobClass").value(DEFAULT_JOB_CLASS.toString()))
-            .andExpect(jsonPath("$.dataMap").value(DEFAULT_DATA_MAP.toString()))
-            .andExpect(jsonPath("$.triggers").value(DEFAULT_TRIGGERS.toString()))
-            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED.booleanValue()));
+            .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.group").value(DEFAULT_GROUP))
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.jobClass").value(DEFAULT_JOB_CLASS))
+            .andExpect(jsonPath("$.dataMap").value(DEFAULT_DATA_MAP))
+            .andExpect(jsonPath("$.triggers").value(DEFAULT_TRIGGERS))
+            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED));
     }
 
     @Test

@@ -252,11 +252,11 @@ public class TimeFrameResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(timeFrame.getId())))
-            .andExpect(jsonPath("$.[*].subscriber").value(hasItem(DEFAULT_SUBSCRIBER.toString())))
+            .andExpect(jsonPath("$.[*].subscriber").value(hasItem(DEFAULT_SUBSCRIBER)))
             .andExpect(jsonPath("$.[*].start").value(hasItem(sameInstant(DEFAULT_START))))
             .andExpect(jsonPath("$.[*].end").value(hasItem(sameInstant(DEFAULT_END))))
-            .andExpect(jsonPath("$.[*].inclusive").value(hasItem(DEFAULT_INCLUSIVE.booleanValue())))
-            .andExpect(jsonPath("$.[*].recurrenceValue").value(hasItem(DEFAULT_RECURRENCE_VALUE.toString())));
+            .andExpect(jsonPath("$.[*].inclusive").value(hasItem(DEFAULT_INCLUSIVE)))
+            .andExpect(jsonPath("$.[*].recurrenceValue").value(hasItem(DEFAULT_RECURRENCE_VALUE)));
     }
 
     @Test
@@ -269,11 +269,11 @@ public class TimeFrameResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(timeFrame.getId()))
-            .andExpect(jsonPath("$.subscriber").value(DEFAULT_SUBSCRIBER.toString()))
+            .andExpect(jsonPath("$.subscriber").value(DEFAULT_SUBSCRIBER))
             .andExpect(jsonPath("$.start").value(sameInstant(DEFAULT_START)))
             .andExpect(jsonPath("$.end").value(sameInstant(DEFAULT_END)))
-            .andExpect(jsonPath("$.inclusive").value(DEFAULT_INCLUSIVE.booleanValue()))
-            .andExpect(jsonPath("$.recurrenceValue").value(DEFAULT_RECURRENCE_VALUE.toString()));
+            .andExpect(jsonPath("$.inclusive").value(DEFAULT_INCLUSIVE))
+            .andExpect(jsonPath("$.recurrenceValue").value(DEFAULT_RECURRENCE_VALUE));
     }
 
     @Test

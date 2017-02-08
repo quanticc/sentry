@@ -236,14 +236,14 @@ public class StreamerResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(streamer.getId())))
-            .andExpect(jsonPath("$.[*].provider").value(hasItem(DEFAULT_PROVIDER.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].league").value(hasItem(DEFAULT_LEAGUE.toString())))
-            .andExpect(jsonPath("$.[*].division").value(hasItem(DEFAULT_DIVISION.toString())))
-            .andExpect(jsonPath("$.[*].titleFilter").value(hasItem(DEFAULT_TITLE_FILTER.toString())))
-            .andExpect(jsonPath("$.[*].announcement").value(hasItem(DEFAULT_ANNOUNCEMENT.toString())))
+            .andExpect(jsonPath("$.[*].provider").value(hasItem(DEFAULT_PROVIDER)))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].league").value(hasItem(DEFAULT_LEAGUE)))
+            .andExpect(jsonPath("$.[*].division").value(hasItem(DEFAULT_DIVISION)))
+            .andExpect(jsonPath("$.[*].titleFilter").value(hasItem(DEFAULT_TITLE_FILTER)))
+            .andExpect(jsonPath("$.[*].announcement").value(hasItem(DEFAULT_ANNOUNCEMENT)))
             .andExpect(jsonPath("$.[*].lastAnnouncement").value(hasItem(sameInstant(DEFAULT_LAST_ANNOUNCEMENT))))
-            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED.booleanValue())))
+            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED)))
             .andExpect(jsonPath("$.[*].lastStreamId").value(hasItem(DEFAULT_LAST_STREAM_ID.intValue())));
     }
 
@@ -257,14 +257,14 @@ public class StreamerResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(streamer.getId()))
-            .andExpect(jsonPath("$.provider").value(DEFAULT_PROVIDER.toString()))
-            .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
-            .andExpect(jsonPath("$.league").value(DEFAULT_LEAGUE.toString()))
-            .andExpect(jsonPath("$.division").value(DEFAULT_DIVISION.toString()))
-            .andExpect(jsonPath("$.titleFilter").value(DEFAULT_TITLE_FILTER.toString()))
-            .andExpect(jsonPath("$.announcement").value(DEFAULT_ANNOUNCEMENT.toString()))
+            .andExpect(jsonPath("$.provider").value(DEFAULT_PROVIDER))
+            .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.league").value(DEFAULT_LEAGUE))
+            .andExpect(jsonPath("$.division").value(DEFAULT_DIVISION))
+            .andExpect(jsonPath("$.titleFilter").value(DEFAULT_TITLE_FILTER))
+            .andExpect(jsonPath("$.announcement").value(DEFAULT_ANNOUNCEMENT))
             .andExpect(jsonPath("$.lastAnnouncement").value(sameInstant(DEFAULT_LAST_ANNOUNCEMENT)))
-            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED.booleanValue()))
+            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED))
             .andExpect(jsonPath("$.lastStreamId").value(DEFAULT_LAST_STREAM_ID.intValue()));
     }
 

@@ -240,10 +240,10 @@ public class UserCountResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(userCount.getId())))
-            .andExpect(jsonPath("$.[*].bot").value(hasItem(DEFAULT_BOT.toString())))
-            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
+            .andExpect(jsonPath("$.[*].bot").value(hasItem(DEFAULT_BOT)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS)))
             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE.intValue())))
-            .andExpect(jsonPath("$.[*].guild").value(hasItem(DEFAULT_GUILD.toString())))
+            .andExpect(jsonPath("$.[*].guild").value(hasItem(DEFAULT_GUILD)))
             .andExpect(jsonPath("$.[*].timestamp").value(hasItem(sameInstant(DEFAULT_TIMESTAMP))));
     }
 
@@ -257,10 +257,10 @@ public class UserCountResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(userCount.getId()))
-            .andExpect(jsonPath("$.bot").value(DEFAULT_BOT.toString()))
-            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
+            .andExpect(jsonPath("$.bot").value(DEFAULT_BOT))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS))
             .andExpect(jsonPath("$.value").value(DEFAULT_VALUE.intValue()))
-            .andExpect(jsonPath("$.guild").value(DEFAULT_GUILD.toString()))
+            .andExpect(jsonPath("$.guild").value(DEFAULT_GUILD))
             .andExpect(jsonPath("$.timestamp").value(sameInstant(DEFAULT_TIMESTAMP)));
     }
 

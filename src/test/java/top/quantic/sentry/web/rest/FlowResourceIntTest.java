@@ -239,13 +239,13 @@ public class FlowResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(flow.getId())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].input").value(hasItem(DEFAULT_INPUT.toString())))
-            .andExpect(jsonPath("$.[*].inputParameters").value(hasItem(DEFAULT_INPUT_PARAMETERS.toString())))
-            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE.toString())))
-            .andExpect(jsonPath("$.[*].translator").value(hasItem(DEFAULT_TRANSLATOR.toString())))
-            .andExpect(jsonPath("$.[*].output").value(hasItem(DEFAULT_OUTPUT.toString())))
-            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED.booleanValue())));
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].input").value(hasItem(DEFAULT_INPUT)))
+            .andExpect(jsonPath("$.[*].inputParameters").value(hasItem(DEFAULT_INPUT_PARAMETERS)))
+            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
+            .andExpect(jsonPath("$.[*].translator").value(hasItem(DEFAULT_TRANSLATOR)))
+            .andExpect(jsonPath("$.[*].output").value(hasItem(DEFAULT_OUTPUT)))
+            .andExpect(jsonPath("$.[*].enabled").value(hasItem(DEFAULT_ENABLED)));
     }
 
     @Test
@@ -258,13 +258,13 @@ public class FlowResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(flow.getId()))
-            .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
-            .andExpect(jsonPath("$.input").value(DEFAULT_INPUT.toString()))
-            .andExpect(jsonPath("$.inputParameters").value(DEFAULT_INPUT_PARAMETERS.toString()))
-            .andExpect(jsonPath("$.message").value(DEFAULT_MESSAGE.toString()))
-            .andExpect(jsonPath("$.translator").value(DEFAULT_TRANSLATOR.toString()))
-            .andExpect(jsonPath("$.output").value(DEFAULT_OUTPUT.toString()))
-            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED.booleanValue()));
+            .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.input").value(DEFAULT_INPUT))
+            .andExpect(jsonPath("$.inputParameters").value(DEFAULT_INPUT_PARAMETERS))
+            .andExpect(jsonPath("$.message").value(DEFAULT_MESSAGE))
+            .andExpect(jsonPath("$.translator").value(DEFAULT_TRANSLATOR))
+            .andExpect(jsonPath("$.output").value(DEFAULT_OUTPUT))
+            .andExpect(jsonPath("$.enabled").value(DEFAULT_ENABLED));
     }
 
     @Test
