@@ -1,8 +1,9 @@
 package top.quantic.sentry.config;
 
-import javax.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.web.cors.CorsConfiguration;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Properties specific to JHipster.
@@ -27,6 +28,8 @@ public class JHipsterProperties {
     private final Swagger swagger = new Swagger();
 
     private final Metrics metrics = new Metrics();
+
+    private final Logging logging = new Logging();
 
     private final CorsConfiguration cors = new CorsConfiguration();
 
@@ -61,6 +64,8 @@ public class JHipsterProperties {
     public Metrics getMetrics() {
         return metrics;
     }
+
+    public Logging getLogging() { return logging; }
 
     public CorsConfiguration getCors() {
         return cors;
@@ -399,10 +404,6 @@ public class JHipsterProperties {
             }
         }
     }
-
-    private final Logging logging = new Logging();
-
-    public Logging getLogging() { return logging; }
 
     public static class Logging {
 

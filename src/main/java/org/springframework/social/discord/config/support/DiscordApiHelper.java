@@ -10,6 +10,8 @@ import org.springframework.social.discord.api.Discord;
 
 public class DiscordApiHelper implements ApiHelper<Discord> {
 
+    private static final Logger log = LoggerFactory.getLogger(DiscordApiHelper.class);
+
     private final UsersConnectionRepository usersConnectionRepository;
     private final UserIdSource userIdSource;
 
@@ -30,7 +32,5 @@ public class DiscordApiHelper implements ApiHelper<Discord> {
         }
         return connection != null ? connection.getApi() : null;
     }
-
-    private static final Logger log = LoggerFactory.getLogger(DiscordApiHelper.class);
 
 }

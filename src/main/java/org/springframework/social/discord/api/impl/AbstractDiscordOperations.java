@@ -4,6 +4,8 @@ import org.springframework.social.MissingAuthorizationException;
 
 class AbstractDiscordOperations {
 
+    private static final String API_BASE_URL = "https://discordapp.com/api";
+
     private final boolean isAuthorized;
 
     public AbstractDiscordOperations(boolean isAuthorized) {
@@ -19,6 +21,4 @@ class AbstractDiscordOperations {
     protected String buildUri(String path) {
         return API_BASE_URL + path;
     }
-
-    private static final String API_BASE_URL = "https://discordapp.com/api";
 }

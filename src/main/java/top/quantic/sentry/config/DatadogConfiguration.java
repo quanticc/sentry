@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 public class DatadogConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(DatadogConfiguration.class);
+    private static final ContainsMatchingStrategy CONTAINS_STRATEGY = new ContainsMatchingStrategy();
+    private static final RegexMatchingStrategy REGEX_STRATEGY = new RegexMatchingStrategy();
 
     private final SentryProperties sentryProperties;
 
@@ -123,13 +125,6 @@ public class DatadogConfiguration {
     private List<String> getExcludes() {
         return sentryProperties.getMetrics().getDatadog().getExcludes();
     }
-
-    ///////////////////////////////////////////////
-    // Based on Dropwizard's BaseReporterFactory //
-    ///////////////////////////////////////////////
-
-    private static final ContainsMatchingStrategy CONTAINS_STRATEGY = new ContainsMatchingStrategy();
-    private static final RegexMatchingStrategy REGEX_STRATEGY = new RegexMatchingStrategy();
 
     private MetricFilter getFilter() {
         StringMatchingStrategy strategy = isUseRegexFilters() ? REGEX_STRATEGY : CONTAINS_STRATEGY;
