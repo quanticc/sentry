@@ -46,7 +46,7 @@ public class GameAdminService implements InitializingBean {
     private static final int TIMEOUT = 60000;
 
     private final Map<String, String> session = new ConcurrentHashMap<>();
-    private final RateLimiter rateLimiter = RateLimiter.create(0.2); // required to operate GameServers panel
+    private final RateLimiter rateLimiter = RateLimiter.create(0.4); // required to operate GameServers panel
 
     private final SentryProperties sentryProperties;
 
@@ -386,10 +386,9 @@ public class GameAdminService implements InitializingBean {
              */
             return Result.RESTARTED;
         } else if (response.contains("Server Stopped")) {
-            /*
-            Server Stopped.
-             */
             return Result.STOPPED;
+        } else if (response.contains("Could not start server")) {
+            return Result.COULD_NOT_START;
         } else {
             return Result.OTHER;
         }
@@ -420,7 +419,8 @@ public class GameAdminService implements InitializingBean {
     }
 
     public enum Result {
-        INSTALLING, RESTARTED, STOPPED, SERVER_OFFLINE, OUTAGE_DETECTED, TOO_MANY_INSTALLS, NO_RESPONSE, OTHER;
+        INSTALLING, RESTARTED, STOPPED, SERVER_OFFLINE, OUTAGE_DETECTED, TOO_MANY_INSTALLS, NO_RESPONSE,
+        COULD_NOT_START, OTHER;
 
         @Override
         public String toString() {
