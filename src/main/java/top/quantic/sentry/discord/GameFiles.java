@@ -94,7 +94,9 @@ public class GameFiles implements CommandSupplier {
                 }
                 String mode = nonOptions.get(0).toLowerCase();
                 List<String> command = baseCommand();
-                String remote, glob, range;
+                String remote;
+                String glob;
+                String range;
                 if ("logs".equals(mode) || "log".equals(mode)) {
                     remote = "/orangebox/tf/logs";
                     glob = "*.log";
