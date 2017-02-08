@@ -1,15 +1,14 @@
 package top.quantic.sentry.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 /**
  * Persistent tokens are used by Spring Security to automatically log in users.
@@ -29,18 +28,18 @@ public class PersistentToken implements Serializable {
     @JsonIgnore
     @NotNull
     private String tokenValue;
-    
+
     private LocalDate tokenDate;
 
     //an IPV6 address max length is 39 characters
     @Size(min = 0, max = 39)
     private String ipAddress;
 
-    
+
     private String userAgent;
 
     @JsonIgnore
-    
+
     @DBRef
     private User user;
 
@@ -107,11 +106,7 @@ public class PersistentToken implements Serializable {
 
         PersistentToken that = (PersistentToken) o;
 
-        if (!series.equals(that.series)) {
-            return false;
-        }
-
-        return true;
+        return series.equals(that.series);
     }
 
     @Override

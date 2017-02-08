@@ -129,9 +129,7 @@ public class StreamerDTO implements Serializable {
 
         StreamerDTO streamerDTO = (StreamerDTO) o;
 
-        if (!Objects.equals(id, streamerDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, streamerDTO.id);
     }
 
     @Override

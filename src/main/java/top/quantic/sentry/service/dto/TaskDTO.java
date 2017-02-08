@@ -107,9 +107,7 @@ public class TaskDTO implements Serializable {
 
         TaskDTO taskDTO = (TaskDTO) o;
 
-        if (!Objects.equals(id, taskDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, taskDTO.id);
     }
 
     @Override

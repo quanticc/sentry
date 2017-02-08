@@ -83,9 +83,7 @@ public class TimeFrameDTO implements Serializable {
 
         TimeFrameDTO timeFrameDTO = (TimeFrameDTO) o;
 
-        if ( ! Objects.equals(id, timeFrameDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, timeFrameDTO.id);
     }
 
     @Override

@@ -71,9 +71,7 @@ public class SettingDTO implements Serializable {
 
         SettingDTO settingDTO = (SettingDTO) o;
 
-        if ( ! Objects.equals(id, settingDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, settingDTO.id);
     }
 
     @Override

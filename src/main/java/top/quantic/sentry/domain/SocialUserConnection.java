@@ -196,11 +196,7 @@ public class SocialUserConnection implements Serializable {
 
         SocialUserConnection user = (SocialUserConnection) o;
 
-        if (!id.equals(user.id)) {
-            return false;
-        }
-
-        return true;
+        return id.equals(user.id);
     }
 
     @Override

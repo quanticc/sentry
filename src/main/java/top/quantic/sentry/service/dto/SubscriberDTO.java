@@ -76,9 +76,7 @@ public class SubscriberDTO implements Serializable {
 
         SubscriberDTO subscriberDTO = (SubscriberDTO) o;
 
-        if (!Objects.equals(id, subscriberDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, subscriberDTO.id);
     }
 
     @Override

@@ -108,9 +108,7 @@ public class FlowDTO implements Serializable {
 
         FlowDTO flowDTO = (FlowDTO) o;
 
-        if (!Objects.equals(id, flowDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, flowDTO.id);
     }
 
     @Override

@@ -142,9 +142,7 @@ public class BotDTO implements Serializable {
 
         BotDTO botDTO = (BotDTO) o;
 
-        if ( ! Objects.equals(id, botDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, botDTO.id);
     }
 
     @Override

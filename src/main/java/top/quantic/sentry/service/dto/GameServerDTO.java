@@ -225,9 +225,7 @@ public class GameServerDTO implements Serializable {
 
         GameServerDTO gameServerDTO = (GameServerDTO) o;
 
-        if ( ! Objects.equals(id, gameServerDTO.id)) return false;
-
-        return true;
+        return Objects.equals(id, gameServerDTO.id);
     }
 
     @Override
