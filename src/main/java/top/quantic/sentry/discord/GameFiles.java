@@ -10,6 +10,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.RequestBuffer;
@@ -24,10 +25,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +40,7 @@ import static java.util.Arrays.asList;
 import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.discord.util.DiscordUtil.answerPrivately;
 import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
-import static top.quantic.sentry.service.util.MiscUtil.getIPAddress;
-import static top.quantic.sentry.service.util.MiscUtil.humanizeBytes;
+import static top.quantic.sentry.service.util.MiscUtil.*;
 
 @Component
 public class GameFiles implements CommandSupplier {
@@ -301,5 +303,31 @@ public class GameFiles implements CommandSupplier {
             "2. You can use 'size' with a range to only download the files that are within that range. For example using" +
             " '1k-10k' will only get files within 1 KB and 10 KB. Sensible defaults are applied if this option is omitted.\n" +
             "3. You can include the word 'dry-run' to only check which files would be downloaded.\n";
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    void deleteOlderDirectories() {
+        SentryProperties.GameAdmin settings = sentryProperties.getGameAdmin();
+        Path dir = Paths.get(settings.getDownloadsDir());
+        int threshold = 30;
+        List<Path> toDelete = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, path -> Files.isDirectory(path))) {
+            for (Path path : stream) {
+                Instant lastModified = Files.getLastModifiedTime(path).toInstant();
+                if (Duration.between(lastModified, Instant.now()).toDays() >= threshold) {
+                    toDelete.add(path);
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Could not check downloads folder", e);
+        }
+        for (Path path : toDelete) {
+            log.info("Removing folder {} as it is over {} old", path, inflect(threshold, "day"));
+            try {
+                FileUtils.deleteDirectory(path.toFile());
+            } catch (IOException e) {
+                log.warn("Could not delete folder", e);
+            }
+        }
     }
 }
