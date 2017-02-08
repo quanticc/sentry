@@ -9,17 +9,20 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
-import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.core.Command;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static top.quantic.sentry.config.Constants.ANY;
 
 public class DiscordUtil {
 
@@ -80,7 +83,7 @@ public class DiscordUtil {
         if (isBlank(command.getCategory())) {
             return Collections.singletonList(command.getName());
         } else {
-            return Arrays.asList(Constants.ANY, command.getName(), command.getCategory());
+            return asList(ANY, command.getName(), command.getCategory());
         }
     }
 

@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sx.blah.discord.handle.obj.IMessage;
-import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.config.SentryProperties;
 import top.quantic.sentry.domain.AbstractAuditingEntity;
 import top.quantic.sentry.domain.Setting;
@@ -135,7 +134,7 @@ public class SettingService {
     }
 
     public List<Setting> findByGlobalKey(String key) {
-        return settingRepository.findByGuildAndKey(Constants.ANY, key);
+        return settingRepository.findByGuildAndKey(ANY, key);
     }
 
     public Optional<Setting> findOneByGuildAndKey(String guild, String key) {
@@ -156,7 +155,7 @@ public class SettingService {
     }
 
     public Optional<Setting> findOneByGlobalKey(String key) {
-        return settingRepository.findByGuildAndKey(Constants.ANY, key).stream().findAny();
+        return settingRepository.findByGuildAndKey(ANY, key).stream().findAny();
     }
 
     public List<Setting> findByKeyStartingWith(String key) {
