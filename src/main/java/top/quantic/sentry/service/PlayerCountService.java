@@ -15,9 +15,9 @@ import top.quantic.sentry.repository.PlayerCountRepository;
 import top.quantic.sentry.service.util.Adder;
 import top.quantic.sentry.web.rest.vm.Series;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,8 +26,7 @@ import java.util.function.Function;
 
 import static com.google.common.collect.Multimaps.toMultimap;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static top.quantic.sentry.service.util.ChartUtil.getAggregatedSeriesFromData;
-import static top.quantic.sentry.service.util.ChartUtil.getSeriesFromData;
+import static top.quantic.sentry.service.util.ChartUtil.*;
 
 /**
  * Service Implementation for managing PlayerCount.
@@ -100,26 +99,10 @@ public class PlayerCountService {
         return key.replaceAll("^.*\\[region:(\\w+),game:(\\w+)]$", "$1");
     }
 
-    public Map<String, List<Series>> getGroupedPoints() {
-        Map<String, List<Series>> map = new LinkedHashMap<>();
-        ZonedDateTime pastDay = ZonedDateTime.now().minusDays(1);
-        ZonedDateTime pastWeek = ZonedDateTime.now().minusWeeks(1);
-//        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
-//        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
-        map.put("day", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastDay), 1,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("week", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastWeek), 60,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-//        map.put("month", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastMonth), 60 * 24,
-//            seriesMapper, timeMapper, valueMapper, objectMapper));
-//        map.put("year", getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfter(pastYear), 60 * 24 * 7,
-//            seriesMapper, timeMapper, valueMapper, objectMapper));
-        return map;
-    }
-
-    public List<Series> getGroupedPointsBetween(ZonedDateTime after, ZonedDateTime before, int resolution) {
-        return getAggregatedSeriesFromData(playerCountRepository.findByTimestampAfterAndTimestampBefore(after, before),
-            resolution, seriesMapper, timeMapper, valueMapper, objectMapper);
+    public List<Series> getGroupedPointsBetween(ZonedDateTime from, ZonedDateTime to) {
+        return getAggregatedSeriesFromData(playerCountRepository.findByTimestampBetween(from, to),
+            getResolution(Duration.between(from, to).toHours()),
+            seriesMapper, timeMapper, valueMapper, objectMapper);
     }
 
     public List<Series> getMostRecentPoint() {

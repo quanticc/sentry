@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.quantic.sentry.web.rest.vm.Series;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -105,21 +104,23 @@ public class ChartUtil {
             .collect(Collectors.toList());
     }
 
-    private ChartUtil() {
-
+    public static int getResolution(long hours) {
+        if (hours < 4) {
+            return 1;
+        } else if (hours < 24) {
+            return 2;
+        } else if (hours < 48) {
+            return 10;
+        } else if (hours < 168) {
+            return 60;
+        } else if (hours < 5040) {
+            return 120;
+        } else {
+            return 1440;
+        }
     }
 
-    public static int truncateResolution(int resolution, ZonedDateTime afterDateTime, ZonedDateTime beforeDateTime) {
-        Duration duration = Duration.between(afterDateTime, beforeDateTime);
-        long days = duration.toDays();
-        if (days == 0) {
-            return Math.max(1, resolution);
-        } else if (days < 7) {
-            return Math.max(60, resolution);
-        } else if (days < 30) {
-            return Math.max(60 * 24, resolution);
-        } else {
-            return Math.max(60 * 24 * 7, resolution);
-        }
+    private ChartUtil() {
+
     }
 }

@@ -1,11 +1,5 @@
 package top.quantic.sentry.web.rest;
 
-import top.quantic.sentry.SentryApp;
-
-import top.quantic.sentry.domain.PlayerCount;
-import top.quantic.sentry.repository.PlayerCountRepository;
-import top.quantic.sentry.service.PlayerCountService;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,22 +9,25 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import top.quantic.sentry.SentryApp;
+import top.quantic.sentry.domain.PlayerCount;
+import top.quantic.sentry.repository.PlayerCountRepository;
+import top.quantic.sentry.service.PlayerCountService;
 
 import javax.inject.Inject;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
-import static top.quantic.sentry.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static top.quantic.sentry.web.rest.TestUtil.sameInstant;
 
 /**
  * Test class for the PlayerCountResource REST controller.
@@ -69,8 +66,7 @@ public class PlayerCountResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        PlayerCountResource playerCountResource = new PlayerCountResource();
-        ReflectionTestUtils.setField(playerCountResource, "playerCountService", playerCountService);
+        PlayerCountResource playerCountResource = new PlayerCountResource(playerCountService);
         this.restPlayerCountMockMvc = MockMvcBuilders.standaloneSetup(playerCountResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setMessageConverters(jacksonMessageConverter).build();

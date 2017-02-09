@@ -14,17 +14,16 @@ import top.quantic.sentry.service.util.Adder;
 import top.quantic.sentry.web.rest.vm.Series;
 
 import javax.inject.Inject;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static top.quantic.sentry.service.util.ChartUtil.getAggregatedSeriesFromData;
-import static top.quantic.sentry.service.util.ChartUtil.getSeriesFromData;
+import static top.quantic.sentry.service.util.ChartUtil.*;
 
 /**
  * Service Implementation for managing UserCount.
@@ -74,28 +73,22 @@ public class UserCountService {
         return key.replaceAll("^.*\\[bot:(\\w+),guild:(\\w+),status:(\\w+)]$", "$1;$2;$3").split(";");
     }
 
-    public Map<String, List<Series>> getGroupedPoints(String bot, String guild) {
-        Map<String, List<Series>> map = new LinkedHashMap<>();
-        ZonedDateTime pastDay = ZonedDateTime.now().minusDays(1);
-        ZonedDateTime pastWeek = ZonedDateTime.now().minusWeeks(1);
-//        ZonedDateTime pastMonth = ZonedDateTime.now().minusMonths(1);
-//        ZonedDateTime pastYear = ZonedDateTime.now().minusYears(1);
-        map.put("day", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastDay), 1,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-        map.put("week", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastWeek), 60,
-            seriesMapper, timeMapper, valueMapper, objectMapper));
-//        map.put("month", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastMonth), 60 * 24,
-//            seriesMapper, timeMapper, valueMapper, objectMapper));
-//        map.put("year", getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild, pastYear), 60 * 24 * 7,
-//            seriesMapper, timeMapper, valueMapper, objectMapper));
-        return map;
-    }
-
     public List<Series> getGroupedPointsBetween(String bot, String guild,
-                                                ZonedDateTime after, ZonedDateTime before,
-                                                int resolution) {
-        return getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampAfterAndTimestampBefore(bot, guild, after, before),
-            resolution, seriesMapper, timeMapper, valueMapper, objectMapper);
+                                                ZonedDateTime from, ZonedDateTime to) {
+        List<Series> list = getAggregatedSeriesFromData(userCountRepository.findByBotAndGuildAndTimestampBetween(bot, guild, from, to),
+            getResolution(Duration.between(from, to).toHours()), seriesMapper, timeMapper, valueMapper, objectMapper);
+        // enrich data
+        for (Series series : list) {
+            if ("online".equals(series.getKey())) {
+                series.setColor("#43b581");
+                series.setArea(true);
+            } else if ("connected".equals(series.getKey())) {
+                series.setColor("#faa61a");
+            } else if ("joined".equals(series.getKey())) {
+                series.setColor("#7085d4");
+            }
+        }
+        return list;
     }
 
     public List<Series> getMostRecentPoint(String bot, String guild) {

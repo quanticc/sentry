@@ -1,6 +1,7 @@
 package top.quantic.sentry.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import top.quantic.sentry.domain.PlayerCount;
 
 import java.time.ZonedDateTime;
@@ -16,7 +17,8 @@ public interface PlayerCountRepository extends MongoRepository<PlayerCount, Stri
 
     Stream<PlayerCount> findByTimestampAfter(ZonedDateTime dateTime);
 
-    Stream<PlayerCount> findByTimestampAfterAndTimestampBefore(ZonedDateTime after, ZonedDateTime before);
+    @Query("{ 'timestamp' : {'$gte': ?0, '$lte': ?1 } }")
+    Stream<PlayerCount> findByTimestampBetween(ZonedDateTime from, ZonedDateTime to);
 
     Long countByRegionAndValueAndTimestamp(String region, Long value, ZonedDateTime timestamp);
 }

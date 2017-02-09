@@ -2,15 +2,31 @@
     <h2>Player Counts</h2>
     <jhi-alert></jhi-alert>
     <br/>
-    <div class="alert alert-info">Refreshing in <strong>{{vm.nextRefresh}}</strong> seconds...</div>
     <div class="row">
-        <h3 class="text-center">Day</h3>
-        <nvd3 options="dayOptions" data="pastDayData"></nvd3>
-        <h3 class="text-center">Week</h3>
-        <nvd3 options="weekOptions" data="pastWeekData"></nvd3>
-        <h3 class="text-center">Month</h3>
-        <nvd3 options="monthOptions" data="pastMonthData"></nvd3>
-        <h3 class="text-center">Year</h3>
-        <nvd3 options="yearOptions" data="pastYearData"></nvd3>
+        <div class="btn-toolbar" role="toolbar" aria-label="...">
+            <div class="btn-group btn-group-xs" role="group" aria-label="...">
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '1h']" ng-click="vm.updateRange('1h')">1 Hour</button>
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '4h']" ng-click="vm.updateRange('4h')">4 Hours</button>
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '1d']" ng-click="vm.updateRange('1d')">1 Day</button>
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '2d']" ng-click="vm.updateRange('2d')">2 Days</button>
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '1w']" ng-click="vm.updateRange('1w')">1 Week</button>
+                <button type="button" class="btn" ng-class="{true: 'btn-primary', false: 'btn-default'}[vm.mode === '1m']" ng-click="vm.updateRange('1m')">1 Month</button>
+            </div>
+            <div class="btn-group btn-group-xs" role="group" aria-label="...">
+                <button type="button" class="btn btn-default" ng-click="vm.backward()"><i class="fa fa-backward" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn-default" ng-click="vm.toggleLive()" style="width: 50px">
+                    <i class="fa" ng-class="{true: 'fa-pause', false: 'fa-play'}[vm.live]" aria-hidden="true"></i>
+                    <span ng-hide="!vm.live"> {{vm.nextRefresh}}</span>
+                </button>
+                <button type="button" class="btn btn-default" ng-click="vm.forward()" ng-disabled="vm.isPresent()"><i class="fa fa-forward" aria-hidden="true"></i></button>
+            </div>
+            <div class="btn-group btn-group-xs" role="group" aria-label="...">
+                <button type="button" class="btn btn-default" ng-click="vm.now()" ng-disabled="vm.isNow()">Now</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <h3 class="text-center">{{vm.fromTime}} - {{vm.toTime}}</h3>
+        <nvd3 options="options" data="data"></nvd3>
     </div>
 </div>

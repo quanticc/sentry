@@ -5,14 +5,174 @@
         .module('sentryApp')
         .controller('PlayerCountController', PlayerCountController);
 
-    PlayerCountController.$inject = ['$scope', '$state', '$interval', '$timeout', 'PlayerCount', 'ParseLinks', 'AlertService'];
+    PlayerCountController.$inject = ['$scope', '$state', '$interval', '$timeout', '$cookies', 'PlayerCount', 'ParseLinks', 'AlertService'];
 
-    function PlayerCountController($scope, $state, $interval, $timeout, PlayerCount, ParseLinks, AlertService) {
+    function PlayerCountController($scope, $state, $interval, $timeout, $cookies, PlayerCount, ParseLinks, AlertService) {
         var vm = this;
 
         vm.refresher = $interval(loadLast, 60000);
         vm.nextRefresh = 60;
         vm.clock = $interval(updateTime, 1000);
+
+        loadTimestamps();
+
+        vm.updateRange = updateRange;
+        vm.backward = backward;
+        vm.forward = forward;
+        vm.toggleLive = toggleLive;
+        vm.isPresent = isPresent;
+        vm.now = now;
+        vm.isNow = isNow;
+
+        function loadTimestamps() {
+            var storedFrom = $cookies.get('playerCountFrom');
+            var storedTo = $cookies.get('playerCountTo');
+            var storedMode = $cookies.get('playerCountMode');
+
+            var from = storedFrom == null ? null : moment(Number(storedFrom));
+            var to = storedTo == null ? null : moment(Number(storedTo));
+
+            if (from == null || !from.isValid()) {
+                from = moment().subtract(1, "hour");
+            }
+
+            if (to == null || !to.isValid()) {
+                to = moment();
+            }
+
+            vm.fromTime = from;
+            vm.toTime = to;
+            vm.mode = isValidMode(storedMode) ? storedMode : '1h';
+            vm.live = vm.mode === '1h' || vm.mode === '4h';
+        }
+
+        function isValidMode(mode) {
+            return mode === '1h' || mode === '4h' || mode === '1d' || mode === '2d' || mode === '1w' || mode === '1m';
+        }
+
+        function now() {
+            vm.mode = '1h';
+            vm.live = true;
+            vm.fromTime = moment().subtract(1, "hour");
+            vm.toTime = moment();
+            loadAll();
+        }
+
+        function isNow() {
+            return vm.mode === '1h' && vm.live && isPresent();
+        }
+
+        function updateRange(unit) {
+            vm.mode = unit;
+            if (unit === '1h') {
+                vm.fromTime = moment().subtract(1, "hour");
+                vm.toTime = moment();
+                vm.live = true;
+            } else if (unit === '4h') {
+                vm.fromTime = moment().subtract(4, "hour");
+                vm.toTime = moment();
+                vm.live = true;
+            } else if (unit === '1d') {
+                vm.fromTime = moment().subtract(1, "day");
+                vm.toTime = moment();
+                vm.live = false;
+            } else if (unit === '2d') {
+                vm.fromTime = moment().subtract(2, "day");
+                vm.toTime = moment();
+                vm.live = false;
+            } else if (unit === '1w') {
+                vm.fromTime = moment().subtract(1, "week");
+                vm.toTime = moment();
+                vm.live = false;
+            } else if (unit === '1m') {
+                vm.fromTime = moment().subtract(1, "month");
+                vm.toTime = moment();
+                vm.live = false;
+            }
+            loadAll();
+        }
+
+        function backward() {
+            console.log('<< Going backwards <<');
+            var unit = vm.mode;
+            if (unit === '1h') {
+                vm.fromTime = vm.fromTime.subtract(1, "hour");
+                vm.toTime = vm.toTime.subtract(1, "hour");
+            } else if (unit === '4h') {
+                vm.fromTime = vm.fromTime.subtract(4, "hour");
+                vm.toTime = vm.toTime.subtract(4, "hour");
+            } else if (unit === '1d') {
+                vm.fromTime = vm.fromTime.subtract(1, "day");
+                vm.toTime = vm.toTime.subtract(1, "day");
+            } else if (unit === '2d') {
+                vm.fromTime = vm.fromTime.subtract(2, "day");
+                vm.toTime = vm.toTime.subtract(2, "day");
+            } else if (unit === '1w') {
+                vm.fromTime = vm.fromTime.subtract(1, "week");
+                vm.toTime = vm.toTime.subtract(1, "week");
+            } else if (unit === '1m') {
+                vm.fromTime = vm.fromTime.subtract(1, "month");
+                vm.toTime = vm.toTime.subtract(1, "month");
+            }
+            loadAll();
+        }
+
+        function forward() {
+            console.log('>> Going forward >>');
+            var unit = vm.mode;
+            if (unit === '1h') {
+                vm.fromTime = vm.fromTime.add(1, "hour");
+                vm.toTime = vm.toTime.add(1, "hour");
+            } else if (unit === '4h') {
+                vm.fromTime = vm.fromTime.add(4, "hour");
+                vm.toTime = vm.toTime.add(4, "hour");
+            } else if (unit === '1d') {
+                vm.fromTime = vm.fromTime.add(1, "day");
+                vm.toTime = vm.toTime.add(1, "day");
+            } else if (unit === '2d') {
+                vm.fromTime = vm.fromTime.add(2, "day");
+                vm.toTime = vm.toTime.add(2, "day");
+            } else if (unit === '1w') {
+                vm.fromTime = vm.fromTime.add(1, "week");
+                vm.toTime = vm.toTime.add(1, "week");
+            } else if (unit === '1m') {
+                vm.fromTime = vm.fromTime.add(1, "month");
+                vm.toTime = vm.toTime.add(1, "month");
+            }
+            loadAll();
+        }
+
+        function toggleLive() {
+            vm.live = !vm.live;
+            if (vm.live) {
+                if (vm.mode !== '1h' && vm.mode !== '4h') {
+                    now();
+                }
+            }
+        }
+
+        function isPresent() {
+            var unit = vm.mode;
+            var to = moment(vm.toTime);
+            if (unit === '1h') {
+                return to.add(1, "hour").isAfter(moment());
+            } else if (unit === '4h') {
+                return to.add(4, "hour").isAfter(moment());
+            } else if (unit === '1d') {
+                return to.add(1, "day").isAfter(moment());
+            } else if (unit === '2d') {
+                return to.add(2, "day").isAfter(moment());
+            } else if (unit === '1w') {
+                return to.add(1, "week").isAfter(moment());
+            } else if (unit === '1m') {
+                return to.add(1, "month").isAfter(moment());
+            }
+            return false;
+        }
+
+        function logState() {
+            console.log('Live: ' + vm.live + ', Mode: ' + vm.mode + ', From: ' + vm.fromTime + ', To: ' + vm.toTime);
+        }
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
@@ -30,13 +190,21 @@
         loadAll();
 
         function loadAll() {
-            PlayerCount.all({}, onSuccess, onError);
+            logState();
+
+            var fromTs = vm.fromTime.format('x');
+            var toTs = vm.toTime.format('x');
+            $cookies.put('playerCountFrom', fromTs);
+            $cookies.put('playerCountTo', toTs);
+            $cookies.put('playerCountMode', vm.mode);
+
+            PlayerCount.points({
+                from: fromTs,
+                to: toTs
+            }, onSuccess, onError);
 
             function onSuccess(data) {
-                $scope.pastDayData = data.day;
-                $scope.pastWeekData = data.week;
-                $scope.pastMonthData = data.month;
-                $scope.pastYearData = data.year;
+                $scope.data = data;
             }
 
             function onError(error) {
@@ -65,6 +233,11 @@
             // if it doesn't belong, create a new series, add it and pad the others with y=0
             for (var series in chartData) {
                 if (chartData.hasOwnProperty(series)) {
+                    if (isNaN(parseFloat(series)) || !isFinite(series)) {
+                        console.log('Series ' + series + ' is not a number');
+                        continue;
+                    }
+
                     var xy = [];
                     xy.push(point.values[0][0]);
 
@@ -102,6 +275,11 @@
         }
 
         function loadLast() {
+            if (!vm.live) {
+                console.log("Paused: not updating");
+                return;
+            }
+
             PlayerCount.last({}, onSuccess, onError);
 
             function onSuccess(data) {
@@ -114,13 +292,9 @@
                             continue;
                         }
 
-                        pushPoint($scope.pastDayData, point, 'day');
-                        pushPoint($scope.pastWeekData, point, 'week');
-                        pushPoint($scope.pastMonthData, point, 'month');
-                        pushPoint($scope.pastYearData, point, 'year');
+                        pushPoint($scope.data, point, 'PlayerCount');
 
                         console.log('Refreshing chart');
-                        updateDomains();
                         clearTooltip();
                     }
                 }
@@ -135,7 +309,7 @@
         //     deepWatchData: true
         // };
 
-        var options = {
+        $scope.options = {
             chart: {
                 type: 'stackedAreaChart',
                 height: 300,
@@ -168,20 +342,6 @@
                 }
             }
         };
-
-        $scope.dayOptions = angular.copy(options);
-        $scope.weekOptions = angular.copy(options);
-        $scope.monthOptions = angular.copy(options);
-        $scope.yearOptions = angular.copy(options);
-
-        updateDomains();
-
-        function updateDomains() {
-            $scope.dayOptions.chart.xDomain = [moment().subtract(1, "days").toDate(), new Date()];
-            $scope.weekOptions.chart.xDomain = [moment().subtract(1, "weeks").toDate(), new Date()];
-            $scope.monthOptions.chart.xDomain = [moment().subtract(1, "months").toDate(), new Date()];
-            $scope.yearOptions.chart.xDomain = [moment().subtract(1, "years").toDate(), new Date()];
-        }
 
         clearTooltip();
 

@@ -1,11 +1,5 @@
 package top.quantic.sentry.web.rest;
 
-import top.quantic.sentry.SentryApp;
-
-import top.quantic.sentry.domain.UserCount;
-import top.quantic.sentry.repository.UserCountRepository;
-import top.quantic.sentry.service.UserCountService;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,22 +9,25 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import top.quantic.sentry.SentryApp;
+import top.quantic.sentry.domain.UserCount;
+import top.quantic.sentry.repository.UserCountRepository;
+import top.quantic.sentry.service.UserCountService;
 
 import javax.inject.Inject;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
-import static top.quantic.sentry.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static top.quantic.sentry.web.rest.TestUtil.sameInstant;
 
 /**
  * Test class for the UserCountResource REST controller.
@@ -75,8 +72,7 @@ public class UserCountResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        UserCountResource userCountResource = new UserCountResource();
-        ReflectionTestUtils.setField(userCountResource, "userCountService", userCountService);
+        UserCountResource userCountResource = new UserCountResource(userCountService);
         this.restUserCountMockMvc = MockMvcBuilders.standaloneSetup(userCountResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setMessageConverters(jacksonMessageConverter).build();

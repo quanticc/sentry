@@ -22,17 +22,7 @@
                 }
             },
             'update': {method: 'PUT'},
-            'all': {
-                method: 'GET',
-                url: 'api/player-counts/all'
-            },
-            'between': {
-                method: 'GET',
-                url: 'api/player-counts/between',
-                params: {
-                    resolution: 30
-                }
-            },
+            'points': {method: 'GET', isArray: true, url: 'api/player-counts/points'},
             'last': {method: 'GET', isArray: true, url: 'api/player-counts/last'}
         });
     }
