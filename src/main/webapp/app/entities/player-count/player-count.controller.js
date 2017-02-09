@@ -114,6 +114,7 @@
                 vm.fromTime = vm.fromTime.subtract(1, "month");
                 vm.toTime = vm.toTime.subtract(1, "month");
             }
+            vm.live = false;
             loadAll();
         }
 
@@ -145,7 +146,7 @@
         function toggleLive() {
             vm.live = !vm.live;
             if (vm.live) {
-                if (vm.mode !== '1h' && vm.mode !== '4h') {
+                if (!isPresent() || (vm.mode !== '1h' && vm.mode !== '4h')) {
                     now();
                 }
             }
@@ -229,49 +230,56 @@
             // lookup the series index this new point belongs to
             var index = findSeries(chartData, point);
 
-            // if point belong to an existing series, add it and pad the rest with y=0
-            // if it doesn't belong, create a new series, add it and pad the others with y=0
+            // iterate through existing series
             for (var series in chartData) {
                 if (chartData.hasOwnProperty(series)) {
                     if (isNaN(parseFloat(series)) || !isFinite(series)) {
-                        console.log('Series ' + series + ' is not a number');
-                        continue;
+                        continue; // discard useless fields
                     }
 
                     var xy = [];
                     xy.push(point.values[0][0]);
 
                     if (index >= 0) {
+                        // the point belongs to an existing series
                         if (series === index) {
+                            // the point belongs to this series - push it!
                             xy.push(point.values[0][1]);
                             chartData[series].values.push(angular.copy(xy));
-                        } else {
-                            xy.push(0);
-                            chartData[series].values.push(angular.copy(xy));
+                            console.log('[' + chartName + '] Pushed ' + xy[1] + ' @ ' + xy[0] + ' to existing series #' + series + ': ' + chartData[series].key);
                         }
-                        console.log('[' + chartName + '] Pushed ' + xy[1] + ' @ ' + xy[0] + ' to ' + series);
-                    } else {
-                        console.log('[' + chartName + '] Creating missing series: ' + point.key);
-                        // zero fill
-                        for (var innerSeries in chartData) {
-                            if (chartData.hasOwnProperty(innerSeries)) {
-                                var zero = [];
-                                zero.push(point.values[0][0]);
-                                zero.push(0);
-                                chartData[innerSeries].values.push(angular.copy(zero));
-                            }
-                        }
-                        // series must be created
-                        xy.push(point.values[0][1]);
-                        var item = {};
-                        item.key = point.key;
-                        item.values = [];
-                        item.values.push(xy);
-                        chartData.push(angular.copy(item));
-                        console.log('[' + chartName + '] Pushed ' + xy[1] + ' @ ' + xy[0] + ' to ' + series);
                     }
                 }
             }
+
+            if (index < 0) {
+                // the point is from a new series, not currently present on chart
+                pushZeroes(chartData, point, chartName);
+            }
+        }
+
+        function pushZeroes(chartData, point, chartName) {
+            var xy = [];
+            xy.push(point.values[0][0]);
+
+            console.log('[' + chartName + '] Creating missing series: ' + point.key);
+            // zero fill existing series at this x-value
+            for (var innerSeries in chartData) {
+                if (chartData.hasOwnProperty(innerSeries)) {
+                    var zero = [];
+                    zero.push(point.values[0][0]);
+                    zero.push(0);
+                    chartData[innerSeries].values.push(angular.copy(zero));
+                }
+            }
+            // series must be created
+            xy.push(point.values[0][1]);
+            var item = {};
+            item.key = point.key;
+            item.values = [];
+            item.values.push(xy);
+            chartData.push(angular.copy(item));
+            console.log('[' + chartName + '] Pushed ' + xy[1] + ' @ ' + xy[0] + ' to new series #' + series + ': ' + chartData[series].key);
         }
 
         function loadLast() {
@@ -283,31 +291,29 @@
             PlayerCount.last({}, onSuccess, onError);
 
             function onSuccess(data) {
+                // for each series this new data includes
                 for (var newSeries in data) {
+                    // filter out useless fields
                     if (data.hasOwnProperty(newSeries)) {
-                        var point = data[newSeries];
+                        var point = data[newSeries]; // point = { key: ..., values: [...] }
 
                         if (point == null || point.values == null) {
-                            console.log('Incoming data is empty - aborting');
-                            continue;
+                            continue; // Discarding invalid or empty series
                         }
 
+                        console.log("New data from '" + point.key + "' series: (" + point.values[0][0] + ", " + point.values[0][1] + ")");
                         pushPoint($scope.data, point, 'PlayerCount');
-
-                        console.log('Refreshing chart');
-                        clearTooltip();
                     }
                 }
+
+                console.log('Refreshing chart');
+                clearTooltip();
             }
 
             function onError(error) {
                 AlertService.error(error.data.message);
             }
         }
-
-        // $scope.config = {
-        //     deepWatchData: true
-        // };
 
         $scope.options = {
             chart: {
@@ -346,9 +352,9 @@
         clearTooltip();
 
         function clearTooltip() {
-            $timeout(function() {
+            $timeout(function () {
                 $scope.dropdownOpen = false;
-                $timeout(function() {
+                $timeout(function () {
                     d3.selectAll('.nvtooltip').remove();
                 });
             }, 500);
