@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Multimaps.toMultimap;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -107,7 +108,8 @@ public class PlayerCountService {
 
     public List<Series> getMostRecentPoint() {
         // simple heuristic to get the most recent point
-        PlayerCount count = playerCountRepository.findFirstByTimestampAfter(ZonedDateTime.now().minusSeconds(70));
+        List<PlayerCount> count = playerCountRepository.findByTimestampAfter(ZonedDateTime.now().minusSeconds(70))
+            .collect(Collectors.toList());
         if (count == null) {
             return Collections.emptyList();
         } else {

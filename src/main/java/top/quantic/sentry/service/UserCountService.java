@@ -84,6 +84,7 @@ public class UserCountService {
                 series.setArea(true);
             } else if ("connected".equals(series.getKey())) {
                 series.setColor("#faa61a");
+                series.setArea(true);
             } else if ("joined".equals(series.getKey())) {
                 series.setColor("#7085d4");
             }
@@ -93,8 +94,8 @@ public class UserCountService {
 
     public List<Series> getMostRecentPoint(String bot, String guild) {
         // simple heuristic to get the most recent point
-        UserCount count = userCountRepository.findFirstByBotAndGuildAndTimestampAfter(bot, guild,
-            ZonedDateTime.now().minusSeconds(70));
+        List<UserCount> count = userCountRepository.findByBotAndGuildAndTimestampAfter(bot, guild,
+            ZonedDateTime.now().minusSeconds(70)).collect(Collectors.toList());
         if (count == null) {
             return Collections.emptyList();
         } else {

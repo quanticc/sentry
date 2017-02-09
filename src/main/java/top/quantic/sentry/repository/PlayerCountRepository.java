@@ -13,8 +13,6 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public interface PlayerCountRepository extends MongoRepository<PlayerCount, String> {
 
-    PlayerCount findFirstByTimestampAfter(ZonedDateTime dateTime);
-
     Stream<PlayerCount> findByTimestampAfter(ZonedDateTime dateTime);
 
     @Query("{ 'timestamp' : {'$gte': ?0, '$lte': ?1 } }")

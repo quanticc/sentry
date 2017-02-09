@@ -13,8 +13,6 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public interface UserCountRepository extends MongoRepository<UserCount, String> {
 
-    UserCount findFirstByBotAndGuildAndTimestampAfter(String bot, String guild, ZonedDateTime dateTime);
-
     Stream<UserCount> findByBotAndGuildAndTimestampAfter(String bot, String guild, ZonedDateTime dateTime);
 
     @Query("{ 'bot' : ?0, 'guild' : ?1, 'timestamp' : {'$gte': ?2, '$lte': ?3 } }")
