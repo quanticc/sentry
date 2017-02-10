@@ -10,6 +10,7 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.service.util.Result;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.config.Constants.ANY;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 public class DiscordUtil {
 
@@ -95,11 +97,23 @@ public class DiscordUtil {
         return String.format("%s#%s (%s)", user.getName(), user.getDiscriminator(), user.getID());
     }
 
+    public static String withDiscriminator(IUser user) {
+        return String.format("%s#%s", user.getName(), user.getDiscriminator());
+    }
+
     public static String humanize(IChannel channel) {
         if (channel.isPrivate()) {
             return String.format("*PM* (%s)", channel.getID());
         } else {
             return String.format("%s/%s (%s)", channel.getGuild().getName(), channel.getName(), channel.getID());
+        }
+    }
+
+    public static String humanizeShort(IChannel channel) {
+        if (channel.isPrivate()) {
+            return "*PM*";
+        } else {
+            return String.format("%s (#%s)", channel.getName(), channel.getID());
         }
     }
 
@@ -145,32 +159,44 @@ public class DiscordUtil {
         }
     }
 
-    public static void deleteMessage(IMessage message) {
-        RequestBuffer.request(() -> {
+    public static RequestBuffer.RequestFuture<Result<Integer>> deleteMessage(IMessage message) {
+        return RequestBuffer.request(() -> {
             try {
                 message.delete();
+                return Result.ok(1, "Message #" + message.getID() + " was deleted");
             } catch (MissingPermissionsException | DiscordException e) {
                 log.warn("Could not delete message", e);
+                return Result.error("Could not delete message: " + e.getMessage());
             }
         });
     }
 
-    public static void deleteInBatch(IChannel channel, List<IMessage> toDelete) {
+    public static Result<Integer> deleteInBatch(IChannel channel, List<IMessage> toDelete) {
         if (toDelete.isEmpty()) {
             log.info("No messages to delete");
+            return Result.ok(0, "No messages to delete");
         } else {
             log.info("Preparing to delete {} messages from {}", toDelete.size(), humanize(channel));
+            int total = 0;
+            Result<Integer> result;
             for (int x = 0; x < (toDelete.size() / 100) + 1; x++) {
                 List<IMessage> subList = toDelete.subList(x * 100, Math.min(toDelete.size(), (x + 1) * 100));
-                RequestBuffer.request(() -> {
+                result = RequestBuffer.request(() -> {
                     try {
                         channel.getMessages().bulkDelete(subList);
+                        return Result.ok(subList.size());
                     } catch (MissingPermissionsException | DiscordException e) {
-                        log.warn("Failed to delete message", e);
+                        log.warn("Failed to delete messages", e);
+                        return Result.<Integer>error("Failed to delete messages: " + e.getMessage());
                     }
-                    return null;
-                });
+                }).get();
+                if (!result.isSuccessful()) {
+                    return Result.error(total, result.getMessage(), null);
+                } else {
+                    total += result.getContent();
+                }
             }
+            return Result.ok(total, "Bulk deleted " + inflect(total, "message"));
         }
     }
 
@@ -293,6 +319,18 @@ public class DiscordUtil {
         } else {
             return sendFile(channel, content, stream, fileName);
         }
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendPrivately(IMessage to, String content) {
+        return sendMessage(to.getAuthor().getOrCreatePMChannel(), content, null, false);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendPrivately(IMessage to, EmbedObject embedObject) {
+        return sendMessage(to.getAuthor().getOrCreatePMChannel(), null, embedObject, false);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> sendPrivately(IMessage to, String content, EmbedObject embedObject) {
+        return sendMessage(to.getAuthor().getOrCreatePMChannel(), content, embedObject, false);
     }
 
     public static RequestBuffer.RequestFuture<IMessage> sendMessage(IChannel channel, String content) {
