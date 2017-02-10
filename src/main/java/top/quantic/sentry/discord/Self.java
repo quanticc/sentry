@@ -12,6 +12,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.util.*;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -26,8 +27,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -212,6 +215,7 @@ public class Self implements CommandSupplier {
             .describedAs("Remove bot's latest messages in this channel")
             .in("Bot")
             .parsedBy(parser)
+            .requires(EnumSet.of(Permissions.MANAGE_MESSAGES))
             .onExecute(context -> {
                 List<String> nonOptions = context.getOptionSet().valuesOf(nonOptSpec);
                 int limit = 1;
@@ -270,10 +274,11 @@ public class Self implements CommandSupplier {
                         }
                     }).get();
                 }
+                c.getMessages().setCacheCapacity(cap);
             } else {
-                deleteInBatch(c, toDelete);
+                CompletableFuture.supplyAsync(() -> deleteInBatch(c, toDelete))
+                    .thenRun(() -> c.getMessages().setCacheCapacity(cap));
             }
-            c.getMessages().setCacheCapacity(cap);
         }
     }
 }
