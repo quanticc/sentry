@@ -256,7 +256,7 @@ public class GameServerService implements InitializingBean {
                         // announce only once per interval to avoid spamming
                         if (lastRconAnnounce.plusMinutes(getRconSayIntervalMinutes()).isBefore(ZonedDateTime.now())) {
                             Result<String> result = tryRcon(server,
-                                "[GameServers] Server will expire in " + humanizeShort(Duration.ofSeconds(seconds)));
+                                "say [GameServers] Server will expire in " + humanizeShort(Duration.ofSeconds(seconds)));
                             if (result.isSuccessful()) {
                                 server.setLastRconAnnounce(ZonedDateTime.now());
                             }
@@ -456,7 +456,7 @@ public class GameServerService implements InitializingBean {
             // announce only once per interval to avoid spamming
             if (lastRconAnnounce.plusMinutes(getRconSayIntervalMinutes()).isBefore(ZonedDateTime.now())) {
                 Result<String> result = tryRcon(server,
-                    "[GameServers] Game update on hold until all players leave the server");
+                    "say [GameServers] Game update on hold until all players leave the server");
                 if (result.isSuccessful()) {
                     server.setLastRconAnnounce(ZonedDateTime.now());
                 }
