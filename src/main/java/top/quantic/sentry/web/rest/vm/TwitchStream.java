@@ -191,7 +191,7 @@ public class TwitchStream {
         }
 
         public String getDisplayName() {
-            return displayName.replace("_", "\\_");
+            return displayName;
         }
 
         public void setDisplayName(String displayName) {
