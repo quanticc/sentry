@@ -18,7 +18,11 @@ public class CommandRegistry {
         return commandsMap.computeIfAbsent(client, k -> new ArrayList<>());
     }
 
-    public void registerAll(IDiscordClient client, Collection<Command> commands) {
+    public void addAll(IDiscordClient client, Collection<Command> commands) {
         getCommands(client).addAll(commands);
+    }
+
+    public List<Command> remove(IDiscordClient client) {
+        return commandsMap.remove(client);
     }
 }

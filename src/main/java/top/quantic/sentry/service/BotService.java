@@ -123,7 +123,7 @@ public class BotService {
             List<Command> commands = supplier.getCommands();
             log.debug("[{}] Registering commands: {}", bot.getName(), commands.stream()
                 .map(Command::getName).collect(Collectors.joining(", ")));
-            commandRegistry.registerAll(client, commands);
+            commandRegistry.addAll(client, commands);
         }
 
         return client;
@@ -143,6 +143,7 @@ public class BotService {
                 log.warn("Bot {} is not logged in", bot.getName());
             }
             clientRegistry.getClients().remove(bot);
+            commandRegistry.remove(client);
         }
 
         return client;
@@ -155,7 +156,7 @@ public class BotService {
         } catch (DiscordException e) {
             log.warn("Could not logout: {}", bot, e);
         }
-        clientRegistry.getClients().remove(bot);
+        commandRegistry.remove(clientRegistry.getClients().remove(bot));
     }
 
     //////////////////
