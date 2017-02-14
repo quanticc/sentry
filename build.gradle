@@ -133,6 +133,10 @@ configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
 }
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
