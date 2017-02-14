@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.GameServer;
 import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.event.RconRefreshFailedEvent;
+import top.quantic.sentry.event.UpdateCompletedEvent;
 import top.quantic.sentry.event.UpdateDelayedEvent;
 import top.quantic.sentry.repository.GameServerRepository;
 import top.quantic.sentry.service.dto.GameServerDTO;
@@ -346,30 +347,31 @@ public class GameServerService implements InitializingBean {
         List<GameServer> outdated = findOutdatedServers();
         if (!outdated.isEmpty()) {
             refreshSettings();
-            long updating = outdated.parallelStream()
-                .map(this::executeGameUpdate)
-                .map(gameServerRepository::save)
+        }
+        outdated.parallelStream()
+            .map(this::executeGameUpdate)
+            .forEach(gameServerRepository::save);
+        if (outdated.isEmpty()) {
+            log.debug("All servers up-to-date");
+            // reset updating flag
+            long upToDate = gameServerRepository.findAll().stream()
+                .filter(GameServer::isUpdating)
+                .map(server -> {
+                    server.setUpdating(false);
+                    server.setUpdateAttempts(0);
+                    return gameServerRepository.save(server);
+                })
                 .count();
-            if (updating == 0) {
-                log.debug("All servers up-to-date");
-                // reset updating flag
-                gameServerRepository.findAll().parallelStream()
-                    .forEach(server -> {
-                        server.setUpdating(false);
-                        gameServerRepository.save(server);
-                    });
-            } else {
-                log.info("Update is pending on {}", inflect(updating, "server"));
-                // TODO: publish as datadog event instead
-                List<GameServer> delaying = gameServerRepository
-                    .findByUpdatingIsTrueAndUpdateAttemptsGreaterThan(getUpdateAttemptsThreshold());
-                publisher.publishEvent(new UpdateDelayedEvent(getLatestVersion(), delaying));
-                if (!delaying.isEmpty()) {
-                    log.debug("-- Servers delaying update --\n", delaying.stream()
-                        .map(this::formatDelayed)
-                        .collect(Collectors.joining("\n")));
-                }
+            if (upToDate > 0) {
+                log.debug("Reset update status on {}", inflect(upToDate, "server"));
+                publisher.publishEvent(new UpdateCompletedEvent(getLatestVersion()));
             }
+        } else {
+            log.info("Update is pending on {}", inflect(outdated.size(), "server"));
+            List<GameServer> delaying = gameServerRepository.findAll().stream()
+                .filter(server -> server.isUpdating() && server.getUpdateAttempts() < getUpdateAttemptsThreshold())
+                .collect(Collectors.toList());
+            publisher.publishEvent(new UpdateDelayedEvent(getLatestVersion(), delaying));
         }
 
         int unresponsive = findUnresponsiveServers().size();

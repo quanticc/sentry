@@ -29,15 +29,11 @@ public interface GameServerRepository extends MongoRepository<GameServer, String
 
     List<GameServer> findByVersionLessThan(Integer version);
 
-    Stream<GameServer> findByLastGameUpdateBeforeAndVersionLessThan(ZonedDateTime date, Integer version);
-
     List<GameServer> findByPingLessThanEqual(Integer ping);
 
     List<GameServer> findByPingGreaterThan(Integer ping);
 
     List<GameServer> findByRconPasswordIsNull();
-
-    List<GameServer> findByUpdatingIsTrueAndUpdateAttemptsGreaterThan(Integer threshold);
 
     List<GameServer> findByIdIn(Collection<String> ids);
 }
