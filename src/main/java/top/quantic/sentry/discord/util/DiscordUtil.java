@@ -275,7 +275,7 @@ public class DiscordUtil {
         return RequestBuffer.request(() -> null);
     }
 
-    private static RequestBuffer.RequestFuture<IMessage> answerToChannel(IChannel channel, String content, boolean tts) {
+    public static RequestBuffer.RequestFuture<IMessage> answerToChannel(IChannel channel, String content, boolean tts) {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
@@ -291,7 +291,7 @@ public class DiscordUtil {
         }
     }
 
-    private static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, File file) {
+    public static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, File file) {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
@@ -306,7 +306,7 @@ public class DiscordUtil {
         }
     }
 
-    private static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, InputStream stream, String fileName) {
+    public static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, InputStream stream, String fileName) {
         if (content.length() > MessageSplitter.LENGTH_LIMIT) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
             List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.nullsLast;
 import static top.quantic.sentry.discord.util.DiscordLimiter.acquireWebhook;
+import static top.quantic.sentry.discord.util.DiscordUtil.answerToChannel;
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
 
 /**
@@ -177,7 +178,12 @@ public class SubscriberService {
             .forEach(entry -> {
                 IChannel channel = entry.getValue().getChannelByID(channelId);
                 if (channel != null) {
-                    sendMessage(channel, content, embedObject);
+                    if (content != null) {
+                        answerToChannel(channel, content, false);
+                    }
+                    if (embedObject != null) {
+                        sendMessage(channel, null, embedObject);
+                    }
                 } else {
                     log.warn("Did not found a channel with id {} in bot {}", channelId, clientId);
                 }
