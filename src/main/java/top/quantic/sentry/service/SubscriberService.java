@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.obj.Message;
 import sx.blah.discord.handle.obj.IChannel;
 import top.quantic.sentry.discord.core.ClientRegistry;
 import top.quantic.sentry.domain.AbstractAuditingEntity;
@@ -178,11 +179,13 @@ public class SubscriberService {
             .forEach(entry -> {
                 IChannel channel = entry.getValue().getChannelByID(channelId);
                 if (channel != null) {
-                    if (content != null) {
-                        answerToChannel(channel, content, false);
-                    }
-                    if (embedObject != null) {
-                        sendMessage(channel, null, embedObject);
+                    if (content != null && content.length() > Message.MAX_MESSAGE_LENGTH) {
+                        answerToChannel(channel, content, false).get();
+                        if (embedObject != null) {
+                            sendMessage(channel, null, embedObject);
+                        }
+                    } else {
+                        sendMessage(channel, content, embedObject);
                     }
                 } else {
                     log.warn("Did not found a channel with id {} in bot {}", channelId, clientId);
