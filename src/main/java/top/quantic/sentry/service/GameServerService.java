@@ -367,10 +367,11 @@ public class GameServerService implements InitializingBean {
                 publisher.publishEvent(new UpdateCompletedEvent(getLatestVersion()));
             }
         } else {
-            log.info("Update is pending on {}", inflect(outdated.size(), "server"));
             List<GameServer> delaying = gameServerRepository.findAll().stream()
-                .filter(server -> server.isUpdating() && server.getUpdateAttempts() < getUpdateAttemptsThreshold())
+                .filter(server -> server.isUpdating() && server.getUpdateAttempts() > getUpdateAttemptsThreshold())
                 .collect(Collectors.toList());
+            log.info("Update is pending on {}: {}", inflect(outdated.size(), "server"),
+                delaying.stream().map(GameServer::getShortName).collect(Collectors.joining(", ")));
             publisher.publishEvent(new UpdateDelayedEvent(getLatestVersion(), delaying));
         }
 

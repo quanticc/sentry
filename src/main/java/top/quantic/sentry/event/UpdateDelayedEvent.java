@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static top.quantic.sentry.service.util.DateUtil.formatRelative;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 public class UpdateDelayedEvent extends SentryEvent {
 
@@ -16,6 +17,7 @@ public class UpdateDelayedEvent extends SentryEvent {
 
     public UpdateDelayedEvent(Integer version, List<GameServer> delaying) {
         super(version);
+        Objects.requireNonNull(delaying);
         this.delaying = delaying;
     }
 
@@ -59,14 +61,14 @@ public class UpdateDelayedEvent extends SentryEvent {
     }
 
     private String body() {
-        return delaying.stream()
-            .map(server -> "• " + server.toString() + " has been trying to update " + times(server.getUpdateAttempts())
-                + " since " + server.getLastUpdateStart() + " (" + formatRelative(server.getLastUpdateStart()) + ")")
-            .collect(Collectors.joining("\n"));
-    }
-
-    private String times(int times) {
-        return times == 1 ? "once" : (times == 2 ? "twice" : times + " times");
+        if (delaying.isEmpty()) {
+            return "---";
+        } else {
+            return delaying.stream()
+                .map(server -> "• " + server.toString() + " has " + inflect(server.getUpdateAttempts(), "update attempt")
+                    + " since " + server.getLastUpdateStart() + " (" + formatRelative(server.getLastUpdateStart()) + ")")
+                .collect(Collectors.joining("\n"));
+        }
     }
 
     private String alertType() {
