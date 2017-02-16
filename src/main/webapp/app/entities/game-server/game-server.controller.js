@@ -5,9 +5,9 @@
         .module('sentryApp')
         .controller('GameServerController', GameServerController);
 
-    GameServerController.$inject = ['$scope', '$state', '$interval', 'GameServer', 'ParseLinks', 'AlertService', 'paginationConstants'];
+    GameServerController.$inject = ['$scope', '$state', '$interval', 'moment', 'GameServer', 'ParseLinks', 'AlertService', 'paginationConstants'];
 
-    function GameServerController ($scope, $state, $interval, GameServer, ParseLinks, AlertService, paginationConstants) {
+    function GameServerController ($scope, $state, $interval, moment, GameServer, ParseLinks, AlertService, paginationConstants) {
         var vm = this;
 
         vm.gameServers = [];
@@ -26,16 +26,11 @@
         vm.grayIfZero = grayIfZero;
         vm.formatMap = formatMap;
         vm.pingToClass = pingToClass;
-        vm.grayIfFalse = grayIfFalse;
-        vm.prettyBoolText = prettyBoolText;
-        vm.prettyBoolClass = prettyBoolClass;
 
         vm.expireWarning = expireWarning;
         vm.pingWarning = pingWarning;
         vm.rconWarning = rconWarning;
         vm.rconWarningText = rconWarningText;
-
-        vm.humanize = humanize;
 
         loadAll();
 
@@ -132,30 +127,6 @@
             }
         }
 
-        function grayIfFalse(flag) {
-            if (flag === true) {
-                return '';
-            } else {
-                return 'gray';
-            }
-        }
-
-        function prettyBoolText(value) {
-            if (value) {
-                return 'YES';
-            } else {
-                return 'NO';
-            }
-        }
-
-        function prettyBoolClass(value) {
-            if (value) {
-                return 'label-warning';
-            } else {
-                return 'label-info';
-            }
-        }
-
         function expireWarning(endTime) {
             var now = moment();
             var end = moment(endTime);
@@ -195,14 +166,6 @@
                 return 'Missing RCON!';
             } else {
                 return rcon;
-            }
-        }
-
-        function humanize(date) {
-            if (date == null) {
-                return '';
-            } else {
-                return moment.duration(moment(date).diff(moment())).humanize(true);
             }
         }
     }

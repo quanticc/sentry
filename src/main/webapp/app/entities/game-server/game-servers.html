@@ -24,7 +24,7 @@
             <tbody infinite-scroll="vm.loadPage(vm.page + 1)" infinite-scroll-disabled="vm.page >= vm.links['last']">
                 <tr ng-repeat="gameServer in vm.gameServers track by gameServer.id">
                     <td>
-                        <a ng-attr-title="Last checked {{vm.humanize(gameServer.statusCheckDate)}}" ng-attr-href="steam://connect/{{gameServer.address}}/{{gameServer.svPassword}}">
+                        <a ng-attr-title="Last checked {{gameServer.statusCheckDate | amTimeAgo}}" ng-attr-href="steam://connect/{{gameServer.address}}/{{gameServer.svPassword}}">
                             <span class="label" ng-class="vm.pingToClass(gameServer.ping)">
                                 {{vm.shortName(gameServer.name)}}
                             </span>
@@ -35,22 +35,22 @@
                         {{gameServer.players}}/{{gameServer.maxPlayers}}{{vm.formatMap(gameServer.map)}}
                     </td>
                     <td>{{gameServer.svPassword}}</td>
-                    <td ng-class="vm.expireWarning(gameServer.expirationDate)" ng-attr-title="Last checked {{vm.humanize(gameServer.expirationCheckDate)}}">{{vm.humanize(gameServer.expirationDate)}}</td>
-                    <td ng-class="vm.pingWarning(gameServer.lastValidPing)">{{vm.humanize(gameServer.lastValidPing)}}</td>
+                    <td ng-class="vm.expireWarning(gameServer.expirationDate)" ng-attr-title="Last checked {{gameServer.expirationCheckDate | amTimeAgo}}">{{gameServer.expirationDate | amTimeAgo}}</td>
+                    <td ng-class="vm.pingWarning(gameServer.lastValidPing)">{{gameServer.lastValidPing | amTimeAgo}}</td>
                     <td>
-                        <span ng-class="vm.rconWarning(gameServer.rconPassword)" ng-attr-title="Last updated {{vm.humanize(gameServer.lastRconDate)}}">
+                        <span ng-class="vm.rconWarning(gameServer.rconPassword)" ng-attr-title="Last updated {{gameServer.lastRconDate | amTimeAgo}}">
                             {{vm.rconWarningText(gameServer.rconPassword)}}
                         </span>
                     </td>
-                    <td ng-attr-title="Last updated {{vm.humanize(gameServer.lastGameUpdate)}}">v{{gameServer.version}}</td>
+                    <td ng-attr-title="Last updated {{gameServer.lastGameUpdate | amTimeAgo}}">v{{gameServer.version}}</td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(gameServer.updating)">
-                            {{vm.prettyBoolText(gameServer.updating)}}
+                        <span class="label" ng-class="gameServer.updating | boolTo:'label-warning':'label-info'">
+                            {{gameServer.updating | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td>{{gameServer.updateAttempts}}</td>
-                    <td>{{vm.humanize(gameServer.lastUpdateStart)}}</td>
-                    <td>{{vm.humanize(gameServer.lastRconAnnounce)}}</td>
+                    <td>{{gameServer.lastUpdateStart | amTimeAgo}}</td>
+                    <td>{{gameServer.lastRconAnnounce | amTimeAgo}}</td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
                             <button type="submit"

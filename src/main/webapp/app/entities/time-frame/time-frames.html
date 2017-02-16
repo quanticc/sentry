@@ -34,8 +34,8 @@
                     <td>{{timeFrame.start | date:'medium'}}</td>
                     <td>{{timeFrame.end | date:'medium'}}</td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(timeFrame.inclusive)">
-                            {{vm.prettyBoolText(timeFrame.inclusive)}}
+                        <span class="label" ng-class="timeFrame.inclusive | boolTo:'label-success':'label-danger'">
+                            {{timeFrame.inclusive | boolTo:'Inclusive':'Exclusive'}}
                         </span>
                     </td>
                     <td>{{timeFrame.recurrenceValue}}</td>

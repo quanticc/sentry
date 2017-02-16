@@ -15,8 +15,6 @@
         vm.reverse = pagingParams.ascending;
         vm.transition = transition;
         vm.itemsPerPage = paginationConstants.itemsPerPage;
-        vm.prettyBoolText = prettyBoolText;
-        vm.prettyBoolClass = prettyBoolClass;
 
         loadAll();
 
@@ -56,22 +54,6 @@
                 sort: vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc'),
                 search: vm.currentSearch
             });
-        }
-
-        function prettyBoolText(value) {
-            if (value) {
-                return 'YES';
-            } else {
-                return 'NO';
-            }
-        }
-
-        function prettyBoolClass(value) {
-            if (value) {
-                return 'label-success';
-            } else {
-                return 'label-danger';
-            }
         }
     }
 })();

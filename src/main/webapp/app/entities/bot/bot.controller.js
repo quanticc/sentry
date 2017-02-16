@@ -15,10 +15,9 @@
         vm.reverse = pagingParams.ascending;
         vm.transition = transition;
         vm.itemsPerPage = paginationConstants.itemsPerPage;
+
         vm.statusText = statusText;
         vm.statusClass = statusClass;
-        vm.prettyBoolText = prettyBoolText;
-        vm.prettyBoolClass = prettyBoolClass;
 
         loadAll();
 
@@ -86,22 +85,6 @@
                 }
             }
             return 'label-default';
-        }
-
-        function prettyBoolText(value) {
-            if (value) {
-                return 'YES';
-            } else {
-                return 'NO';
-            }
-        }
-
-        function prettyBoolClass(value) {
-            if (value) {
-                return 'label-success';
-            } else {
-                return 'label-danger';
-            }
         }
     }
 })();

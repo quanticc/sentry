@@ -16,11 +16,6 @@
         vm.transition = transition;
         vm.itemsPerPage = paginationConstants.itemsPerPage;
 
-        vm.prettyBoolText = prettyBoolText;
-        vm.prettyBoolClass = prettyBoolClass;
-
-        vm.humanize = humanize;
-
         loadAll();
 
         function loadAll () {
@@ -59,30 +54,6 @@
                 sort: vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc'),
                 search: vm.currentSearch
             });
-        }
-
-        function prettyBoolText(value) {
-            if (value) {
-                return 'YES';
-            } else {
-                return 'NO';
-            }
-        }
-
-        function prettyBoolClass(value) {
-            if (value) {
-                return 'label-success';
-            } else {
-                return 'label-danger';
-            }
-        }
-
-        function humanize(date) {
-            if (date == null) {
-                return '';
-            } else {
-                return moment.duration(moment(date).diff(moment())).humanize(true);
-            }
         }
     }
 })();

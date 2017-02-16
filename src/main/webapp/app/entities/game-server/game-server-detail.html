@@ -46,35 +46,35 @@
         </dd>
         <dt><span>Expires</span></dt>
         <dd>
-            <span>{{vm.gameServer.expires}}</span>
+            <span class="label" ng-class="vm.gameServer.expires | boolTo:'label-info':'label-default'">{{vm.gameServer.expires | boolTo:'YES':'NO'}}</span>
         </dd>
         <dt><span>Expiration Date</span></dt>
         <dd>
-            <span>{{vm.gameServer.expirationDate | date:'medium'}}</span>
+            <span>{{vm.gameServer.expirationDate | date:'medium'}} ({{vm.gameServer.expirationDate | amTimeAgo}})</span>
         </dd>
         <dt><span>Expiration Check Date</span></dt>
         <dd>
-            <span>{{vm.gameServer.expirationCheckDate | date:'medium'}}</span>
+            <span>{{vm.gameServer.expirationCheckDate | date:'medium'}} ({{vm.gameServer.expirationCheckDate | amTimeAgo}})</span>
         </dd>
         <dt><span>Status Check Date</span></dt>
         <dd>
-            <span>{{vm.gameServer.statusCheckDate | date:'medium'}}</span>
+            <span>{{vm.gameServer.statusCheckDate | date:'medium'}} ({{vm.gameServer.statusCheckDate | amTimeAgo}})</span>
         </dd>
         <dt><span>Last Valid Ping</span></dt>
         <dd>
-            <span>{{vm.gameServer.lastValidPing | date:'medium'}}</span>
+            <span>{{vm.gameServer.lastValidPing | date:'medium'}} ({{vm.gameServer.lastValidPing | amTimeAgo}})</span>
         </dd>
         <dt><span>Last Rcon Date</span></dt>
         <dd>
-            <span>{{vm.gameServer.lastRconDate | date:'medium'}}</span>
+            <span>{{vm.gameServer.lastRconDate | date:'medium'}} ({{vm.gameServer.lastRconDate | amTimeAgo}})</span>
         </dd>
         <dt><span>Last Game Update</span></dt>
         <dd>
-            <span>{{vm.gameServer.lastGameUpdate | date:'medium'}}</span>
+            <span>{{vm.gameServer.lastGameUpdate | date:'medium'}} ({{vm.gameServer.lastGameUpdate | amTimeAgo}})</span>
         </dd>
         <dt><span>Updating</span></dt>
         <dd>
-            <span>{{vm.gameServer.updating}}</span>
+            <span class="label" ng-class="vm.gameServer.updating | boolTo:'label-warning':'label-info'">{{vm.gameServer.updating | boolTo:'YES':'NO'}}</span>
         </dd>
         <dt><span>Update Attempts</span></dt>
         <dd>
@@ -82,11 +82,11 @@
         </dd>
         <dt><span>Last Update Start</span></dt>
         <dd>
-            <span>{{vm.gameServer.lastUpdateStart | date:'medium'}}</span>
+            <span>{{vm.gameServer.lastUpdateStart | date:'medium'}} ({{vm.gameServer.lastUpdateStart | amTimeAgo}})</span>
         </dd>
         <dt><span>Last Rcon Announce</span></dt>
         <dd>
-            <span>{{vm.gameServer.lastRconAnnounce | date:'medium'}}</span>
+            <span>{{vm.gameServer.lastRconAnnounce | date:'medium'}} ({{vm.gameServer.lastRconAnnounce | amTimeAgo}})</span>
         </dd>
     </dl>
 

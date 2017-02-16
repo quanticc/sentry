@@ -46,11 +46,11 @@
                         </div>
                     </td>
                     <td ng-attr-title="{{streamer.lastAnnouncement | date:'medium'}}">
-                        {{vm.humanize(streamer.lastAnnouncement)}}
+                        {{streamer.lastAnnouncement | amTimeAgo}}
                     </td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(streamer.enabled)">
-                            {{vm.prettyBoolText(streamer.enabled)}}
+                        <span class="label" ng-class="streamer.enabled | boolTo:'label-success':'label-danger'">
+                            {{streamer.enabled | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td class="text-right">

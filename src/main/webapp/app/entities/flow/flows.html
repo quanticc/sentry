@@ -43,8 +43,8 @@
                     <td>{{flow.translator}}</td>
                     <td>{{flow.output}}</td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(flow.enabled)">
-                            {{vm.prettyBoolText(flow.enabled)}}
+                        <span class="label" ng-class="flow.enabled | boolTo:'label-success':'label-danger'">
+                            {{flow.enabled | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td class="text-right">

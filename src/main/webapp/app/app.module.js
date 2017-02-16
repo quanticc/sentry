@@ -19,7 +19,8 @@
             'patternfly',
             //'patternfly.charts',
             'key-value-editor',
-            'nvd3'
+            'nvd3',
+            'angularMoment'
         ])
         .run(run);
 

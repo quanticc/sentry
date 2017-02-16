@@ -41,8 +41,8 @@
                     </td>
                     <td>{{task.triggers}}</td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(task.enabled)">
-                            {{vm.prettyBoolText(task.enabled)}}
+                        <span class="label" ng-class="task.enabled | boolTo:'label-success':'label-danger'">
+                            {{task.enabled | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td class="text-right">

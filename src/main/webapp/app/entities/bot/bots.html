@@ -39,21 +39,21 @@
                     </td>
                     <td><a ui-sref="bot-detail({id:bot.id})">{{bot.name}}</a></td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(bot.autoLogin)">
-                            {{vm.prettyBoolText(bot.autoLogin)}}
+                        <span class="label" ng-class="bot.autoLogin | boolTo:'label-success':'label-danger'">
+                            {{bot.autoLogin | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(bot.daemon)">
-                            {{vm.prettyBoolText(bot.daemon)}}
+                        <span class="label" ng-class="bot.daemon | boolTo:'label-success':'label-danger'">
+                            {{bot.daemon | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td>{{bot.maxMissedPings}}</td>
                     <td>{{bot.maxReconnectAttempts}}</td>
                     <td>{{bot.shardCount}}</td>
                     <td>
-                        <span class="label" ng-class="vm.prettyBoolClass(bot.primary)">
-                            {{vm.prettyBoolText(bot.primary)}}
+                        <span class="label" ng-class="bot.primary | boolTo:'label-success':'label-danger'">
+                            {{bot.primary | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td>{{bot.tags}}</td>

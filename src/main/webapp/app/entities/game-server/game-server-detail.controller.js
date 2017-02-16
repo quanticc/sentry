@@ -5,9 +5,9 @@
         .module('sentryApp')
         .controller('GameServerDetailController', GameServerDetailController);
 
-    GameServerDetailController.$inject = ['$scope', '$rootScope', '$stateParams', 'previousState', 'entity', 'GameServer'];
+    GameServerDetailController.$inject = ['$scope', '$rootScope', '$stateParams', 'previousState', 'entity', 'GameServer', 'moment'];
 
-    function GameServerDetailController($scope, $rootScope, $stateParams, previousState, entity, GameServer) {
+    function GameServerDetailController($scope, $rootScope, $stateParams, previousState, entity, GameServer, moment) {
         var vm = this;
 
         vm.gameServer = entity;
