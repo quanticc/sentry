@@ -18,7 +18,6 @@
         <table class="jh-table table table-striped">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
-                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="channel"><span>Channel</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="type"><span>Type</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -28,8 +27,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="subscriber in vm.subscribers track by subscriber.id">
-                    <td><a ui-sref="subscriber-detail({id:subscriber.id})">{{subscriber.id}}</a></td>
-                    <td>{{subscriber.name}}</td>
+                    <td><a ui-sref="subscriber-detail({id:subscriber.id})">{{subscriber.name}}</a></td>
                     <td>{{subscriber.channel}}</td>
                     <td>{{subscriber.type}}</td>
                     <td>

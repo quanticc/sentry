@@ -18,7 +18,6 @@
         <table class="jh-table table table-striped">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
-                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="input"><span>Input</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="variables"><span>Variables</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -31,8 +30,7 @@
             </thead>
             <tbody>
                 <tr ng-repeat="flow in vm.flows track by flow.id">
-                    <td><a ui-sref="flow-detail({id:flow.id})">{{flow.id}}</a></td>
-                    <td>{{flow.name}}</td>
+                    <td><a ui-sref="flow-detail({id:flow.id})">{{flow.name}}</a></td>
                     <td>{{flow.input}}</td>
                     <td>
                         <div ng-repeat="(key, value) in flow.variables">

@@ -18,7 +18,6 @@
         <table class="jh-table table table-striped">
             <thead>
                 <tr jh-sort="vm.predicate" ascending="vm.reverse" callback="vm.transition()">
-                    <th jh-sort-by="id"><span>ID</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="provider"><span>Provider</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="name"><span>Name</span> <span class="glyphicon glyphicon-sort"></span></th>
                     <th jh-sort-by="league"><span>League</span> <span class="glyphicon glyphicon-sort"></span></th>
@@ -33,9 +32,8 @@
             </thead>
             <tbody>
                 <tr ng-repeat="streamer in vm.streamers track by streamer.id">
-                    <td><a ui-sref="streamer-detail({id:streamer.id})">{{streamer.id}}</a></td>
                     <td>{{streamer.provider}}</td>
-                    <td>{{streamer.name}}</td>
+                    <td><a ui-sref="streamer-detail({id:streamer.id})">{{streamer.name}}</a></td>
                     <td>{{streamer.league}}</td>
                     <td>{{streamer.division}}</td>
                     <td>{{streamer.titleFilter}}</td>
