@@ -167,6 +167,8 @@ dependencies {
     compile "com.ibasco.agql:agql-source-query:0.1.2"
     compile "com.ibasco.agql:agql-steam-webapi:0.1.2"
     compile "com.github.jknack:handlebars:4.0.6"
+    compile "org.codehaus.groovy:groovy-all:2.4.8"
+    compile "org.devcake.groovy:autoimports-groovy:1.0.9"
 
     compile "io.dropwizard.metrics:metrics-core"
     compile "io.dropwizard.metrics:metrics-graphite:${dropwizard_metrics_version}"
