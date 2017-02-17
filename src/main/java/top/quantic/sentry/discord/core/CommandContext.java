@@ -50,4 +50,15 @@ public class CommandContext {
     public void setOptionSet(OptionSet optionSet) {
         this.optionSet = optionSet;
     }
+
+    public String getContentAfterPrefix() {
+        if (message == null || prefix == null) {
+            return null;
+        }
+        String content = message.getContent();
+        if (!content.contains(prefix)) {
+            return content;
+        }
+        return content.substring(prefix.length());
+    }
 }
