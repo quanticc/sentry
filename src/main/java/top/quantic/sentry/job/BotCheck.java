@@ -36,7 +36,6 @@ public class BotCheck implements Job {
                 for (IShard shard : client.getShards()) {
                     String shardTag = "shard:" + shard.getInfo()[0];
                     long millis = shard.getResponseTime();
-                    log.debug("[{}:{}] Discord WS response time: {} ms", entry.getKey().getName(), shard.getInfo()[0], millis);
                     metricRegistry.timer("discord.ws.response[" + botTag + "," + shardTag + "]")
                         .update(millis, TimeUnit.MILLISECONDS);
                 }
