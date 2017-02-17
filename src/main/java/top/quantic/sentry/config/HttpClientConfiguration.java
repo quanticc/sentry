@@ -4,9 +4,12 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClients;
+import org.apache.http.impl.client.cache.FileResourceFactory;
+import org.apache.http.impl.client.cache.ManagedHttpCacheStorage;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,12 +22,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 @Configuration
-public class HttpClientConfiguration {
+public class HttpClientConfiguration implements DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(HttpClientConfiguration.class);
 
     @Autowired
     private SentryProperties sentryProperties;
+
+    private CloseableHttpClient client;
+    private ManagedHttpCacheStorage cacheStorage;
 
     @Bean
     public ClientHttpRequestFactory httpRequestFactory() {
@@ -65,15 +71,28 @@ public class HttpClientConfiguration {
             }
         }
 
-        return CachingHttpClients.custom()
+        FileResourceFactory resourceFactory = new FileResourceFactory(cacheDir);
+        cacheStorage = new ManagedHttpCacheStorage(cacheConfig);
+
+        client = CachingHttpClients.custom()
             .setCacheConfig(cacheConfig)
-            .setCacheDir(cacheDir)
+            .setResourceFactory(resourceFactory)
+            .setHttpCacheStorage(cacheStorage)
             .setDefaultRequestConfig(requestConfig)
             .setConnectionManager(connectionManager)
             .build();
+
+        return client;
     }
 
     private SentryProperties.Http properties() {
         return sentryProperties.getHttp();
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        log.debug("Closing HttpClient and CacheStorage");
+        client.close();
+        cacheStorage.cleanResources();
     }
 }
