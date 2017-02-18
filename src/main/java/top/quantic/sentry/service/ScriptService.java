@@ -7,7 +7,6 @@ import groovy.transform.ThreadInterrupt;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.devcake.groovy.autoimports.AutoImportsGroovyShell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,7 +129,7 @@ public class ScriptService {
         });
         config.addCompilationCustomizers(importCustomizer);
 
-        return new AutoImportsGroovyShell(null, new Binding(bindingValues), config);
+        return new GroovyShell(null, new Binding(bindingValues), config);
     }
 
     public CompletableFuture<Map<String, Object>> executeScript(String script, IMessage message) {
