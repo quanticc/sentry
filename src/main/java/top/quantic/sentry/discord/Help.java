@@ -175,7 +175,7 @@ public class Help implements CommandSupplier {
             try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
                 command.getParser().formatHelpWith(new DiscordHelpFormatter(280, 5));
                 command.getParser().printHelpOn(stream);
-                builder.append(new String(stream.toByteArray(), "UTF-8")).append('\n');
+                builder.append(stream.toString("UTF-8")).append('\n');
             } catch (Exception e) {
                 log.warn("Could not show help", e);
             }
