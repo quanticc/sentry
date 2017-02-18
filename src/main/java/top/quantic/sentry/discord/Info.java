@@ -3,12 +3,24 @@ package top.quantic.sentry.discord;
 import com.google.common.base.CaseFormat;
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.util.EmbedBuilder;
+import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
@@ -17,6 +29,8 @@ import top.quantic.sentry.discord.util.DiscordUtil;
 import top.quantic.sentry.service.PermissionService;
 
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.time.Duration;
@@ -27,22 +41,26 @@ import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.leftPad;
 import static top.quantic.sentry.config.Operations.QUERY_ALL_GUILDS;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.humanize;
-import static top.quantic.sentry.service.util.DateUtil.systemToInstant;
+import static top.quantic.sentry.service.util.DateUtil.*;
+import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
 @Component
 public class Info implements CommandSupplier {
 
+    private static final Logger log = LoggerFactory.getLogger(Info.class);
+
     private final PermissionService permissionService;
     private final BuildProperties buildProperties;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    public Info(PermissionService permissionService, BuildProperties buildProperties) {
+    public Info(PermissionService permissionService, BuildProperties buildProperties, RestTemplate restTemplate) {
         this.permissionService = permissionService;
         this.buildProperties = buildProperties;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -61,12 +79,19 @@ public class Info implements CommandSupplier {
                 version = (version == null ? "snapshot" : version);
                 RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
                 long uptime = rb.getUptime();
-                String content = "Hey! I'm here to help with **UGC support**.\n\n" +
-                    "**Version:** " + version + '\n' +
-                    "**Discord4J:** " + Discord4J.VERSION + '\n' +
-                    "**Uptime:** " + humanize(Duration.ofMillis(uptime), false, true) + '\n' +
-                    "**Website:** https://sentry.quantic.top/" + '\n';
-                answer(message, content);
+                IUser me = message.getClient().getOurUser();
+                sendMessage(message.getChannel(), new EmbedBuilder()
+                    .setLenient(true)
+                    .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
+                    .withThumbnail(me.getAvatarURL())
+                    .withTitle(me.getDisplayName(message.getChannel().getGuild()))
+                    .withDescription("Hey! I'm here to help with **UGC Support** and **League operations**.\n" +
+                        "Check out the commands using `.help` or `.help full`")
+                    .appendField("Version", version, true)
+                    .appendField("Discord4J", Discord4J.VERSION, true)
+                    .appendField("Uptime", humanize(Duration.ofMillis(uptime), false, true), true)
+                    .appendField("Website", "https://sentry.quantic.top/", false)
+                    .build());
             }).build();
     }
 
@@ -82,7 +107,6 @@ public class Info implements CommandSupplier {
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
                 boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
-                StringBuilder builder = new StringBuilder();
                 Set<IUser> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<@!?(\\d+)>", "$1");
@@ -95,48 +119,91 @@ public class Info implements CommandSupplier {
                         .collect(Collectors.toList());
                     if (matching.size() == 1) {
                         IUser user = matching.get(0);
-                        builder.append(getUserInfo(user, context));
+                        sendMessage(message.getChannel(), getUserInfo(user, context)).get();
                     } else if (matching.size() > 1) {
-                        builder.append("Multiple matches for ").append(query).append("\n")
-                            .append(matching.stream()
+                        sendMessage(message.getChannel(), new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaaaa00))
+                            .withTitle("User Search")
+                            .withDescription("Multiple matches for " + query)
+                            .appendField("Users", matching.stream()
                                 .map(DiscordUtil::humanizeShort)
-                                .collect(Collectors.joining("\n")));
+                                .collect(Collectors.joining("\n")), false)
+                            .build()).get();
                     } else {
-                        builder.append("No users matching ").append(id).append("\n");
+                        sendMessage(message.getChannel(), new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaa0000))
+                            .withTitle("User Search")
+                            .withDescription("No users matching " + id)
+                            .build()).get();
                     }
-                    builder = appendOrAnswer(message, builder, "\n");
                 }
-                answer(message, builder.toString());
             }).build();
     }
 
-    private String getUserInfo(IUser user, CommandContext context) {
+    private EmbedObject getUserInfo(IUser user, CommandContext context) {
         if (user == null) {
-            return "";
+            return null;
         }
-        IGuild guild = context.getMessage().getChannel().getGuild();
-        int pad = 10;
-        String result = "```http\n" + leftPad("User: ", pad) + user.getName() + '#' + user.getDiscriminator() + (user.isBot() ? " [BOT]\n" : '\n');
+        IUser author = context.getMessage().getAuthor();
+        IGuild guild = context.getMessage().getGuild();
+        IPresence presence = user.getPresence();
+        EmbedBuilder builder = new EmbedBuilder()
+            .setLenient(true)
+            .withThumbnail(user.getAvatarURL())
+            .withColor(getDominantColor(asInputStream(user.getAvatarURL()), new Color(0x00aa00)))
+            .withFooterIcon(author.getAvatarURL())
+            .withFooterText("Requested by " + withDiscriminator(author))
+            .appendField((user.isBot() ? "Bot" : "User"), user.getName() + '#' + user.getDiscriminator(), false);
         if (guild != null && !user.getName().equals(user.getNicknameForGuild(guild).orElse(user.getName()))) {
-            result += leftPad("Nickname: ", pad) + user.getDisplayName(guild) + '\n';
+            builder.appendField("Nickname", user.getDisplayName(guild), false);
         }
-        result += leftPad("ID: ", pad) + '<' + user.getID() + ">\n"
-            + leftPad("Joined: ", pad) + systemToInstant(user.getCreationDate()).toString() + '\n'
-            + leftPad("Status: ", pad) + user.getPresence().getStatus().name().toLowerCase() + '\n';
-        if (guild != null) {
-            result += leftPad("Roles: ", pad) + formatRoles(user.getRolesForGuild(guild)) + '\n';
+        builder.appendField("ID", user.getID(), false)
+            .appendField("Joined", withRelative(systemToInstant(user.getCreationDate())), false)
+            .appendField("Status", formatStatus(presence.getStatus()), true);
+        if (presence.getPlayingText().isPresent()) {
+            builder.appendField("Playing", presence.getPlayingText().get(), true);
         }
-        result += "\n```" + user.getAvatarURL() + '\n';
-        return result;
+        if (presence.getStreamingUrl().isPresent()) {
+            builder.appendField("Streaming", presence.getStreamingUrl().get(), true);
+        }
+        if (!context.getMessage().getChannel().isPrivate()) {
+            builder.appendField("Roles", formatRoles(user.getRolesForGuild(guild)), false);
+        }
+        return builder.build();
+    }
+
+    private InputStream asInputStream(String url) {
+        String targetUrl = url.replace(".webp", ".png");
+        HttpHeaders headers = new HttpHeaders();
+        // workaround to go through CloudFlare :^)
+        headers.add("User-Agent", Constants.USER_AGENT);
+        try {
+            ResponseEntity<Resource> responseEntity = restTemplate.exchange(targetUrl,
+                HttpMethod.GET, new HttpEntity<>(headers), Resource.class);
+            return responseEntity.getBody().getInputStream();
+        } catch (IOException | RestClientException e) {
+            log.warn("Could not get {} as InputStream", e);
+            return null;
+        }
+    }
+
+    private String formatStatus(StatusType status) {
+        if (status == StatusType.DND) {
+            return "DND";
+        } else {
+            return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, status.name());
+        }
     }
 
     private String formatRoles(List<IRole> roles) {
         String names = roles.stream()
             .map(IRole::getName)
-            .filter(s -> !"@everyone".equals(s))
+            .filter(s -> !"@everyone" .equals(s))
             .collect(Collectors.joining(", "));
         if (names.isEmpty()) {
-            return "<none>";
+            return "*none*";
         } else {
             return names;
         }
@@ -155,7 +222,6 @@ public class Info implements CommandSupplier {
                 IChannel channel = message.getChannel();
                 IDiscordClient client = message.getClient();
                 boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
-                StringBuilder builder = new StringBuilder();
                 Set<IRole> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<@&(\\d+)>", "$1");
@@ -176,29 +242,37 @@ public class Info implements CommandSupplier {
                         .collect(Collectors.toList());
                     if (matching.size() == 1) {
                         IRole role = matching.get(0);
-                        boolean withGuild = aware &&
-                            (channel.isPrivate() || !channel.getGuild().equals(role.getGuild()));
-                        builder.append(getRoleInfo(role, withGuild));
+                        boolean withGuild = aware && (channel.isPrivate() || !channel.getGuild().equals(role.getGuild()));
+                        for (EmbedObject embed : getRoleInfo(role, withGuild, context)) {
+                            sendMessage(channel, embed).get();
+                        }
                     } else if (matching.size() > 1) {
-                        builder.append("Multiple matches for ").append(query).append("\n")
-                            .append(matching.stream()
+                        sendMessage(channel, new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaaaa00))
+                            .withTitle("Role Search")
+                            .withDescription("Multiple matches for " + query)
+                            .appendField("Roles", matching.stream()
                                 .map(this::getShortRoleInfo)
-                                .collect(Collectors.joining("\n")));
+                                .collect(Collectors.joining("\n")), false)
+                            .build()).get();
                     } else {
-                        builder.append("No roles matching ").append(id).append("\n");
+                        sendMessage(channel, new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaa0000))
+                            .withTitle("Role Search")
+                            .withDescription("No roles matching " + id)
+                            .build()).get();
                     }
-                    builder = appendOrAnswer(message, builder, "\n");
                 }
-                answer(message, builder.toString());
             }).build();
     }
 
-    private String getRoleInfo(IRole role, boolean withGuild) {
+    private List<EmbedObject> getRoleInfo(IRole role, boolean withGuild, CommandContext context) {
+        List<EmbedObject> embeds = new ArrayList<>();
         if (role == null) {
-            return "";
+            return embeds;
         }
-        int pad = 13;
-        String created = systemToInstant(role.getCreationDate()).toString();
         Color color = role.getColor();
         String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
         String perms = role.getPermissions().stream()
@@ -209,33 +283,43 @@ public class Info implements CommandSupplier {
         boolean mentionable = role.isMentionable();
         boolean managed = role.isManaged();
         boolean isEveryone = role.isEveryoneRole();
-        String result = "```http\n" + leftPad("Role: ", pad) + mentionBuster(role.getName()) + '\n'
-            + leftPad("ID: ", pad) + '<' + role.getID() + ">\n"
-            + leftPad("Color: ", pad) + hex + '\n'
-            + leftPad("Position: ", pad) + role.getPosition() + '\n'
-            + leftPad("Created: ", pad) + created + '\n';
+        IUser author = context.getMessage().getAuthor();
+
+        EmbedBuilder builder = new EmbedBuilder()
+            .setLenient(true)
+            .withColor(role.getColor() != null ? role.getColor() : new Color(0))
+            .withFooterIcon(author.getAvatarURL())
+            .withFooterText("Requested by " + withDiscriminator(author))
+            .appendField("Role", mentionBuster(role.getName()), false)
+            .appendField("ID", "<" + role.getID() + ">", false)
+            .appendField("Color", hex, true)
+            .appendField("Position", "" + role.getPosition(), true)
+            .appendField("Created", withRelative(systemToInstant(role.getCreationDate())), false);
         if (!isEveryone && (hoisted || mentionable || managed)) {
-            result += leftPad("Tags: ", pad) +
-                Stream.of((hoisted ? "hoisted" : ""), (mentionable ? "mentionable" : ""), (managed ? "managed" : ""))
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.joining(", "));
+            builder.appendField("Tags", Stream.of((hoisted ? "hoisted" : ""), (mentionable ? "mentionable" : ""), (managed ? "managed" : ""))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.joining(", ")), false);
         }
-        result += leftPad("Permissions: ", pad) + perms + "\n```";
+        builder.appendField("Permissions", perms, true);
+        embeds.add(builder.build());
         if (isEveryone || withGuild) {
-            result += "\n" + getGuildInfo(role.getGuild());
+            embeds.add(getGuildInfo(role.getGuild()));
         }
-        return result;
+        return embeds;
     }
 
-    private String getGuildInfo(IGuild guild) {
+    private EmbedObject getGuildInfo(IGuild guild) {
         if (guild == null) {
-            return "";
+            return null;
         }
-        int pad = 9;
-        return "```http\n" + leftPad("Guild: ", pad) + guild.getName() + " <" + guild.getID() + ">\n"
-            + leftPad("Owner: ", pad) + guild.getOwner().getName() + " <" + guild.getOwnerID() + ">\n"
-            + leftPad("Members: ", pad) + guild.getTotalMemberCount() + '\n'
-            + "\n```" + guild.getIconURL() + "\n";
+        return new EmbedBuilder()
+            .setLenient(true)
+            .withThumbnail(guild.getIconURL())
+            .withColor(getDominantColor(asInputStream(guild.getIconURL()), new Color(0x00aa00)))
+            .appendField("Guild", guild.getName() + " <" + guild.getID() + ">", false)
+            .appendField("Owner", guild.getOwner().getName() + " <" + guild.getOwnerID() + ">", false)
+            .appendField("Members", "" + guild.getTotalMemberCount(), false)
+            .build();
     }
 
     private String getShortRoleInfo(IRole role) {
@@ -262,7 +346,6 @@ public class Info implements CommandSupplier {
                 IChannel channel = message.getChannel();
                 IDiscordClient client = message.getClient();
                 boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
-                StringBuilder builder = new StringBuilder();
                 Set<IChannel> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<#(\\d+)>", "$1");
@@ -281,48 +364,64 @@ public class Info implements CommandSupplier {
                         .peek(matched::add)
                         .collect(Collectors.toList());
                     if (matching.size() == 1) {
-                        builder.append(getChannelInfo(matching.get(0)));
+                        for (EmbedObject embed : getChannelInfo(matching.get(0), context)) {
+                            sendMessage(channel, embed).get();
+                        }
                     } else if (matching.size() > 1) {
-                        builder.append("Multiple matches for ").append(query).append("\n")
-                            .append(matching.stream()
+                        sendMessage(channel, new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaaaa00))
+                            .withTitle("Channel Search")
+                            .withDescription("Multiple matches for " + query)
+                            .appendField("Channels", matching.stream()
                                 .map(this::getShortChannelInfo)
-                                .collect(Collectors.joining("\n")));
+                                .collect(Collectors.joining("\n")), false)
+                            .build()).get();
                     } else {
-                        builder.append("No channels matching ").append(id).append("\n");
+                        sendMessage(channel, new EmbedBuilder()
+                            .setLenient(true)
+                            .withColor(new Color(0xaa0000))
+                            .withTitle("Channel Search")
+                            .withDescription("No channel matching " + id)
+                            .build()).get();
                     }
-                    builder = appendOrAnswer(message, builder, "\n");
                 }
-                answer(message, builder.toString());
             }).build();
     }
 
-    private String getChannelInfo(IChannel channel) {
+    private List<EmbedObject> getChannelInfo(IChannel channel, CommandContext context) {
+        List<EmbedObject> embeds = new ArrayList<>();
         if (channel == null) {
-            return "";
+            return embeds;
         }
-        int pad = 10;
         String created = systemToInstant(channel.getCreationDate()).toString();
-        String result = "```http\n" + leftPad("Channel: ", pad) + channel.getName() + '\n'
-            + leftPad("ID: ", pad) + '<' + channel.getID() + ">\n"
-            + leftPad("Position: ", pad) + channel.getPosition() + '\n'
-            + leftPad("Created: ", pad) + created + '\n';
+        IUser author = context.getMessage().getAuthor();
+
+        EmbedBuilder builder = new EmbedBuilder()
+            .setLenient(true)
+            .withFooterIcon(author.getAvatarURL())
+            .withFooterText("Requested by " + withDiscriminator(author))
+            .appendField("Channel", channel.getName(), false)
+            .appendField("ID", "<" + channel.getID() + ">", false)
+            .appendField("Created", created, false);
         if (!isBlank(channel.getTopic())) {
-            result += leftPad("Topic: ", pad) + channel.getTopic() + '\n';
+            builder.appendField("Topic", channel.getTopic(), false);
         }
+        builder.appendField("Position", "" + channel.getPosition(), true);
         if (channel instanceof IVoiceChannel) {
             IVoiceChannel voice = (IVoiceChannel) channel;
             int connected = voice.getConnectedUsers().size();
             int capacity = voice.getUserLimit();
-            result += leftPad("Bitrate: ", pad) + voice.getBitrate() + '\n';
+            builder.appendField("Bitrate", "" + voice.getBitrate(), true);
             if (connected > 0) {
-                result += leftPad("Users: ", pad) + connected + (capacity > 0 ? "/" + capacity : "") + '\n';
+                builder.appendField("Users", "" + connected + (capacity > 0 ? "/" + capacity : ""), true);
             }
         }
-        result += "```\n";
+        embeds.add(builder.build());
         if (!channel.isPrivate() && channel.getGuild().getID().equals(channel.getID())) {
-            result += getGuildInfo(channel.getGuild());
+            embeds.add(getGuildInfo(channel.getGuild()));
         }
-        return result;
+        return embeds;
     }
 
     private String getShortChannelInfo(IChannel channel) {
