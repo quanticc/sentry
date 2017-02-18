@@ -304,8 +304,8 @@ public class GameServerService implements InitializingBean {
     }
 
     public String refreshPasswordAndGet(GameServer server) {
-        refreshRconPassword(server);
-        return server.getRconPassword();
+        GameServer updated = refreshRconPassword(server);
+        return updated == null ? server.getRconPassword() : updated.getRconPassword();
     }
 
     private String cleanCommand(String command) {
