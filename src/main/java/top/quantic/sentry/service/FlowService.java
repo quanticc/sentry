@@ -25,10 +25,7 @@ import top.quantic.sentry.web.rest.vm.DatadogEvent;
 import top.quantic.sentry.web.rest.vm.DatadogPayload;
 import top.quantic.sentry.web.rest.vm.DiscordWebhook;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -71,7 +68,7 @@ public class FlowService implements InitializingBean {
     @EventListener
     public void onSentryEvent(SentryEvent event) {
         String className = event.getClass().getSimpleName();
-        log.debug("[{}] {}", className, event.asContent(null));
+        log.debug("[{}] {}", className, event.asContent(new LinkedHashMap<>()));
         flowRepository.findByEnabledIsTrueAndInputAndMessage(SENTRY_EVENT, className)
             .forEach(flow -> executeEventFlow(flow, event));
     }
