@@ -404,9 +404,9 @@ Social Buttons
 }
 
 .btn-clean {
-    padding: 0px 6px 0px 6px;
-    border-top-width: 0px;
-    border-bottom-width: 0px;
+    padding: 0 6px 0 6px;
+    border-top-width: 0;
+    border-bottom-width: 0;
 }
 
 .btn-clean:hover {
@@ -443,7 +443,7 @@ Social Buttons
 
 .dashboard-circle {
     width: 100%;
-    border: 2px #CCC solid;
+    border: 2px #ccc solid;
 }
 
 .footer {
@@ -452,14 +452,8 @@ Social Buttons
     width: 100%;
     height: 60px;
     padding-top: 18px;
-    background-color: #1062f1;
+    background-color: #b4982e;
     color: #fff;
-    opacity: .6;
-    transition: .3s opacity;
-}
-
-.footer:hover {
-    opacity: 1;
 }
 
 .version {
