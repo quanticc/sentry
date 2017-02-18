@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.events.Event;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.truncate;
 import static top.quantic.sentry.config.Constants.ANY;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
@@ -198,6 +200,25 @@ public class DiscordUtil {
             }
             return Result.ok(total, "Bulk deleted " + inflect(total, "message"));
         }
+    }
+
+    public static String messageSummary(List<IMessage> messages, int maxChars) {
+        return messages.stream()
+            .map(message -> String.format("• [%s] %s: %s", humanizeShort(message.getChannel()), humanize(message.getAuthor()),
+                truncate(message.getContent(), maxChars) + (message.getContent().length() > maxChars ? "..." : "")))
+            .collect(Collectors.joining("\n"));
+    }
+
+    public static String ourBotName(Event event) {
+        return ourBotName(event.getClient());
+    }
+
+    public static String ourBotId(Event event) {
+        return ourBotId(event.getClient());
+    }
+
+    public static String ourBotName(IDiscordClient client) {
+        return client.getOurUser().getName();
     }
 
     public static String ourBotId(IDiscordClient client) {

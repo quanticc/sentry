@@ -3,7 +3,6 @@ package top.quantic.sentry.discord;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -19,7 +18,6 @@ import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -28,8 +26,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.truncate;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
@@ -227,7 +225,7 @@ public class Moderator implements CommandSupplier {
 
                 if (o.has(testSpec)) {
                     answerPrivately(message, (toDelete.size() == 0 ? "Dry run: No messages would be deleted" :
-                        "Dry run: Would be deleting " + inflect(toDelete.size(), "message") + "\n" + messageSummary(toDelete)));
+                        "Dry run: Would be deleting " + inflect(toDelete.size(), "message") + "\n" + messageSummary(toDelete, 50)));
                     messages.setCacheCapacity(capacity);
                 } else {
                     // bulk delete requires at least 2 messages
@@ -243,7 +241,7 @@ public class Moderator implements CommandSupplier {
                                 answerPrivately(message, "Error: " + result.getMessage());
                             } else {
                                 answerPrivately(message, (toDelete.size() == 0 ? "No messages were deleted" :
-                                    "Deleting " + inflect(toDelete.size(), "message") + "\n" + messageSummary(toDelete)));
+                                    "Deleting " + inflect(toDelete.size(), "message") + "\n" + messageSummary(toDelete, 50)));
                             }
                         }
                         if (error != null) {
@@ -252,23 +250,5 @@ public class Moderator implements CommandSupplier {
                     }).thenRun(() -> messages.setCacheCapacity(capacity));
                 }
             }).build();
-    }
-
-    private String messageSummary(List<IMessage> messages) {
-        int max = 50;
-        return messages.stream()
-            .map(message -> String.format("• [%s] %s: %s", humanizeShort(message.getChannel()), humanize(message.getAuthor()),
-                truncate(message.getContent(), max) + (message.getContent().length() > max ? "..." : "")))
-            .collect(Collectors.joining("\n"));
-    }
-
-    private ZonedDateTime parseTimeDate(String timex) {
-        List<Date> parsed = new PrettyTimeParser().parse(timex); // never null, can be empty
-        if (!parsed.isEmpty()) {
-            Date first = parsed.get(0);
-            return ZonedDateTime.ofInstant(first.toInstant(), ZoneId.systemDefault());
-        }
-        log.warn("Could not parse a valid date from input: {}", timex);
-        return null;
     }
 }
