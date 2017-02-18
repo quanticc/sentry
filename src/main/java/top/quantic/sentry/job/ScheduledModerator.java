@@ -115,10 +115,8 @@ public class ScheduledModerator implements Job {
                 }
             }
 
-            if (toDelete.size() > 1) {
-                if (before.isBefore(thisMinute.minusWeeks(2)) || after.isBefore(thisMinute.minusWeeks(2))) {
-                    throw new JobExecutionException("Cannot bulk delete messages before 2 weeks ago");
-                }
+            if (toDelete.size() > 1 && (before.isBefore(thisMinute.minusWeeks(2)) || after.isBefore(thisMinute.minusWeeks(2)))) {
+                throw new JobExecutionException("Cannot bulk delete messages before 2 weeks ago");
             }
 
             log.info("Deleting {} after searching through {}", inflect(toDelete.size(), "message"), inflect(i, "message"));
