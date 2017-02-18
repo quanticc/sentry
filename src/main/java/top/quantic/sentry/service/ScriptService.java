@@ -154,7 +154,7 @@ public class ScriptService {
         scope.put("client", message.getClient());
         scope.put("message", message);
         scope.put("content", message.getContent());
-        scope.put("server", message.getChannel().isPrivate() ? null : message.getChannel().getGuild());
+        scope.put("guild", message.getChannel().isPrivate() ? null : message.getChannel().getGuild());
         scope.put("channel", message.getChannel());
         scope.put("author", message.getAuthor());
         FutureTask<String> evalTask = new FutureTask<>(() -> evalWithScope(script, scope));
