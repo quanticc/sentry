@@ -21,6 +21,8 @@ import top.quantic.sentry.service.PermissionService;
 import top.quantic.sentry.service.SettingService;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -38,14 +40,16 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
     private final SettingService settingService;
     private final PermissionService permissionService;
     private final Help help;
+    private final Executor taskExecutor;
 
     @Autowired
     public Dispatcher(CommandRegistry commandRegistry, SettingService settingService,
-                      PermissionService permissionService, Help help) {
+                      PermissionService permissionService, Help help, Executor taskExecutor) {
         this.commandRegistry = commandRegistry;
         this.settingService = settingService;
         this.permissionService = permissionService;
         this.help = help;
+        this.taskExecutor = taskExecutor;
     }
 
     @Override
@@ -55,6 +59,14 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
 
     @Override
     public void handle(MessageReceivedEvent event) {
+        CompletableFuture.runAsync(() -> execute(event), taskExecutor)
+            .exceptionally(t -> {
+                log.warn("Command executor terminated exceptionally", t);
+                return null;
+            });
+    }
+
+    private void execute(MessageReceivedEvent event) {
         IMessage message = event.getMessage();
         String content = message.getContent();
         String guild = message.getChannel().isPrivate() ? Constants.ANY : message.getChannel().getGuild().getID();
