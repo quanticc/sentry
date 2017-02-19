@@ -90,7 +90,7 @@ public class Help implements CommandSupplier {
                             .sorted(Comparator.naturalOrder())
                             .map(Command::getName)
                             .collect(Collectors.joining(", ")) +
-                            "\n\n• Get a more detailed view using `" + prefix + "help more`)" +
+                            "\n\n• Get a more detailed view using `" + prefix + "help more`" +
                             "\n• Get help for an specific command use `" + prefix + "help <command>`";
                     }
                 } else {
