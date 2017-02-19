@@ -14,7 +14,6 @@ import top.quantic.sentry.domain.Privilege;
 import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.repository.PermissionRepository;
 import top.quantic.sentry.repository.PrivilegeRepository;
-import top.quantic.sentry.service.util.SentryException;
 
 import java.util.Collections;
 import java.util.List;
@@ -110,12 +109,8 @@ public class PermissionService {
      * @param permission the entity to save
      * @return the persisted entity
      */
-    public Permission save(Permission permission) throws SentryException {
+    public Permission save(Permission permission) {
         log.debug("Request to save Permission : {}", permission);
-        // reject permission if a privilege already maps to this
-        if (!privilegeRepository.findByKey(permission.getRole()).isEmpty()) {
-            throw new SentryException("A privilege already maps to this: " + permission.getRole());
-        }
         Permission result = permissionRepository.save(permission);
         return result;
     }
