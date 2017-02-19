@@ -1,5 +1,6 @@
 package top.quantic.sentry.discord.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +66,9 @@ public class DiscordUtil {
 
     private static Set<String> getRolesWithGuild(IUser user, IGuild guild) {
         if (user == null) {
-            return Collections.emptySet();
+            return Sets.newHashSet();
         } else if (guild == null) {
-            return Collections.singleton(user.getID());
+            return Sets.newHashSet(user.getID());
         } else {
             Set<String> roleSet = Sets.newHashSet(user.getID());
             roleSet.addAll(user.getRolesForGuild(guild).stream()
@@ -83,11 +84,11 @@ public class DiscordUtil {
      * @param command the Command to get the ids from
      * @return a List of resource-ids assignable to the Command
      */
-    public static List<String> getResourcesFromCommand(Command command) {
+    public static Set<String> getResourcesFromCommand(Command command) {
         if (isBlank(command.getCategory())) {
-            return Collections.singletonList(command.getName());
+            return Collections.singleton(command.getName());
         } else {
-            return asList(ANY, command.getName(), command.getCategory());
+            return ImmutableSet.of(ANY, command.getName(), command.getCategory());
         }
     }
 

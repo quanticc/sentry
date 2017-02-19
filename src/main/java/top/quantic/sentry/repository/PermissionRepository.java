@@ -3,6 +3,7 @@ package top.quantic.sentry.repository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import top.quantic.sentry.domain.Permission;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -11,5 +12,5 @@ import java.util.List;
 @SuppressWarnings("unused")
 public interface PermissionRepository extends MongoRepository<Permission,String> {
 
-    List<Permission> findByRoleAndOperationAndResource(String role, String operation, String resource);
+    List<Permission> findByRoleInAndOperationAndResourceIn(Collection<String> roles, String operation, Collection<String> resources);
 }

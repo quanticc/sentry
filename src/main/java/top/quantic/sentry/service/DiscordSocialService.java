@@ -1,5 +1,6 @@
 package top.quantic.sentry.service;
 
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.social.connect.Connection;
 import org.springframework.social.connect.ConnectionRepository;
@@ -67,7 +68,7 @@ public class DiscordSocialService {
 
     public boolean canCurrentUserReadDashboard(String dashboardId) {
         Optional<Connection<Discord>> connection = getCurrentUserConnection();
-        Set<String> roles = Collections.singleton(connection.map(c -> c.getApi().userOperations().getProfileId()).orElse("0"));
+        Set<String> roles = Sets.newHashSet(connection.map(c -> c.getApi().userOperations().getProfileId()).orElse("0"));
         Set<PermissionType> perms = permissionService.check(roles, "viewDashboard", dashboardId);
         boolean isManager = connection.map(c -> c.getApi().userOperations().getGuilds().stream()
             .anyMatch(g -> g.getId().equals(dashboardId) && hasDiscordPermission(Permissions.MANAGE_SERVER, g.getPermissions())))
