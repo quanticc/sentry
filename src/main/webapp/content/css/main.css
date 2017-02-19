@@ -450,9 +450,9 @@ Social Buttons
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 60px;
-    padding-top: 18px;
-    background-color: #b4982e;
+    height: 40px;
+    padding-top: 6px;
+    background-color: #333;
     color: #fff;
 }
 
@@ -460,8 +460,20 @@ Social Buttons
     font-size: 10px;
 }
 
-.white {
-    color: #fff;
+.discord {
+    color: white;
+}
+
+.discord:hover {
+    color: #7289da;
+}
+
+.github {
+    color: white;
+}
+
+.github:hover {
+    color: black;
 }
 
 /* jhipster-needle-css-add-main JHipster will add new css style */
