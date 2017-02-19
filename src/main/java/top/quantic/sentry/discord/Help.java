@@ -49,24 +49,31 @@ public class Help implements CommandSupplier {
 
     private Command help() {
         OptionParser parser = new OptionParser();
-        OptionSpec<String> helpNonOptionSpec = parser.nonOptions("Command to get help about").ofType(String.class);
-        OptionSpec<Void> helpFullSpec = parser.accepts("full", "Display all commands in a list with their description");
+        OptionSpec<String> nonOptSpec = parser.nonOptions("Command to get help about").ofType(String.class);
+        OptionSpec<Void> moreSpec = parser.accepts("more", "Display all commands in a list with their description");
+        OptionSpec<Void> fullSpec = parser.accepts("full", "Calculate permissions from all of your known guild roles");
         return CommandBuilder.of("help")
             .describedAs("Show help about commands")
             .in("General")
             .parsedBy(parser)
             .onExecute(context -> {
                 OptionSet o = context.getOptionSet();
-                boolean full = o.has(helpFullSpec);
-                List<String> keys = o.valuesOf(helpNonOptionSpec);
+                boolean withDescription = o.has(moreSpec);
+                boolean deep = o.has(fullSpec);
+                List<String> keys = o.valuesOf(nonOptSpec);
                 IMessage message = context.getMessage();
                 List<Command> commandList = commandRegistry.getCommands(message.getClient());
                 String response;
+                String prefix = context.getPrefix();
                 if (keys.isEmpty()) {
-                    if (full) {
+                    if (withDescription || deep) {
                         response = "*Commands available to you*\n";
+                        if (!deep) {
+                            response += "Note: This list does not take all of your known guild roles into account, " +
+                                "use `" + prefix + "help full` for that\n\n";
+                        }
                         List<Command> executable = commandList.stream()
-                            .filter(c -> canExecute(c, message, false))
+                            .filter(c -> canExecute(c, message, deep))
                             .collect(Collectors.toList());
                         Map<String, List<Command>> categories = new HashMap<>();
                         executable.forEach(cmd -> categories.computeIfAbsent(cmd.getCategory(), k -> new ArrayList<>()).add(cmd));
@@ -78,12 +85,13 @@ public class Help implements CommandSupplier {
                                     .collect(Collectors.joining("\n")))
                             .collect(Collectors.joining("\n\n"));
                     } else {
-                        String prefix = settingService.getPrefixes(message).stream().findAny().orElse("");
-                        response = "*Commands available to you*: " + commandList.stream()
+                        response = "*Commands available to you*\n" + commandList.stream()
                             .filter(c -> canExecute(c, message, false))
                             .sorted(Comparator.naturalOrder())
                             .map(Command::getName)
-                            .collect(Collectors.joining(", ")) + " (more with `" + prefix + "help full`)";
+                            .collect(Collectors.joining(", ")) +
+                            "\n\n• Get a more detailed view using `" + prefix + "help more`)" +
+                            "\n• Get help for an specific command use `" + prefix + "help <command>`";
                     }
                 } else {
                     List<Command> requested = commandList.stream()
