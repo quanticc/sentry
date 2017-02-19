@@ -285,8 +285,12 @@ public class GameServerService implements InitializingBean {
             log.debug("[{}] Authenticating to RCON", server.getShortNameAndAddress());
             SourceRconAuthStatus authStatus = gameQueryService.authenticate(address, password).join();
             if (!authStatus.isAuthenticated()) {
-                log.warn("[{}] Could not re-authenticate", server.getShortNameAndAddress());
-                return null;
+                log.warn("[{}] Refreshing RCON after auth failing", server.getShortNameAndAddress());
+                authStatus = gameQueryService.authenticate(address, refreshPasswordAndGet(server)).join();
+                if (!authStatus.isAuthenticated()) {
+                    log.warn("[{}] Could not re-authenticate: {}", server.getShortNameAndAddress(), authStatus.getReason());
+                    return null;
+                }
             }
         }
 
