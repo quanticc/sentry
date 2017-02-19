@@ -251,7 +251,7 @@ public class GameServerService implements InitializingBean {
                 int seconds = expirationSeconds.get(server.getId());
                 if (seconds != 0) {
                     server.setExpirationDate(now.plusSeconds(seconds));
-                    if (seconds < 60 * 15) {
+                    if (server.getPlayers() > 0 && seconds < 60 * 15) {
                         ZonedDateTime lastRconAnnounce = Optional.ofNullable(server.getLastRconAnnounce())
                             .orElse(Instant.EPOCH.atZone(ZoneId.systemDefault()));
                         // announce only once per interval to avoid spamming
