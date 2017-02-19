@@ -66,7 +66,7 @@ public class Help implements CommandSupplier {
                     if (full) {
                         response = "*Commands available to you*\n";
                         List<Command> executable = commandList.stream()
-                            .filter(c -> canExecute(c, message))
+                            .filter(c -> canExecute(c, message, false))
                             .collect(Collectors.toList());
                         Map<String, List<Command>> categories = new HashMap<>();
                         executable.forEach(cmd -> categories.computeIfAbsent(cmd.getCategory(), k -> new ArrayList<>()).add(cmd));
@@ -80,7 +80,7 @@ public class Help implements CommandSupplier {
                     } else {
                         String prefix = settingService.getPrefixes(message).stream().findAny().orElse("");
                         response = "*Commands available to you*: " + commandList.stream()
-                            .filter(c -> canExecute(c, message))
+                            .filter(c -> canExecute(c, message, false))
                             .sorted(Comparator.naturalOrder())
                             .map(Command::getName)
                             .collect(Collectors.joining(", ")) + " (more with `" + prefix + "help full`)";
@@ -88,7 +88,7 @@ public class Help implements CommandSupplier {
                 } else {
                     List<Command> requested = commandList.stream()
                         .filter(c -> isRequested(keys, c))
-                        .filter(c -> canExecute(c, message))
+                        .filter(c -> canExecute(c, message, true))
                         .sorted(Comparator.naturalOrder())
                         .collect(Collectors.toList());
                     StringBuilder builder = new StringBuilder();
@@ -118,7 +118,7 @@ public class Help implements CommandSupplier {
                 } else {
                     List<Command> requested = commandList.stream()
                         .filter(c -> isRequested(keys, c))
-                        .filter(c -> canExecute(c, message))
+                        .filter(c -> canExecute(c, message, true))
                         .sorted(Comparator.naturalOrder())
                         .collect(Collectors.toList());
                     StringBuilder builder = new StringBuilder();
@@ -135,8 +135,8 @@ public class Help implements CommandSupplier {
             && keys.stream().anyMatch(k -> c.getAliases().stream().anyMatch(a -> k.contains(a.toLowerCase()))));
     }
 
-    private boolean canExecute(Command command, IMessage message) {
-        return (!command.isSecured() || permissionService.hasPermission(message, Operations.EXECUTE, command))
+    private boolean canExecute(Command command, IMessage message, boolean deep) {
+        return (!command.isSecured() || permissionService.hasPermission(message, Operations.EXECUTE, command, deep))
             && message.getChannel().getModifiedPermissions(message.getAuthor()).containsAll(command.getRequiredPermissions());
     }
 

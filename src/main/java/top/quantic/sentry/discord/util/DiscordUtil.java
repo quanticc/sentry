@@ -32,30 +32,31 @@ public class DiscordUtil {
 
     private static final Logger log = LoggerFactory.getLogger(DiscordUtil.class);
 
-    public static Set<String> getRoles(IUser user) {
-        return getRolesWithGuild(user, null);
-    }
-
     /**
      * Get all the role-ids assignable to a user from a Message.
      *
      * @param message the Message to get the ids from
+     * @param deep    whether to retrieve roles from all guilds when invoked from a private channel
      * @return a Set of role-ids assignable from the Message's author
      */
-    public static Set<String> getRolesFromMessage(IMessage message) {
-        return getRolesWithChannel(message.getAuthor(), message.getChannel());
+    public static Set<String> getRolesFromMessage(IMessage message, boolean deep) {
+        return getRolesWithChannel(message.getAuthor(), message.getChannel(), deep);
     }
 
-    private static Set<String> getRolesWithChannel(IUser user, IChannel channel) {
+    private static Set<String> getRolesWithChannel(IUser user, IChannel channel, boolean deep) {
         if (user == null) {
             return Collections.emptySet();
         } else if (channel == null || channel.isPrivate()) {
-            // get all belonging guilds of this user - might be expensive
-            return user.getClient().getGuilds().stream()
-                .filter(guild -> guild.getUserByID(user.getID()) != null)
-                .map(guild -> getRolesWithGuild(user, guild))
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+            if (deep) {
+                return Sets.newHashSet(user.getID());
+            } else {
+                // get all belonging guilds of this user - expensive!
+                return user.getClient().getGuilds().stream()
+                    .filter(guild -> guild.getUserByID(user.getID()) != null)
+                    .map(guild -> getRolesWithGuild(user, guild))
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            }
         } else {
             Set<String> roleSet = getRolesWithGuild(user, channel.getGuild());
             roleSet.add(channel.getID());

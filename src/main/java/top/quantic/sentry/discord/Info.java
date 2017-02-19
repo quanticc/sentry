@@ -106,7 +106,7 @@ public class Info implements CommandSupplier {
                 List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
-                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*", true);
                 Set<IUser> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<@!?(\\d+)>", "$1");
@@ -221,7 +221,7 @@ public class Info implements CommandSupplier {
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
                 IDiscordClient client = message.getClient();
-                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*", true);
                 Set<IRole> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<@&(\\d+)>", "$1");
@@ -345,7 +345,7 @@ public class Info implements CommandSupplier {
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
                 IDiscordClient client = message.getClient();
-                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*", true);
                 Set<IChannel> matched = new HashSet<>();
                 for (String query : queries) {
                     String id = query.replaceAll("<#(\\d+)>", "$1");

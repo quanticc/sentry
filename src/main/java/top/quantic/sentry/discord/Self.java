@@ -130,7 +130,7 @@ public class Self implements CommandSupplier {
                     }
 
                     String query = o.valueOf(avatarSpec);
-                    boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*");
+                    boolean aware = permissionService.hasPermission(message, QUERY_ALL_GUILDS, "*", true);
                     IChannel channel = message.getChannel();
 
                     String id = query.replaceAll("<@!?(\\d+)>", "$1");

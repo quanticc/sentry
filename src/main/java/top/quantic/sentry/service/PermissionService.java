@@ -40,12 +40,12 @@ public class PermissionService {
         this.privilegeRepository = privilegeRepository;
     }
 
-    public boolean hasPermission(IMessage message, String operation, Command command) {
-        return hasPermission(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
+    public boolean hasPermission(IMessage message, String operation, Command command, boolean deep) {
+        return hasPermission(getRolesFromMessage(message, deep), operation, getResourcesFromCommand(command));
     }
 
-    public boolean hasPermission(IMessage message, String operation, String resource) {
-        return hasPermission(getRolesFromMessage(message), operation, resource);
+    public boolean hasPermission(IMessage message, String operation, String resource, boolean deep) {
+        return hasPermission(getRolesFromMessage(message, deep), operation, resource);
     }
 
     public boolean hasPermission(Set<String> roles, String operation, String resource) {
@@ -66,10 +66,11 @@ public class PermissionService {
      * @param message   the Discord message to extract roles from
      * @param operation the permissible operation
      * @param command   the Command to extract resources from
+     * @param deep      whether to retrieve roles from all guilds when invoked from a private channel
      * @return a Set of types of Permission, like ALLOW or DENY. Can also contain both or none.
      */
-    public Set<PermissionType> check(IMessage message, String operation, Command command) {
-        return checkPermissions(getRolesFromMessage(message), operation, getResourcesFromCommand(command));
+    public Set<PermissionType> check(IMessage message, String operation, Command command, boolean deep) {
+        return checkPermissions(getRolesFromMessage(message, deep), operation, getResourcesFromCommand(command));
     }
 
     public Set<PermissionType> check(String role, String operation, String resource) {
