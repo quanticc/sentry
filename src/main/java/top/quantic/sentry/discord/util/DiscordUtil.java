@@ -48,14 +48,14 @@ public class DiscordUtil {
             return Collections.emptySet();
         } else if (channel == null || channel.isPrivate()) {
             if (deep) {
-                return Sets.newHashSet(user.getID());
-            } else {
                 // get all belonging guilds of this user - expensive!
                 return user.getClient().getGuilds().stream()
                     .filter(guild -> guild.getUserByID(user.getID()) != null)
                     .map(guild -> getRolesWithGuild(user, guild))
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
+            } else {
+                return Sets.newHashSet(user.getID());
             }
         } else {
             Set<String> roleSet = getRolesWithGuild(user, channel.getGuild());
