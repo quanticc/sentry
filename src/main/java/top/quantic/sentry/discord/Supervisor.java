@@ -7,15 +7,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.events.guild.member.GuildMemberEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
 import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
 import sx.blah.discord.handle.impl.events.shard.ReconnectFailureEvent;
 import sx.blah.discord.handle.impl.events.shard.ReconnectSuccessEvent;
 import top.quantic.sentry.discord.module.DiscordSubscriber;
-import top.quantic.sentry.event.ForwardedDiscordEvent;
-import top.quantic.sentry.event.LogoutRequestEvent;
-import top.quantic.sentry.event.ReconnectEvent;
-import top.quantic.sentry.event.ReconnectFailedEvent;
+import top.quantic.sentry.event.*;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.ourBotName;
 
@@ -50,11 +47,11 @@ public class Supervisor implements DiscordSubscriber {
     @EventSubscriber
     public void onDisconnect(DisconnectedEvent event) {
         log.info("[{}] Discord bot disconnected due to {}", ourBotName(event), event.getReason());
-        publisher.publishEvent(new ForwardedDiscordEvent(event));
+        publisher.publishEvent(new BotDisconnectedEvent(event));
     }
 
     @EventSubscriber
-    public void onGuildMemberEvent(GuildMemberEvent event) {
-        publisher.publishEvent(new ForwardedDiscordEvent(event));
+    public void onUserBanned(UserBanEvent event) {
+        publisher.publishEvent(new UserBannedEvent(event));
     }
 }
