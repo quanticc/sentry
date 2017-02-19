@@ -85,18 +85,13 @@ public class PermissionService {
             return Collections.emptySet();
         } else {
             Set<String> translated = roles.stream()
-                .map(role -> {
-                    List<Privilege> privileges = privilegeRepository.findByKey(role);
-                    if (privileges.isEmpty()) {
-                        return Collections.singleton(role);
-                    } else {
-                        return privileges.stream().map(Privilege::getRole).collect(Collectors.toSet());
-                    }
-                })
-                .flatMap(Set::stream)
+                .map(privilegeRepository::findByKey)
+                .flatMap(List::stream)
+                .map(Privilege::getRole)
                 .collect(Collectors.toSet());
-            log.trace("Checking '{}' on {} for {}", operation, resources, translated);
-            return permissionRepository.findByRoleInAndOperationAndResourceIn(translated, operation, resources)
+            roles.addAll(translated);
+            log.trace("Checking '{}' on {} for {}", operation, resources, roles);
+            return permissionRepository.findByRoleInAndOperationAndResourceIn(roles, operation, resources)
                 .stream()
                 .map(Permission::getType)
                 .collect(Collectors.toSet());
