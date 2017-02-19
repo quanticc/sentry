@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.truncate;
-import static top.quantic.sentry.config.Constants.ANY;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 public class DiscordUtil {
@@ -88,7 +87,7 @@ public class DiscordUtil {
         if (isBlank(command.getCategory())) {
             return Collections.singleton(command.getName());
         } else {
-            return ImmutableSet.of(ANY, command.getName(), command.getCategory());
+            return ImmutableSet.of(command.getName(), command.getCategory());
         }
     }
 
