@@ -271,18 +271,22 @@ public class GameServerService implements InitializingBean {
             .count();
     }
 
+    public boolean isMissingOrExpiredRcon(GameServer server) {
+        return server.getRconPassword() == null || (server.getLastRconDate().isBefore(server.getExpirationDate()) && server.getExpirationDate().isBefore(ZonedDateTime.now()));
+    }
+
     public String rcon(GameServer server, String cmd) {
         InetSocketAddress address = getInetSocketAddress(server);
-        String password = server.getRconPassword();
+        boolean needsRconRefresh = isMissingOrExpiredRcon(server);
+        String password = needsRconRefresh ? refreshPasswordAndGet(server) : server.getRconPassword();
         String command = cleanCommand(cmd);
 
-        if (!gameQueryService.isAuthenticated(address)) {
+        if (!gameQueryService.isAuthenticated(address) || needsRconRefresh) {
+            log.debug("[{}] Authenticating to RCON", server.getShortNameAndAddress());
             SourceRconAuthStatus authStatus = gameQueryService.authenticate(address, password).join();
             if (!authStatus.isAuthenticated()) {
-                authStatus = gameQueryService.authenticate(address, refreshPasswordAndGet(server)).join();
-                if (!authStatus.isAuthenticated()) {
-                    return null;
-                }
+                log.warn("[{}] Could not re-authenticate", server.getShortNameAndAddress());
+                return null;
             }
         }
 
@@ -292,7 +296,7 @@ public class GameServerService implements InitializingBean {
     public Result<String> tryRcon(GameServer server, String command) {
         try {
             String response = rcon(server, command);
-            if (response == null) {
+            if (response == null || response.equals("Unable to re-authenticate from server")) {
                 return Result.error("Could not authenticate to server");
             } else {
                 return Result.ok(response);
