@@ -14,6 +14,7 @@ import top.quantic.sentry.domain.Privilege;
 import top.quantic.sentry.domain.enumeration.PermissionType;
 import top.quantic.sentry.repository.PermissionRepository;
 import top.quantic.sentry.repository.PrivilegeRepository;
+import top.quantic.sentry.service.util.SentryException;
 
 import java.util.Collections;
 import java.util.List;
@@ -85,13 +86,18 @@ public class PermissionService {
             return Collections.emptySet();
         } else {
             Set<String> translated = roles.stream()
-                .map(privilegeRepository::findByKey)
-                .flatMap(List::stream)
-                .map(Privilege::getRole)
+                .map(role -> {
+                    List<Privilege> privileges = privilegeRepository.findByKey(role);
+                    if (privileges.isEmpty()) {
+                        return Collections.singleton(role);
+                    } else {
+                        return privileges.stream().map(Privilege::getRole).collect(Collectors.toSet());
+                    }
+                })
+                .flatMap(Set::stream)
                 .collect(Collectors.toSet());
-            roles.addAll(translated);
-            log.trace("Checking '{}' on {} for {}", operation, resources, roles);
-            return permissionRepository.findByRoleInAndOperationAndResourceIn(roles, operation, resources)
+            log.trace("Checking '{}' on {} for {}", operation, resources, translated);
+            return permissionRepository.findByRoleInAndOperationAndResourceIn(translated, operation, resources)
                 .stream()
                 .map(Permission::getType)
                 .collect(Collectors.toSet());
@@ -104,8 +110,12 @@ public class PermissionService {
      * @param permission the entity to save
      * @return the persisted entity
      */
-    public Permission save(Permission permission) {
+    public Permission save(Permission permission) throws SentryException {
         log.debug("Request to save Permission : {}", permission);
+        // reject permission if a privilege already maps to this
+        if (!privilegeRepository.findByKey(permission.getRole()).isEmpty()) {
+            throw new SentryException("A privilege already maps to this: " + permission.getRole());
+        }
         Permission result = permissionRepository.save(permission);
         return result;
     }
