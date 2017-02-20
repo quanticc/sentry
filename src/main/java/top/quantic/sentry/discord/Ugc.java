@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
 public class Ugc implements CommandSupplier, InitializingBean {
@@ -130,10 +131,11 @@ public class Ugc implements CommandSupplier, InitializingBean {
                 }
                 RequestBuffer.RequestFuture<IMessage> header = answer(message, "Getting match data from UGC...");
                 try {
-                    UgcSchedule schedule = ugcService.getSchedule(args[0], Long.parseLong(args[1]), Long.parseLong(args[2]));
+                    boolean regex = args[3].startsWith("~");
+                    UgcSchedule schedule = ugcService.getSchedule(args[0], Long.parseLong(args[1]), Long.parseLong(args[2]),
+                        (regex ? null : args[3]), false);
                     List<UgcSchedule.Match> matchList = schedule.getSchedule().stream()
-                        .filter(match -> match.getDivName().toLowerCase().contains(args[3].toLowerCase())
-                            || (args[3].startsWith("~") && match.getDivName().matches(args[3].substring(1))))
+                        .filter(match -> !regex || match.getDivName().matches(args[3].substring(1)))
                         .collect(Collectors.toList());
                     EmbedBuilder builder = authoredSuccessEmbed(message)
                         .withTitle("Schedules for " + (args[0].contains("s") ? args[0].toLowerCase() : args[0].toUpperCase()))
@@ -143,14 +145,16 @@ public class Ugc implements CommandSupplier, InitializingBean {
                     for (UgcSchedule.Match match : matchList) {
                         if (count++ % 5 == 0) {
                             int c = count;
+                            int progress = (int) (100 * (double) count / matchList.size());
                             CompletableFuture.runAsync(() -> RequestBuffer.request(() -> header.get()
-                                .edit("Getting match data from UGC (" + c + "/" + matchList.size() + ") ...")));
+                                .edit("Retrieved " + c + " of " + inflect(matchList.size(), "match") + " from UGC (" + progress + "%)")));
                         }
                         if (match.getClanIdH() != null && match.getClanIdV() != null) {
                             UgcTeam home = ugcService.getTeam(match.getClanIdH(), false);
                             UgcTeam away = ugcService.getTeam(match.getClanIdV(), false);
                             divisionToMatches.computeIfAbsent(match.getDivName(), k -> new ArrayList<>())
-                                .add(home.getClanName() + " (" + home.getClanId() + ") vs " + away.getClanName() + " (" + away.getClanId() + ")");
+                                .add(home.getClanName() + " (" + home.getClanId() + ") vs "
+                                    + away.getClanName() + (away.getClanId() == 0 ? "" : " (" + away.getClanId() + ")"));
                         }
                     }
                     divisionToMatches.forEach((div, matches) -> {

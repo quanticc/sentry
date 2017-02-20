@@ -39,9 +39,12 @@ public class UgcResource {
     public ResponseEntity<UgcSchedule> getSchedule(@ApiIgnore HttpServletRequest request,
                                                    @PathVariable String ladder,
                                                    @PathVariable Long season,
-                                                   @PathVariable Long week) throws IOException {
-        log.debug("REST request to get schedule for {} s{}w{}", ladder, season, week);
-        return ResponseEntity.ok(ugcService.getSchedule(ladder, season, week));
+                                                   @PathVariable Long week,
+                                                   @RequestParam(required = false) String division,
+                                                   @RequestParam(required = false) Boolean teams) throws IOException {
+        log.debug("REST request to get schedule for {} s{}w{}{}", ladder, season, week,
+            (division != null ? " with division: " + division : ""), (teams != null && teams ? " and team names" : ""));
+        return ResponseEntity.ok(ugcService.getSchedule(ladder, season, week, division, teams != null ? teams : false));
     }
 
     @GetMapping("/team/{id}")
@@ -50,7 +53,7 @@ public class UgcResource {
     public ResponseEntity<UgcTeam> getTeam(@ApiIgnore HttpServletRequest request,
                                            @PathVariable Long id,
                                            @RequestParam(required = false) Boolean roster) throws IOException {
-        log.debug("REST request to get team with id {}", id);
+        log.debug("REST request to get team with id {}{}", id, (roster != null && roster ? " with roster data" : ""));
         return ResponseEntity.ok(ugcService.getTeam(id, roster != null ? roster : true));
     }
 

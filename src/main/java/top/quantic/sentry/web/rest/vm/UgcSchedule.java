@@ -9,6 +9,7 @@ import java.util.List;
 public class UgcSchedule {
 
     private String ladder;
+    private String division;
     private Long season;
     private Long week;
     private List<Match> schedule = new ArrayList<>();
@@ -19,6 +20,14 @@ public class UgcSchedule {
 
     public void setLadder(String ladder) {
         this.ladder = ladder;
+    }
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
     }
 
     public Long getSeason() {
@@ -52,6 +61,8 @@ public class UgcSchedule {
         private Long clanIdH;
         private Long divId;
         private String divName;
+        private String homeTeam;
+        private String awayTeam;
 
         public Long getMatchId() {
             return matchId;
@@ -90,7 +101,23 @@ public class UgcSchedule {
         }
 
         public void setDivName(String divName) {
-            this.divName = divName;
+            this.divName = divName != null ? divName.trim() : null;
+        }
+
+        public String getHomeTeam() {
+            return homeTeam;
+        }
+
+        public void setHomeTeam(String homeTeam) {
+            this.homeTeam = homeTeam;
+        }
+
+        public String getAwayTeam() {
+            return awayTeam;
+        }
+
+        public void setAwayTeam(String awayTeam) {
+            this.awayTeam = awayTeam;
         }
     }
 

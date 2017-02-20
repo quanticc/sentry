@@ -19,6 +19,8 @@ import top.quantic.sentry.web.rest.vm.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
@@ -33,6 +35,10 @@ public class UgcService implements InitializingBean {
     private final ObjectMapper objectMapper;
 
     private Map<String, String> endpoints;
+    private Map<Long, UgcLadder> ladders = new ConcurrentHashMap<>();
+    private Map<Long, UgcDivision> divisions = new ConcurrentHashMap<>();
+    private Map<String, UgcLadder> ladderAliases = new ConcurrentHashMap<>();
+    private Map<Long, Map<String, UgcDivision>> divByLadderAliases = new ConcurrentHashMap<>();
 
     @Autowired
     public UgcService(SentryProperties sentryProperties, RestTemplate restTemplate, ObjectMapper objectMapper) {
@@ -43,39 +49,98 @@ public class UgcService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        endpoints = sentryProperties.getUgc().getEndpoints();
+        SentryProperties.Ugc ugc = sentryProperties.getUgc();
+        endpoints = ugc.getEndpoints();
         log.debug("Loaded endpoints: {}", endpoints.keySet().toString());
+        ladders = ugc.getLadders().entrySet().stream()
+            .map(entry -> UgcLadder.parse(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toMap(UgcLadder::getLadderId, Function.identity()));
+        log.debug("Loaded {}", inflect(ladders.keySet().size(), "ladder"));
+        divisions = ugc.getDivisions().entrySet().stream()
+            .map(entry -> UgcDivision.parse(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toMap(UgcDivision::getDivId, Function.identity()));
+        log.debug("Loaded {}", inflect(divisions.keySet().size(), "division"));
+        ladders.forEach((id, ladder) -> ladder.getAliases().forEach(alias -> ladderAliases.put(alias, ladder)));
+        divisions.forEach((id, division) ->
+            division.getAliases().forEach(alias -> divByLadderAliases
+                .computeIfAbsent(division.getLadderId(), k -> new ConcurrentHashMap<>())
+                .put(alias, division)));
+        divisions.forEach((id, division) -> divByLadderAliases
+            .computeIfAbsent(division.getLadderId(), k -> new ConcurrentHashMap<>())
+            .put(division.getDivName(), division));
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
     @Cacheable("schedule")
-    public UgcSchedule getSchedule(String ladder, Long season, Long week) throws IOException {
+    public UgcSchedule getSchedule(String ladder, Long season, Long week, String division, Boolean withTeams) throws IOException {
         Objects.requireNonNull(ladder, "Ladder must not be null");
         Objects.requireNonNull(season, "Season must not be null");
         Objects.requireNonNull(week, "Week must not be null");
-        String ladderId = sentryProperties.getUgc().getLadders().get(ladder.toLowerCase());
-        if (ladderId == null) {
+        Objects.requireNonNull(withTeams, "withTeams must not be null");
+        UgcLadder ladderSpec = ladderAliases.get(ladder.toLowerCase());
+        if (ladderSpec == null) {
             throw new CustomParameterizedException("Invalid ladder name: " + ladder + ". Use one of: " +
-                sentryProperties.getUgc().getLadders().keySet().stream().collect(Collectors.joining(", ")));
+                ladderAliases.keySet().stream().collect(Collectors.joining(", ")));
         }
+        Long ladderId = ladderSpec.getLadderId();
         Map<String, Object> vars = getVariablesMap();
         vars.put("ladder", ladderId);
         vars.put("season", season);
         vars.put("week", week);
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(endpoints.get("schedule"), String.class, vars);
+        ResponseEntity<String> responseEntity;
+        UgcDivision divisionSpec = null;
+        if (division == null) {
+            responseEntity = restTemplate.getForEntity(endpoints.get("schedule"), String.class, vars);
+        } else {
+            divisionSpec = findDivisionByAlias(ladderId, division);
+            if (divisionSpec == null) {
+                throw new CustomParameterizedException("Invalid division name: " + division + ". Use one of: " +
+                    divByLadderAliases.get(ladderId).keySet().stream().collect(Collectors.joining(", ")));
+            }
+            vars.put("div", divisionSpec.getDivId());
+            responseEntity = restTemplate.getForEntity(endpoints.get("scheduleByDiv"), String.class, vars);
+        }
         log.trace("[Schedule] {}", responseEntity);
         if (responseEntity.getStatusCode().is4xxClientError() || responseEntity.getStatusCode().is5xxServerError()) {
             throw new CustomParameterizedException("UGC API returned status " + responseEntity.getStatusCode());
         }
         JsonUgcResponse response = objectMapper.readValue(responseEntity.getBody(), JsonUgcResponse.class);
         UgcSchedule schedule = new UgcSchedule();
-        schedule.setLadder(ladder);
+        schedule.setLadder(ladderSpec.getShortName());
         schedule.setSeason(season);
         schedule.setWeek(week);
-        schedule.setSchedule(objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcSchedule.Match>>() {
-        }));
-        log.debug("Schedule of {} s{}w{} retrieved: {}", ladder, season, week, inflect(schedule.getSchedule().size(), "match"));
+        schedule.setDivision(division);
+        List<UgcSchedule.Match> matches = objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcSchedule.Match>>() {
+        });
+        if (withTeams) {
+            matches.forEach(match -> {
+                if (match.getClanIdH() != null) {
+                    try {
+                        match.setHomeTeam(getTeam(match.getClanIdH(), false).getClanName());
+                    } catch (IOException e) {
+                        log.warn("Could not get team data", e);
+                    }
+                }
+                if (match.getClanIdV() != null) {
+                    try {
+                        match.setAwayTeam(getTeam(match.getClanIdV(), false).getClanName());
+                    } catch (IOException e) {
+                        log.warn("Could not get team data", e);
+                    }
+                }
+            });
+        }
+        schedule.setSchedule(matches.stream()
+            .sorted(Comparator.comparingLong(match -> divisions.get(match.getDivId()).getDivOrder()))
+            .collect(Collectors.toList()));
+        log.debug("Schedule of {} s{}w{}{} retrieved: {}", ladderSpec.getShortName(), season, week,
+            divisionSpec == null ? "" : " and " + divisionSpec.getDivName() + " division", inflect(schedule.getSchedule().size(), "match"));
         return schedule;
+    }
+
+    private UgcDivision findDivisionByAlias(Long ladderId, String key) {
+        return Optional.ofNullable(divByLadderAliases.get(ladderId))
+            .map(aliases -> aliases.get(key)).orElse(null);
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
@@ -192,11 +257,12 @@ public class UgcService implements InitializingBean {
     public List<UgcTransaction> getTransactions(String ladder, Long days) throws IOException {
         Objects.requireNonNull(ladder, "Ladder must not be null");
         Objects.requireNonNull(days, "Days span must not be null");
-        String ladderId = sentryProperties.getUgc().getLadders().get(ladder);
-        if (ladderId == null) {
+        UgcLadder ladderSpec = ladderAliases.get(ladder.toLowerCase());
+        if (ladderSpec == null) {
             throw new CustomParameterizedException("Invalid ladder name: " + ladder + ". Use one of: " +
-                sentryProperties.getUgc().getLadders().keySet().stream().collect(Collectors.joining(", ")));
+                ladderAliases.keySet().stream().collect(Collectors.joining(", ")));
         }
+        Long ladderId = ladderSpec.getLadderId();
         Map<String, Object> vars = getVariablesMap();
         vars.put("ladder", ladderId);
         vars.put("span", days);

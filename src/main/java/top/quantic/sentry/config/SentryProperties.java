@@ -325,7 +325,8 @@ public class SentryProperties {
     public static class Ugc {
         private String apiKey;
         private Map<String, String> endpoints = new LinkedHashMap<>();
-        private Map<String, String> ladders = new LinkedHashMap<>();
+        private Map<Long, String> ladders = new LinkedHashMap<>();
+        private Map<Long, String> divisions = new LinkedHashMap<>();
 
         public String getApiKey() {
             return apiKey;
@@ -343,12 +344,20 @@ public class SentryProperties {
             this.endpoints = endpoints;
         }
 
-        public Map<String, String> getLadders() {
+        public Map<Long, String> getLadders() {
             return ladders;
         }
 
-        public void setLadders(Map<String, String> ladders) {
+        public void setLadders(Map<Long, String> ladders) {
             this.ladders = ladders;
+        }
+
+        public Map<Long, String> getDivisions() {
+            return divisions;
+        }
+
+        public void setDivisions(Map<Long, String> divisions) {
+            this.divisions = divisions;
         }
     }
 
