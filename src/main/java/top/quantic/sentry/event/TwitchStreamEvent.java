@@ -129,7 +129,7 @@ public class TwitchStreamEvent extends SentryEvent {
             .withFooterIcon("https://www.twitch.tv/favicon.ico")
             .withFooterText("twitch.tv")
             .appendField("Playing", stream.getGame(), true);
-        if (stream.getViewers() < 10) {
+        if (stream.getViewers() >= 10) {
             builder.appendField("Viewers", stream.getViewers() + "", true);
         } else {
             builder.appendField("Started", formatRelative(stream.getCreatedAt()), true);
