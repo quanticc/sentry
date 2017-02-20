@@ -1,6 +1,5 @@
 package top.quantic.sentry.discord;
 
-import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,6 +11,7 @@ import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
 
+import java.util.Collections;
 import java.util.List;
 
 import static top.quantic.sentry.config.Constants.INSTANCE_KEY;

@@ -16,7 +16,6 @@ import top.quantic.sentry.discord.core.CommandRegistry;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordHelpFormatter;
 import top.quantic.sentry.service.PermissionService;
-import top.quantic.sentry.service.SettingService;
 
 import java.io.ByteArrayOutputStream;
 import java.util.*;
@@ -33,13 +32,11 @@ public class Help implements CommandSupplier {
 
     private final CommandRegistry commandRegistry;
     private final PermissionService permissionService;
-    private final SettingService settingService;
 
     @Autowired
-    public Help(CommandRegistry commandRegistry, PermissionService permissionService, SettingService settingService) {
+    public Help(CommandRegistry commandRegistry, PermissionService permissionService) {
         this.commandRegistry = commandRegistry;
         this.permissionService = permissionService;
-        this.settingService = settingService;
     }
 
     @Override
