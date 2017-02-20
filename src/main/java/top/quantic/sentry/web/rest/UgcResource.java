@@ -5,10 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 import top.quantic.sentry.service.UgcService;
 import top.quantic.sentry.web.rest.util.RateLimited;
@@ -51,9 +48,10 @@ public class UgcResource {
     @Timed
     @RateLimited(1)
     public ResponseEntity<UgcTeam> getTeam(@ApiIgnore HttpServletRequest request,
-                                           @PathVariable Long id) throws IOException {
+                                           @PathVariable Long id,
+                                           @RequestParam(required = false) Boolean roster) throws IOException {
         log.debug("REST request to get team with id {}", id);
-        return ResponseEntity.ok(ugcService.getTeam(id, true));
+        return ResponseEntity.ok(ugcService.getTeam(id, roster != null ? roster : true));
     }
 
     @GetMapping("/results/{season}/{week}")
