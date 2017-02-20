@@ -1,8 +1,8 @@
 # Sentry
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc33fe55d2454684bc537690e4cda0a1)](https://www.codacy.com/app/quanticc/sentry?utm_source=github.com&utm_medium=referral&utm_content=quanticc/sentry&utm_campaign=badger) [![Dependency Status](https://www.versioneye.com/user/projects/587fb1b6e25f59002c91bcd5/badge.svg)](https://www.versioneye.com/user/projects/587fb1b6e25f59002c91bcd5)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc33fe55d2454684bc537690e4cda0a1)](https://www.codacy.com/app/quanticc/sentry?utm_source=github.com&utm_medium=referral&utm_content=quanticc/sentry&utm_campaign=badger)
 
-This application is an assistant for [UGC League][] operations and the successor for the [ugc-bot][] project.
+This application is an assistant for [UGC League][] operations and the successor of the [ugc-bot][] project.
 Bootstrapped using [JHipster 3.12.2][] (Spring Boot + AngularJS).
 
 ## Features
@@ -11,7 +11,8 @@ Bootstrapped using [JHipster 3.12.2][] (Spring Boot + AngularJS).
 - Manages [Discord][] bots to communicate with general users
 - Delivers server files (maps, config files) and game version updates in batch
 - Retrieves SourceTV and log files from game servers
-- Keeps track of GS server statistics and expire status
+- Keeps track of GS server statistics and expiration status
+- Wraps existing UGC API in order to provide richer content
 - Matches UGC result data with stats providers
 - Alerts on missing updates and unresponsive servers
 - Forwards metrics and events to Discord webhooks or messages
