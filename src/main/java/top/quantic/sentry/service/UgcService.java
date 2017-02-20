@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -19,6 +20,8 @@ import top.quantic.sentry.web.rest.vm.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Service
 public class UgcService implements InitializingBean {
@@ -45,11 +48,12 @@ public class UgcService implements InitializingBean {
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("schedule")
     public UgcSchedule getSchedule(String ladder, Long season, Long week) throws IOException {
         Objects.requireNonNull(ladder, "Ladder must not be null");
         Objects.requireNonNull(season, "Season must not be null");
         Objects.requireNonNull(week, "Week must not be null");
-        String ladderId = sentryProperties.getUgc().getLadders().get(ladder);
+        String ladderId = sentryProperties.getUgc().getLadders().get(ladder.toLowerCase());
         if (ladderId == null) {
             throw new CustomParameterizedException("Invalid ladder name: " + ladder + ". Use one of: " +
                 sentryProperties.getUgc().getLadders().keySet().stream().collect(Collectors.joining(", ")));
@@ -70,11 +74,13 @@ public class UgcService implements InitializingBean {
         schedule.setWeek(week);
         schedule.setSchedule(objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcSchedule.Match>>() {
         }));
+        log.debug("Schedule of {} s{}w{} retrieved: {}", ladder, season, week, inflect(schedule.getSchedule().size(), "match"));
         return schedule;
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
-    public UgcTeam getTeam(Long id) throws IOException {
+    @Cacheable("team")
+    public UgcTeam getTeam(Long id, boolean withRoster) throws IOException {
         Objects.requireNonNull(id, "ID must not be null");
         Map<String, Object> vars = getVariablesMap();
         vars.put("id", id);
@@ -85,11 +91,16 @@ public class UgcService implements InitializingBean {
         }
         JsonUgcResponse response = objectMapper.readValue(clean(responseEntity.getBody()), JsonUgcResponse.class);
         UgcTeam team = objectMapper.convertValue(convertTabularData(response).get(0), UgcTeam.class);
-        team.setRoster(getRoster(id));
+        log.debug("Team {} ({}) retrieved", team.getClanName(), team.getClanId());
+        if (withRoster) {
+            team.setRoster(getRoster(id));
+        }
         return team;
     }
 
-    private List<UgcTeam.RosteredPlayer> getRoster(Long id) throws IOException {
+    @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("roster")
+    public List<UgcTeam.RosteredPlayer> getRoster(Long id) throws IOException {
         Objects.requireNonNull(id, "ID must not be null");
         Map<String, Object> vars = getVariablesMap();
         vars.put("id", id);
@@ -99,11 +110,14 @@ public class UgcService implements InitializingBean {
             throw new CustomParameterizedException("UGC API returned status " + responseEntity.getStatusCode());
         }
         JsonUgcResponse response = objectMapper.readValue(responseEntity.getBody(), JsonUgcResponse.class);
-        return objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcTeam.RosteredPlayer>>() {
+        List<UgcTeam.RosteredPlayer> result = objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcTeam.RosteredPlayer>>() {
         });
+        log.debug("Roster for team {} retrieved: {}", id, inflect(result.size(), "member"));
+        return result;
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("results")
     public UgcResults getResults(Long season, Long week) throws IOException {
         Objects.requireNonNull(season, "Season must not be null");
         Objects.requireNonNull(week, "Week must not be null");
@@ -122,10 +136,12 @@ public class UgcService implements InitializingBean {
         results.setWeek(week);
         results.setMatches(objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcResults.Match>>() {
         }));
+        log.debug("Results of HL s{}w{} retrieved: {}", season, week, inflect(results.getMatches().size(), "game"));
         return results;
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("legacyPlayer")
     public UgcLegacyPlayer getLegacyPlayer(Long id) throws IOException {
         Objects.requireNonNull(id, "ID must not be null");
         Map<String, Object> vars = getVariablesMap();
@@ -144,6 +160,7 @@ public class UgcService implements InitializingBean {
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("player")
     public UgcPlayer getPlayer(Long id) throws IOException {
         Objects.requireNonNull(id, "ID must not be null");
         Map<String, Object> vars = getVariablesMap();
@@ -157,6 +174,7 @@ public class UgcService implements InitializingBean {
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("banList")
     public List<UgcBan> getBanList() throws IOException {
         Map<String, Object> vars = getVariablesMap();
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(endpoints.get("banList"), String.class, vars);
@@ -170,6 +188,7 @@ public class UgcService implements InitializingBean {
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("transactions")
     public List<UgcTransaction> getTransactions(String ladder, Long days) throws IOException {
         Objects.requireNonNull(ladder, "Ladder must not be null");
         Objects.requireNonNull(days, "Days span must not be null");
