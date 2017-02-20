@@ -9,11 +9,13 @@ import sx.blah.discord.api.events.Event;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.service.util.Result;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -418,6 +420,47 @@ public class DiscordUtil {
         return null;
     }
 
+    public static EmbedBuilder authoredEmbed(IMessage message) {
+        return new EmbedBuilder()
+            .setLenient(true)
+            .withFooterIcon(message.getAuthor().getAvatarURL())
+            .withFooterText("Requested by " + withDiscriminator(message.getAuthor()));
+    }
+
+    public static EmbedBuilder lenientEmbed() {
+        return new EmbedBuilder()
+            .setLenient(true);
+    }
+
+    public static EmbedBuilder authoredSuccessEmbed(IMessage message) {
+        return authoredEmbed(message)
+            .withColor(new Color(0x00aa00));
+    }
+
+    public static EmbedBuilder authoredInfoEmbed(IMessage message) {
+        return authoredEmbed(message)
+            .withColor(new Color(0x0000aa));
+    }
+
+    public static EmbedBuilder authoredWarningEmbed(IMessage message) {
+        return authoredEmbed(message)
+            .withColor(new Color(0xaaaa00));
+    }
+
+    public static EmbedBuilder authoredErrorEmbed(IMessage message) {
+        return authoredEmbed(message)
+            .withColor(new Color(0xaa0000));
+    }
+
+    public static EmbedBuilder warningEmbed() {
+        return lenientEmbed()
+            .withColor(new Color(0xaaaa00));
+    }
+
+    public static EmbedBuilder errorEmbed() {
+        return lenientEmbed()
+            .withColor(new Color(0xaa0000));
+    }
 
     private DiscordUtil() {
     }

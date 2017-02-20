@@ -32,6 +32,7 @@ public final class Constants {
     public static final String INSTANCE_KEY = RandomStringUtils.randomAlphanumeric(7);
 
     public static final String UGC_DATE_FORMAT = "MMMM, dd yyyy HH:mm:ss";
+    public static final String UGC_NEW_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Settings
     public static final String ANY = "*";
