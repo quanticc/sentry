@@ -33,7 +33,10 @@ public class ChannelPurgeEvent extends SentryEvent {
 
     @Override
     public String asContent(Map<String, Object> dataMap) {
-        return "Deleted " + inflect(purged.size(), "message") + "\n" + messageSummary(purged, 50);
+        if (purged.isEmpty()) {
+            return null;
+        }
+        return "**Deleted " + inflect(purged.size(), "message") + " from** " + getSource().mention() + "\n" + messageSummary(purged, 50);
     }
 
     @Override
