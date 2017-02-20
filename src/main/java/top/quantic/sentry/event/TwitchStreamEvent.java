@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static top.quantic.sentry.service.util.DateUtil.formatRelative;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
 public class TwitchStreamEvent extends SentryEvent {
@@ -127,9 +128,13 @@ public class TwitchStreamEvent extends SentryEvent {
             .withImage(stream.getPreview().get("medium"))
             .withFooterIcon("https://www.twitch.tv/favicon.ico")
             .withFooterText("twitch.tv")
-            .appendField("Playing", stream.getGame(), true)
-            .appendField("Viewers", stream.getViewers() + "", true)
-            .appendField("League", league, true)
+            .appendField("Playing", stream.getGame(), true);
+        if (stream.getViewers() < 10) {
+            builder.appendField("Viewers", stream.getViewers() + "", true);
+        } else {
+            builder.appendField("Started", formatRelative(stream.getCreatedAt()), true);
+        }
+        builder.appendField("League", league, true)
             .appendField("Division", division, true);
         if (resolvedFields != null) {
             resolvedFields.forEach((title, content) -> {
