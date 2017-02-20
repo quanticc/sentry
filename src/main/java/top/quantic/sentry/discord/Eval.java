@@ -45,7 +45,7 @@ public class Eval implements CommandSupplier {
     private Command eval() {
         return CommandBuilder.of("eval")
             .describedAs("Run a script")
-            .in("Eval")
+            .in("Administrative")
             .nonParsed()
             .secured()
             .onExecute(context -> {

@@ -30,7 +30,7 @@ public class PowerSwitch implements CommandSupplier {
     private Command logout() {
         return CommandBuilder.of("logout")
             .describedAs("Disconnect from Discord")
-            .in("Power")
+            .in("Administrative")
             .nonParsed()
             .secured()
             .onExecute(context -> {
