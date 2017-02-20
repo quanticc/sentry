@@ -80,6 +80,7 @@ public class HttpClientConfiguration implements DisposableBean {
             .setHttpCacheStorage(cacheStorage)
             .setDefaultRequestConfig(requestConfig)
             .setConnectionManager(connectionManager)
+            .setUserAgent(Constants.USER_AGENT)
             .build();
 
         return client;
