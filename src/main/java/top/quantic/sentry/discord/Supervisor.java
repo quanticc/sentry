@@ -47,7 +47,6 @@ public class Supervisor implements DiscordSubscriber {
     @EventSubscriber
     public void onDisconnect(DisconnectedEvent event) {
         log.info("[{}] Discord bot disconnected due to {}", ourBotName(event), event.getReason());
-        publisher.publishEvent(new BotDisconnectedEvent(event));
     }
 
     @EventSubscriber
