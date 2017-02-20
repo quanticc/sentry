@@ -31,6 +31,8 @@ public final class Constants {
 
     public static final String INSTANCE_KEY = RandomStringUtils.randomAlphanumeric(7);
 
+    public static final String UGC_DATE_FORMAT = "MMMM, dd yyyy HH:mm:ss";
+
     // Settings
     public static final String ANY = "*";
     public static final String KEY_PREFIX = "prefix";

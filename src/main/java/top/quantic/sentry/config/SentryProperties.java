@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @ConfigurationProperties(prefix = "sentry", ignoreUnknownFields = false)
 public class SentryProperties {
@@ -15,6 +17,7 @@ public class SentryProperties {
     private final GameAdmin gameAdmin = new GameAdmin();
     private final GameQuery gameQuery = new GameQuery();
     private final Twitch twitch = new Twitch();
+    private final Ugc ugc = new Ugc();
 
     public Discord getDiscord() {
         return discord;
@@ -38,6 +41,10 @@ public class SentryProperties {
 
     public Twitch getTwitch() {
         return twitch;
+    }
+
+    public Ugc getUgc() {
+        return ugc;
     }
 
     public static class Discord {
@@ -312,6 +319,36 @@ public class SentryProperties {
 
         public void setClientId(String clientId) {
             this.clientId = clientId;
+        }
+    }
+
+    public static class Ugc {
+        private String apiKey;
+        private Map<String, String> endpoints = new LinkedHashMap<>();
+        private Map<String, String> ladders = new LinkedHashMap<>();
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public Map<String, String> getEndpoints() {
+            return endpoints;
+        }
+
+        public void setEndpoints(Map<String, String> endpoints) {
+            this.endpoints = endpoints;
+        }
+
+        public Map<String, String> getLadders() {
+            return ladders;
+        }
+
+        public void setLadders(Map<String, String> ladders) {
+            this.ladders = ladders;
         }
     }
 

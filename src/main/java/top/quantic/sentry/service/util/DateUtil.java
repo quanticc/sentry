@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.text.ParseException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -203,6 +204,17 @@ public class DateUtil {
         PrettyTime prettyTime = new PrettyTime(Locale.ENGLISH);
         prettyTime.removeUnit(JustNow.class);
         return prettyTime.formatDuration(Date.from(then));
+    }
+
+    public static Instant parseLongDate(String text, String format) {
+        if (text != null) {
+            try {
+                LocalDateTime actual = LocalDateTime.parse(text, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
+                return actual.atZone(ZoneId.systemDefault()).toInstant();
+            } catch (DateTimeParseException ignore) {
+            }
+        }
+        return null;
     }
 
     private DateUtil() {
