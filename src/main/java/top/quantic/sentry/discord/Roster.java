@@ -32,6 +32,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 import static top.quantic.sentry.config.Constants.UGC_NEW_DATE_FORMAT;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.withRelative;
+import static top.quantic.sentry.service.util.SteamIdConverter.steamId64To3;
 
 @Component
 public class Roster implements CommandSupplier {
@@ -45,7 +46,8 @@ public class Roster implements CommandSupplier {
 
     private static final Pattern STATUS = Pattern.compile("^.+\"(.+)\"\\s+(\\[([a-zA-Z]):([0-5]):([0-9]+)(:[0-9]+)?])\\s+.*$", Pattern.MULTILINE);
     private static final Pattern LOG_LINE = Pattern.compile("^.*\"(.+)<([0-9]+)><(\\[([a-zA-Z]):([0-5]):([0-9]+)(:[0-9]+)?])>.*$", Pattern.MULTILINE);
-    private static final Pattern STANDALONE = Pattern.compile("(\\[U:([0-5]):([0-9]+)(:[0-9]+)?])", Pattern.MULTILINE);
+    private static final Pattern STEAM_3 = Pattern.compile("(\\[U:([0-5]):([0-9]+)(:[0-9]+)?])", Pattern.MULTILINE);
+    private static final Pattern STEAM_ID_64 = Pattern.compile("([0-9]{17,19})", Pattern.MULTILINE);
 
     private final UgcService ugcService;
     private final GameQueryService gameQueryService;
@@ -85,6 +87,10 @@ public class Roster implements CommandSupplier {
                                         .withTitle("Warning")
                                         .withDescription(join.getLeft().getServerName() + " joined " +
                                             join.getRight().getName() + " less than " + ELIGIBLE_HOURS + " hours ago!")
+                                        .appendField("Player", join.getLeft().getServerName() +
+                                            "\nhttp://www.ugcleague.com/players_page.cfm?player_id=" + join.getLeft().getCommunityId(), false)
+                                        .appendField("Team", join.getRight().getName() +
+                                            "\nhttp://www.ugcleague.com/team_page.cfm?clan_id=" + join.getRight().getClanId(), false)
                                         .appendField("Joined", ugcDateToInstant(join.getRight().getJoinedTeam()).toString(), false)
                                         .appendField("Eligible to play", withRelative(getEligibleToPlayDate(join.getRight())), false)
                                         .build()).get();
@@ -109,7 +115,8 @@ public class Roster implements CommandSupplier {
     private Result<Pair<String, List<Pair<RosterData, UgcPlayer.Membership>>>> doCheck(String content) {
         Matcher statusMatcher = STATUS.matcher(content);
         Matcher logMatcher = LOG_LINE.matcher(content);
-        Matcher standaloneMatcher = STANDALONE.matcher(content);
+        Matcher steam3Matcher = STEAM_3.matcher(content);
+        Matcher steamId64Matcher = STEAM_ID_64.matcher(content);
         StringBuilder builder = new StringBuilder("```asciidoc\n");
         Set<RosterData> players = new LinkedHashSet<>();
         while (statusMatcher.find()) {
@@ -140,29 +147,40 @@ public class Roster implements CommandSupplier {
                 players.add(player);
             }
         }
-        while (standaloneMatcher.find()) {
+        while (steam3Matcher.find()) {
             RosterData player = new RosterData();
-            player.setModernId(standaloneMatcher.group(1));
+            player.setModernId(steam3Matcher.group(1));
             player.setCommunityId(gameQueryService.getSteamId64(player.getModernId())
                 .exceptionally(t -> {
                     log.warn("Could not resolve {} to a steamId64", player.getModernId(), t);
                     return null;
                 }).join());
             if (player.getCommunityId() != null) {
-                SteamPlayerProfile profile = gameQueryService.getPlayerProfile(player.getCommunityId())
-                    .exceptionally(t -> {
-                        log.warn("Could not get profile for {}", player.getCommunityId(), t);
-                        return null;
-                    }).join();
-                player.setServerName(profile.getName());
+                player.setServerName(getProfileName(player.getCommunityId()));
             }
             if (!players.contains(player)) {
                 log.debug("Matched by Steam3ID: {}", player);
                 players.add(player);
             }
         }
+        while (steamId64Matcher.find()) {
+            RosterData player = new RosterData();
+            player.setCommunityId(gameQueryService.getSteamId64(steamId64Matcher.group(1))
+                .exceptionally(t -> {
+                    log.warn("Could not resolve {} to a steamId64", player.getModernId(), t);
+                    return null;
+                }).join());
+            if (player.getCommunityId() != null) {
+                player.setModernId(steamId64To3(player.getCommunityId()));
+                player.setServerName(getProfileName(player.getCommunityId()));
+            }
+            if (!players.contains(player) && player.getCommunityId() != null) {
+                log.debug("Matched by SteamId64: {}", player);
+                players.add(player);
+            }
+        }
         if (players.isEmpty()) {
-            return Result.error("No player data or Steam3IDs found");
+            return Result.error("No player data, Steam3IDs or SteamId64s found");
         }
         String filter = "";
         if (content.startsWith("HL ") || content.startsWith("hl ") || content.startsWith("9 ") || content.startsWith("9v ") || content.startsWith("9v9 ")) {
@@ -231,6 +249,15 @@ public class Roster implements CommandSupplier {
             }
         }
         return Result.ok(Pair.of(builder.append("```").append(teamSummary).toString(), recentJoins));
+    }
+
+    private String getProfileName(Long steamId64) {
+        SteamPlayerProfile profile = gameQueryService.getPlayerProfile(steamId64)
+            .exceptionally(t -> {
+                log.warn("Could not get profile for {}", steamId64, t);
+                return null;
+            }).join();
+        return profile.getName();
     }
 
     private boolean isRecentJoin(UgcPlayer.Membership team) {
