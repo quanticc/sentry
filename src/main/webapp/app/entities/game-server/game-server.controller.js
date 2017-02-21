@@ -34,18 +34,18 @@
 
         loadAll();
 
-        vm.refresher = $interval(loadAll, 60000);
         vm.nextRefresh = 60;
-        vm.clock = $interval(updateTime, 1000);
+        vm.refresher = $interval(updateTime, 1000);
 
         $scope.$on('$destroy', function() {
             $interval.cancel(vm.refresher);
-            $interval.cancel(vm.clock);
         });
 
         function updateTime() {
             if (vm.nextRefresh === 0) {
                 vm.nextRefresh = 60;
+                console.log('** Refreshing GameServer Data **');
+                loadAll();
             }
             vm.nextRefresh--;
         }
