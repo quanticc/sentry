@@ -175,13 +175,17 @@ public class Moderator implements CommandSupplier {
                             log.debug("Search interrupted after hitting date constraint");
                             break;
                         }
-                        // exclude by content (.matches)
-                        if (o.has(matchingSpec) && !msg.getContent().matches(o.valueOf(matchingSpec))) {
-                            continue;
-                        }
-                        // exclude by content (.contains)
-                        if (o.has(likeSpec) && !msg.getContent().contains(o.valueOf(likeSpec))) {
-                            continue;
+                        // only do these checks if message has text content
+                        // TODO: handle embed content
+                        if (msg.getContent() != null) {
+                            // exclude by content (.matches)
+                            if (o.has(matchingSpec) && !msg.getContent().matches(o.valueOf(matchingSpec))) {
+                                continue;
+                            }
+                            // exclude by content (.contains)
+                            if (o.has(likeSpec) && !msg.getContent().contains(o.valueOf(likeSpec))) {
+                                continue;
+                            }
                         }
                         // exclude by author
                         if (!authorsToMatch.isEmpty() && !authorsToMatch.contains(msg.getAuthor())) {
