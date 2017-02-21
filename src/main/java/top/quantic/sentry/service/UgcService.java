@@ -235,7 +235,11 @@ public class UgcService implements InitializingBean {
         if (responseEntity.getStatusCode().is4xxClientError() || responseEntity.getStatusCode().is5xxServerError()) {
             throw new CustomParameterizedException("UGC API returned status " + responseEntity.getStatusCode());
         }
-        return responseEntity.getBody();
+        UgcPlayer player = responseEntity.getBody();
+        if (player.getTeam().isEmpty()) {
+            player.setUgcPage("http://www.ugcleague.com/players_page.cfm?player_id=" + id);
+        }
+        return player;
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
