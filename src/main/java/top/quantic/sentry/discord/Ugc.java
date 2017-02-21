@@ -137,6 +137,14 @@ public class Ugc implements CommandSupplier, InitializingBean {
                     List<UgcSchedule.Match> matchList = schedule.getSchedule().stream()
                         .filter(match -> !regex || match.getDivName().matches(args[3].substring(1)))
                         .collect(Collectors.toList());
+                    if (matchList.isEmpty()) {
+                        EmbedBuilder builder = authoredErrorEmbed(message)
+                            .withTitle("Schedules for " + (args[0].contains("s") ? args[0].toLowerCase() : args[0].toUpperCase()))
+                            .withDescription("No schedules for Season **" + args[1] + "** Week **" + args[2] + "**");
+                        CompletableFuture.runAsync(() -> deleteMessage(header.get()));
+                        sendMessage(message.getChannel(), builder.build());
+                        return;
+                    }
                     EmbedBuilder builder = authoredSuccessEmbed(message)
                         .withTitle("Schedules for " + (args[0].contains("s") ? args[0].toLowerCase() : args[0].toUpperCase()))
                         .withDescription("Season **" + args[1] + "** Week **" + args[2] + "**");
