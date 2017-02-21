@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -247,6 +248,10 @@ public class DiscordUtil {
 
     private static boolean shouldSplit(StringBuilder builder, String content) {
         return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
+    }
+
+    public static CompletableFuture<RequestBuffer.RequestFuture<IMessage>> updateMessage(RequestBuffer.RequestFuture<IMessage> message, String content) {
+        return CompletableFuture.supplyAsync(() -> RequestBuffer.request(() -> (IMessage) message.get().edit(content)));
     }
 
     /**
