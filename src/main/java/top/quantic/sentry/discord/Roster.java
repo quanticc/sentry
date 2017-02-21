@@ -71,7 +71,7 @@ public class Roster implements CommandSupplier {
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 String withCommand = context.getContentAfterPrefix();
-                String content = withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : withCommand;
+                String content = withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : null;
                 if (isBlank(content)) {
                     answer(message, "Please paste output of a server `status` command");
                     return;
