@@ -12,7 +12,9 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuffer;
+import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.core.Command;
+import top.quantic.sentry.service.SettingService;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
@@ -247,8 +249,30 @@ public class DiscordUtil {
         return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
     }
 
+    /**
+     * Retrieve a trusted channel from this message, or a PM channel if it's not possible.
+     *
+     * @param settingService a SettingService instance to retrieve trusted channel configuration
+     * @param message        the message to obtain the trusted channel from
+     * @return a channel defined as 'trusted' via settings
+     */
+    public static IChannel getTrustedChannel(SettingService settingService, IMessage message) {
+        IChannel channel = message.getChannel();
+        String guildId = channel.getGuild().getID();
+        String channelId = channel.getID();
+        if (channel.isPrivate() || !settingService.findSetting(guildId, channelId, Constants.TRUSTED).isEmpty()) {
+            return message.getChannel();
+        } else {
+            return message.getAuthor().getOrCreatePMChannel();
+        }
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> trustedAnswer(SettingService service, IMessage to, String content) {
+        return answerToChannel(getTrustedChannel(service, to), content, false);
+    }
+
     public static RequestBuffer.RequestFuture<IMessage> answer(IMessage to, String content) {
-        return answer(to, content, false);
+        return answerToChannel(to.getChannel(), content, false);
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answer(IMessage to, String content, boolean tts) {
@@ -297,6 +321,10 @@ public class DiscordUtil {
                 humanize(to.getAuthor()), e);
         }
         return RequestBuffer.request(() -> null);
+    }
+
+    public static RequestBuffer.RequestFuture<IMessage> answerToChannel(IChannel channel, String content) {
+        return answerToChannel(channel, content, false);
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerToChannel(IChannel channel, String content, boolean tts) {
