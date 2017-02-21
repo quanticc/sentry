@@ -284,18 +284,21 @@ public class GameServers implements CommandSupplier {
     }
 
     private String rconExamples() {
-        return "Usage: rcon <servers> <command>\nWhere **<servers>** is a list of targeted GameServers " +
-            "(IP address, name, region), separated by commas.";
+        return "Usage: **rcon** <__servers__> <__command__>\n" +
+            "Where **servers** is a list of targeted GameServers (IP address, name, region), separated by commas.\n" +
+            "For example to get the status of all Chicago servers: `rcon chi status`\n" +
+            "To say hello to three select servers: `rcon chi2,dal7,mia2 say Hey!`\n" +
+            "To run a payload config and then change map on chi5 server: `rcon chi5 exec ugc_hl_stopwatch;changelevel pl_upward`\n";
     }
 
     private String serversExamples() {
-        return "Usage: servers [filter]\nWhere **[filter]** is an optional query to filter by IP address, name or region.";
+        return "Usage: **servers** [__filter__]\nWhere **filter** is an optional query to filter by IP address, name or region.\n";
     }
 
     private String serverExamples() {
-        return "Usage: server <action> <server> [args]\n" +
-            "Where **<action>** is one of: restart, stop, update, install-mod, status or console.\n" +
-            "And **<server>** is a list of GameServers (IP address, name or region), separated by commas.\n" +
+        return "Usage: **server** <__action__> <__server__> [__args__]\n" +
+            "Where **action** is one of: restart, stop, update, install-mod, status or console.\n" +
+            "And **server** is a list of GameServers (IP address, name or region), separated by commas.\n" +
             "Additionally, some actions like 'install-mod' take an extra argument at the end for the mods to install.\n";
     }
 }

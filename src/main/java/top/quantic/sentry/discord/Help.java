@@ -87,8 +87,8 @@ public class Help implements CommandSupplier {
                             .sorted(Comparator.naturalOrder())
                             .map(Command::getName)
                             .collect(Collectors.joining(", ")) +
-                            "\n\n• Get a more detailed view using `" + prefix + "help more`" +
-                            "\n• Get help for an specific command use `" + prefix + "help <command>`";
+                            "\n\n• Get a more detailed view using **" + prefix + "help more**" +
+                            "\n• Get help for an specific command use **" + prefix + "help** [__command__]";
                     }
                 } else {
                     List<Command> requested = commandList.stream()
@@ -164,8 +164,8 @@ public class Help implements CommandSupplier {
         if (!isBlank(command.getExamples())) {
             builder.append(command.getExamples());
         } else {
-            builder.append("No examples defined for this command, check `help ")
-                .append(command.getName()).append("`\n");
+            builder.append("No examples defined for this command, check **help ")
+                .append(command.getName()).append("**\n");
         }
         return builder.append('\n');
     }

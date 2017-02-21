@@ -66,7 +66,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
         return CommandBuilder.of("team")
             .describedAs("Get a UGC team information")
             .in("Integrations")
-            .withExamples("Usage: team <id>\n")
+            .withExamples("Usage: **team** <__id__>\n")
             .nonParsed()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
@@ -112,7 +112,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
         return CommandBuilder.of("schedules", "schedule", "sched")
             .describedAs("Get UGC schedules")
             .in("Integrations")
-            .withExamples("Usage: schedules <format> <season> <week> <division>\n" +
+            .withExamples("Usage: **schedules** <__format__> <__season__> <__week__> <__division__>\n" +
                 "- **format** must be one of: HL, 6s, 4s\n" +
                 "- **division** can be a word like 'NA' for all NA divisions\n")
             .nonParsed()

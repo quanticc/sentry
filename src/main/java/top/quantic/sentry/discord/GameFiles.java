@@ -72,7 +72,7 @@ public class GameFiles implements CommandSupplier {
             "Download only files older than the specified time").withRequiredArg().describedAs("timex");
         OptionSpec<String> sizeRangeSpec = parser.acceptsAll(asList("size", "size-range"),
             "Download only files with size in specified range").withRequiredArg().describedAs("range");
-        OptionSpec<Void> dryRunSpec = parser.acceptsAll(asList("dry", "dry-run"), "Only prints, no files downloaded");
+        OptionSpec<Void> dryRunSpec = parser.acceptsAll(asList("preview", "test"), "Only prints, no files downloaded");
         OptionSpec<String> nonOptSpec = parser.nonOptions("Expects at least 2 arguments: " +
             "(1) One of the keywords 'logs' or 'stv', (2) A list of GameServers (IP address, name or region), " +
             "separated by commas. The following argument is an optional glob pattern and is used to only include files matching it");
@@ -278,23 +278,19 @@ public class GameFiles implements CommandSupplier {
     }
 
     private String getExamples() {
-        return "Usage: get <logs/stv> <server> [file-glob] [after <timex>] [before <timex>] [size <range>] [dry-run]\n\n" +
+        return "Usage: **get** <**logs**|**stv**> <__server__> [__file-glob__] [**after** __timex__] [**before** __timex__] [**size** __range__] [**test**]\n\n" +
             "Many options come with defaults so there is no need to configure each one, for example:\n" +
             "Command ``get stv chi4`` will download all SourceTV demos since 2 days ago from chi4 server.\n" +
             "Command ``get logs chi`` will download all Log files since 2 days ago from all Chicago servers.\n\n" +
             "Further parameter information:\n" +
-            "- The first parameter determines what files are retrieved: .log files for logs and .dem files for stv\n" +
-            "- The second parameter determines the servers from where files will be retrieved. This is a list of " +
-            "GameServers (IP address, name or region), separated by commas.\n" +
-            "- The third parameter is optional, and represents a glob of files to filter by name. For example using " +
-            "'pl_upward' as parameter when using the 'stv' mode, will only download demos matching pl_upward in their names.\n" +
+            "- The first parameter determines what files are retrieved: .log files for **logs** and .dem files for **stv**\n" +
+            "- The second parameter determines the servers from where files will be retrieved. This is a list of GameServers (IP address, name or region), separated by commas.\n" +
+            "- The third parameter is optional, and represents a glob of files to filter by name. For example using 'pl_upward' as parameter when using the 'stv' mode, will only download demos matching pl_upward in their names.\n" +
             "- A series of optional arguments can be included to filter the downloaded files, for example:\n" +
-            "1. You can use 'after' or 'before' followed by an 'at' time expression. Examples of these are 'now-2days', " +
-            "'now-7days', '\"week ago\"' (within quotes if using spaces) or '2016-02-07 15:00'. " +
+            "1. You can use 'after' or 'before' followed by an 'at' time expression. Examples of these are 'now-2days', 'now-7days', '\"week ago\"' (within quotes if using spaces) or '2016-02-07 15:00'. " +
             "Guidelines for the specification are present in <http://pubs.opengroup.org/onlinepubs/9699919799/utilities/at.html>\n" +
-            "2. You can use 'size' with a range to only download the files that are within that range. For example using" +
-            " '1k-10k' will only get files within 1 KB and 10 KB. Sensible defaults are applied if this option is omitted.\n" +
-            "3. You can include the word 'dry-run' to only check which files would be downloaded.\n";
+            "2. You can use 'size' with a range to only download the files that are within that range. For example using '1k-10k' will only get files within 1 KB and 10 KB. Sensible defaults are applied if this option is omitted.\n" +
+            "3. You can include the word 'test' to only check which files would be downloaded (dry-run mode).\n";
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
