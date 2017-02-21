@@ -39,8 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static top.quantic.sentry.discord.util.DiscordUtil.answerToChannel;
-import static top.quantic.sentry.discord.util.DiscordUtil.getTrustedChannel;
+import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
 import static top.quantic.sentry.service.util.MiscUtil.*;
 
@@ -141,10 +140,8 @@ public class GameFiles implements CommandSupplier {
                 String job = RandomStringUtils.randomAlphanumeric(16);
                 long start = System.currentTimeMillis();
                 int code = 0;
-                CompletableFuture<IMessage> statusFuture = CompletableFuture.supplyAsync(
-                    () -> answerToChannel(replyChannel, "Retrieving files, please wait...").get());
-                CompletableFuture<IMessage> filesFuture = CompletableFuture.supplyAsync(
-                    () -> answerToChannel(replyChannel, "...").get());
+                RequestBuffer.RequestFuture<IMessage> header = answerToChannel(replyChannel, "Retrieving files, please wait...");
+                RequestBuffer.RequestFuture<IMessage> status = answerToChannel(replyChannel, "...");
                 Map<String, List<String>> files = new LinkedHashMap<>();
                 for (GameServer target : targets) {
                     String key = target.getShortName();
@@ -157,10 +154,7 @@ public class GameFiles implements CommandSupplier {
                     log.debug("Retrieving files from {} server using: {}", target.getShortName(), commands.stream()
                         .filter(this::containsPublicInfo)
                         .collect(Collectors.joining(" ")));
-                    statusFuture = statusFuture.thenApply(msg ->
-                        RequestBuffer.request(() -> (IMessage)
-                            msg.edit("Retrieving files from **" + target.getShortName() + "** (" +
-                                target.getAddress() + ") ...")).get());
+                    updateMessage(header, "Retrieving files from **" + target.getShortName() + "** (" + target.getAddress() + ") ...");
                     Process process = null;
                     try {
                         process = new ProcessBuilder(commands)
@@ -175,7 +169,7 @@ public class GameFiles implements CommandSupplier {
                                     if (line.startsWith("Transferring file")) {
                                         String filename = line.replaceAll("^.*`(.+)'$", "$1");
                                         files.computeIfAbsent(key, k -> new ArrayList<>()).add(filename);
-                                        filesFuture = refreshFiles(filesFuture, files);
+                                        refreshFiles(status, files);
                                     }
                                 }
                             }
@@ -203,32 +197,23 @@ public class GameFiles implements CommandSupplier {
                     answerToChannel(replyChannel, "Operation completed " + (code > 0 ? "with errors" : "successfully"));
                 }
                 long millis = System.currentTimeMillis() - start;
-                statusFuture.thenApply(msg -> RequestBuffer.request(
-                    () -> {
-                        Path dir = local.resolve(job);
-                        if (Files.exists(dir)) {
-                            String size = humanizeBytes(FileUtils.sizeOf(dir.toFile()));
-                            return msg.edit("Got " + size + " in " + humanizeShort(Duration.ofMillis(millis)));
-                        } else {
-                            return msg.edit("Completed in " + humanizeShort(Duration.ofMillis(millis)));
-                        }
-                    }
-                ));
+                Path dir = local.resolve(job);
+                if (Files.exists(dir)) {
+                    String size = humanizeBytes(FileUtils.sizeOf(dir.toFile()));
+                    updateMessage(header, "Got " + size + " in " + humanizeShort(Duration.ofMillis(millis)));
+                } else {
+                    updateMessage(header, "Completed in " + humanizeShort(Duration.ofMillis(millis)));
+                }
             })
             .onAuthorDenied(CommandBuilder.noPermission())
             .build();
 
     }
 
-    private CompletableFuture<IMessage> refreshFiles(CompletableFuture<IMessage> filesFuture, Map<String, List<String>> files) {
-        return filesFuture.thenApply(msg ->
-            RequestBuffer.request(() -> (IMessage)
-                msg.edit(
-                    files.entrySet().stream()
-                        .map(entry -> "• **" + entry.getKey() + "**: " +
-                            entry.getValue().stream().collect(Collectors.joining(", ")))
-                        .collect(Collectors.joining("\n"))))
-                .get());
+    private CompletableFuture<RequestBuffer.RequestFuture<IMessage>> refreshFiles(RequestBuffer.RequestFuture<IMessage> message, Map<String, List<String>> files) {
+        return updateMessage(message, files.entrySet().stream()
+            .map(entry -> "• **" + entry.getKey() + "**: " + entry.getValue().stream().collect(Collectors.joining(", ")))
+            .collect(Collectors.joining("\n")));
     }
 
     private void startErrorReader(Process process, GameServer target) {
