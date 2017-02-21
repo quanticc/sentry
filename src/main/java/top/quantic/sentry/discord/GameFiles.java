@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.SentryProperties;
@@ -20,6 +21,7 @@ import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.domain.GameServer;
 import top.quantic.sentry.service.GameServerService;
+import top.quantic.sentry.service.SettingService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,8 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static top.quantic.sentry.discord.util.DiscordUtil.answer;
-import static top.quantic.sentry.discord.util.DiscordUtil.answerPrivately;
+import static top.quantic.sentry.discord.util.DiscordUtil.answerToChannel;
+import static top.quantic.sentry.discord.util.DiscordUtil.getTrustedChannel;
 import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
 import static top.quantic.sentry.service.util.MiscUtil.*;
 
@@ -49,11 +51,13 @@ public class GameFiles implements CommandSupplier {
 
     private final GameServerService gameServerService;
     private final SentryProperties sentryProperties;
+    private final SettingService settingService;
 
     @Autowired
-    public GameFiles(GameServerService gameServerService, SentryProperties sentryProperties) {
+    public GameFiles(GameServerService gameServerService, SentryProperties sentryProperties, SettingService settingService) {
         this.gameServerService = gameServerService;
         this.sentryProperties = sentryProperties;
+        this.settingService = settingService;
     }
 
     @Override
@@ -81,15 +85,16 @@ public class GameFiles implements CommandSupplier {
             .secured()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
+                IChannel replyChannel = getTrustedChannel(settingService, message);
                 OptionSet o = context.getOptionSet();
                 List<String> nonOptions = o.valuesOf(nonOptSpec);
                 if (nonOptions.size() < 2) {
-                    answer(message, "Please specify at least 2 non-option arguments: logs/stv and server");
+                    answerToChannel(replyChannel, "Please specify at least 2 non-option arguments: logs/stv and server");
                     return;
                 }
                 List<GameServer> targets = gameServerService.findServersMultiple(asList(nonOptions.get(1).split(",|;")));
                 if (targets.isEmpty()) {
-                    answer(message, "Must at least match 1 GameServer. Use IP address, name or region.");
+                    answerToChannel(replyChannel, "Must at least match 1 GameServer. Use IP address, name or region.");
                     return;
                 }
                 String mode = nonOptions.get(0).toLowerCase();
@@ -106,7 +111,7 @@ public class GameFiles implements CommandSupplier {
                     glob = "*.dem";
                     range = "0-50m";
                 } else {
-                    answer(message, "Invalid operation mode - Must be one of: logs, stv");
+                    answerToChannel(replyChannel, "Invalid operation mode - Must be one of: logs, stv");
                     return;
                 }
                 if (nonOptions.size() >= 3) {
@@ -130,16 +135,16 @@ public class GameFiles implements CommandSupplier {
                     Files.createDirectories(local);
                 } catch (IOException e) {
                     log.warn("Could not create downloads directory", e);
-                    answer(message, "Could not create local directory");
+                    answerToChannel(replyChannel, "Could not create local directory");
                     return;
                 }
                 String job = RandomStringUtils.randomAlphanumeric(16);
                 long start = System.currentTimeMillis();
                 int code = 0;
                 CompletableFuture<IMessage> statusFuture = CompletableFuture.supplyAsync(
-                    () -> answerPrivately(message, "Retrieving files, please wait...").get());
+                    () -> answerToChannel(replyChannel, "Retrieving files, please wait...").get());
                 CompletableFuture<IMessage> filesFuture = CompletableFuture.supplyAsync(
-                    () -> answerPrivately(message, "...").get());
+                    () -> answerToChannel(replyChannel, "...").get());
                 Map<String, List<String>> files = new LinkedHashMap<>();
                 for (GameServer target : targets) {
                     String key = target.getShortName();
@@ -180,11 +185,11 @@ public class GameFiles implements CommandSupplier {
                         log.debug("Process completed with exit code: {}", process.exitValue());
                     } catch (IOException e) {
                         log.warn("Could not execute process", e);
-                        answerPrivately(message, "Could not execute process");
+                        answerToChannel(replyChannel, "Could not execute process");
                         return;
                     } catch (InterruptedException e) {
                         log.warn("Process was interrupted", e);
-                        answerPrivately(message, "Process was interrupted");
+                        answerToChannel(replyChannel, "Process was interrupted");
                         return;
                     } finally {
                         if (process != null && process.isAlive()) {
@@ -193,9 +198,9 @@ public class GameFiles implements CommandSupplier {
                     }
                 }
                 if (!o.has(dryRunSpec)) {
-                    answerPrivately(message, "Your requested files are available under https://quantic.top/files/" + job);
+                    answerToChannel(replyChannel, "Your requested files are available under https://quantic.top/files/" + job);
                 } else {
-                    answerPrivately(message, "Operation completed " + (code > 0 ? "with errors" : "successfully"));
+                    answerToChannel(replyChannel, "Operation completed " + (code > 0 ? "with errors" : "successfully"));
                 }
                 long millis = System.currentTimeMillis() - start;
                 statusFuture.thenApply(msg -> RequestBuffer.request(
