@@ -85,11 +85,12 @@ public class Info implements CommandSupplier {
                     .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
                     .withThumbnail(me.getAvatarURL())
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
-                    .withDescription("Hey! I'm here to help with **UGC Support** and **League operations**.\n" +
-                        "Check out the commands using `.help` or `.help full`")
+                    .withDescription("Hey! I'm here to help with **UGC Support** and **League Operations**.\n" +
+                        "Check out the commands using `.help` or `.help more`")
                     .appendField("Version", version, true)
                     .appendField("Discord4J", Discord4J.VERSION, true)
                     .appendField("Uptime", humanize(Duration.ofMillis(uptime), false, true), true)
+                    .appendField("Author", "<@134127815531560960>", true)
                     .appendField("Website", "https://sentry.quantic.top/", false)
                     .build());
             }).build();
