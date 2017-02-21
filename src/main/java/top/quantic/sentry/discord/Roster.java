@@ -102,13 +102,14 @@ public class Roster implements CommandSupplier {
                                     .build());
                             }
                         } else {
-                            log.warn("Failed with error: {}", error.toString());
+                            log.warn("Failed with error", error);
                             sendMessage(message.getChannel(), authoredErrorEmbed(message)
                                 .withTitle("Roster Check")
                                 .withDescription("Error while processing your request. Report this!")
                                 .build());
                         }
-                    }).thenRun(() -> deleteMessage(header.get()));
+                        deleteMessage(header.get());
+                    });
             }).build();
     }
 
@@ -174,13 +175,13 @@ public class Roster implements CommandSupplier {
                 player.setModernId(steamId64To3(player.getCommunityId()));
                 player.setServerName(getProfileName(player.getCommunityId()));
             }
-            if (!players.contains(player) && player.getCommunityId() != null) {
+            if (!players.contains(player) && player.getModernId() != null) {
                 log.debug("Matched by SteamId64: {}", player);
                 players.add(player);
             }
         }
         if (players.isEmpty()) {
-            return Result.error("No player data, Steam3IDs or SteamId64s found");
+            return Result.error("No valid player data, Steam3IDs or SteamId64s found");
         }
         String filter = "";
         if (content.startsWith("HL ") || content.startsWith("hl ") || content.startsWith("9 ") || content.startsWith("9v ") || content.startsWith("9v9 ")) {

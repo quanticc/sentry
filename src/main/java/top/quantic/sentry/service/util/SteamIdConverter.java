@@ -37,6 +37,10 @@ public class SteamIdConverter {
     }
 
     public static String steam2To3(String steamId32) {
+        if (steamId32 == null) {
+            return null;
+        }
+
         String[] tokens = steamId32.split(":");
         if (tokens.length != 3) {
             return "";
