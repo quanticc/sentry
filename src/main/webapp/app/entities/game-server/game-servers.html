@@ -24,33 +24,33 @@
             <tbody infinite-scroll="vm.loadPage(vm.page + 1)" infinite-scroll-disabled="vm.page >= vm.links['last']">
                 <tr ng-repeat="gameServer in vm.gameServers track by gameServer.id">
                     <td>
-                        <a ng-attr-title="Last checked {{gameServer.statusCheckDate | amTimeAgo}}" ng-attr-href="steam://connect/{{gameServer.address}}/{{gameServer.svPassword}}">
+                        <a ui-sref="game-server-detail({id:gameServer.id})" ng-attr-title="Last checked {{gameServer.statusCheckDate | amCalendar:referenceTime:formats}} ({{gameServer.statusCheckDate | amTimeAgo}})">
                             <span class="label" ng-class="vm.pingToClass(gameServer.ping)">
                                 {{vm.shortName(gameServer.name)}}
                             </span>
                         </a>
                     </td>
-                    <td><a ui-sref="game-server-detail({id:gameServer.id})">{{gameServer.address}}</a></td>
+                    <td><a title="Click to connect" ng-attr-href="steam://connect/{{gameServer.address}}/{{gameServer.svPassword}}">{{gameServer.address}}</a></td>
                     <td ng-class="vm.grayIfZero(gameServer.players)">
                         {{gameServer.players}}/{{gameServer.maxPlayers}}{{vm.formatMap(gameServer.map)}}
                     </td>
                     <td>{{gameServer.svPassword}}</td>
-                    <td ng-class="vm.expireWarning(gameServer.expirationDate)" ng-attr-title="Last checked {{gameServer.expirationCheckDate | amTimeAgo}}">{{gameServer.expirationDate | amTimeAgo}}</td>
-                    <td ng-class="vm.pingWarning(gameServer.lastValidPing)">{{gameServer.lastValidPing | amTimeAgo}}</td>
+                    <td ng-class="vm.expireWarning(gameServer.expirationDate)" ng-attr-title="{{gameServer.expirationDate | amCalendar:referenceTime:formats}} - Last checked {{gameServer.expirationCheckDate | amTimeAgo}}">{{gameServer.expirationDate | amTimeAgo}}</td>
+                    <td ng-class="vm.pingWarning(gameServer.lastValidPing)" ng-attr-title="{{gameServer.lastValidPing | amCalendar:referenceTime:formats}}">{{gameServer.lastValidPing | amTimeAgo}}</td>
                     <td>
-                        <span ng-class="vm.rconWarning(gameServer.rconPassword)" ng-attr-title="Last updated {{gameServer.lastRconDate | amTimeAgo}}">
+                        <span ng-class="vm.rconWarning(gameServer.rconPassword)" ng-attr-title="Last updated {{gameServer.lastRconDate | amCalendar:referenceTime:formats}} ({{gameServer.lastRconDate | amTimeAgo}})">
                             {{vm.rconWarningText(gameServer.rconPassword)}}
                         </span>
                     </td>
-                    <td ng-attr-title="Last updated {{gameServer.lastGameUpdate | amTimeAgo}}">v{{gameServer.version}}</td>
+                    <td ng-attr-title="Last updated {{gameServer.lastGameUpdate | amCalendar:referenceTime:formats}} ({{gameServer.lastGameUpdate | amTimeAgo}})">v{{gameServer.version}}</td>
                     <td>
                         <span class="label" ng-class="gameServer.updating | boolTo:'label-warning':'label-info'">
                             {{gameServer.updating | boolTo:'YES':'NO'}}
                         </span>
                     </td>
                     <td>{{gameServer.updateAttempts}}</td>
-                    <td>{{gameServer.lastUpdateStart | amTimeAgo}}</td>
-                    <td>{{gameServer.lastRconAnnounce | amTimeAgo}}</td>
+                    <td ng-attr-title="{{gameServer.lastUpdateStart | amCalendar:referenceTime:formats}}">{{gameServer.lastUpdateStart | amTimeAgo}}</td>
+                    <td ng-attr-title="{{gameServer.lastRconAnnounce | amCalendar:referenceTime:formats}}">{{gameServer.lastRconAnnounce | amTimeAgo}}</td>
                     <td class="text-right">
                         <div class="btn-group flex-btn-group-container">
                             <button type="submit"
