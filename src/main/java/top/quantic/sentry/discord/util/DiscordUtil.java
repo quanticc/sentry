@@ -208,10 +208,14 @@ public class DiscordUtil {
         }
     }
 
+    public static String stripMarkdown(String str) {
+        return MarkdownStripper.strip(str);
+    }
+
     public static String messageSummary(List<IMessage> messages, int maxChars) {
         return messages.stream()
             .map(message -> String.format("• [%s] %s: %s", humanizeShort(message.getChannel()), humanize(message.getAuthor()),
-                truncate(message.getContent(), maxChars) + (message.getContent().length() > maxChars ? "..." : "")))
+                truncate(stripMarkdown(message.getContent()), maxChars)))
             .collect(Collectors.joining("\n"));
     }
 

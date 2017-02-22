@@ -196,6 +196,7 @@ public class Moderator implements CommandSupplier {
                     } catch (ArrayIndexOutOfBoundsException e) {
                         // we reached the end apparently
                         log.warn("Could not retrieve messages to delete: {}", e.getMessage());
+                        i--;
                         break;
                     }
                 }
