@@ -74,11 +74,11 @@ public class Eval implements CommandSupplier {
                     }
                     String title = result.isSuccessful() ? "Response" : "Error";
                     if (response.length() > Message.MAX_MESSAGE_LENGTH) {
-                        response = "Response too long";
+                        String msg = "Response too long";
                         if (!channel.isPrivate()) {
-                            response += ", check your PMs!";
+                            msg += ", check your PMs!";
                         }
-                        sendMessage(channel, builder.appendField(title, response, false).build()).get();
+                        sendMessage(channel, builder.appendField(title, msg, false).build()).get();
                         answerPrivately(message, response).get();
                     } else {
                         sendMessage(channel, builder.appendField(title, response, false).build()).get();
