@@ -10,9 +10,8 @@
     function UserCountController($scope, $state, $interval, $timeout, $cookies, UserCount, Setting, ParseLinks, AlertService, paginationConstants, pagingParams) {
         var vm = this;
 
-        vm.refresher = $interval(loadLast, 60000);
+        vm.refresher = $interval(updateTime, 1000);
         vm.nextRefresh = 60;
-        vm.clock = $interval(updateTime, 1000);
 
         vm.bot = '...';
         vm.guild = '...';
@@ -180,13 +179,13 @@
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
-            $interval.cancel(vm.clock);
             clearTooltip();
         });
 
         function updateTime() {
             if (vm.nextRefresh === 0) {
                 vm.nextRefresh = 60;
+                loadLast();
             }
             vm.nextRefresh--;
         }

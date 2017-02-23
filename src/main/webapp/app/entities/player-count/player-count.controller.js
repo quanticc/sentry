@@ -10,9 +10,8 @@
     function PlayerCountController($scope, $state, $interval, $timeout, $cookies, PlayerCount, ParseLinks, AlertService) {
         var vm = this;
 
-        vm.refresher = $interval(loadLast, 60000);
+        vm.refresher = $interval(updateTime, 1000);
         vm.nextRefresh = 60;
-        vm.clock = $interval(updateTime, 1000);
 
         loadTimestamps();
 
@@ -177,13 +176,13 @@
 
         $scope.$on('$destroy', function () {
             $interval.cancel(vm.refresher);
-            $interval.cancel(vm.clock);
             clearTooltip();
         });
 
         function updateTime() {
             if (vm.nextRefresh === 0) {
                 vm.nextRefresh = 60;
+                loadLast();
             }
             vm.nextRefresh--;
         }
