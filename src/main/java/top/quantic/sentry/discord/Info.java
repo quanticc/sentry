@@ -83,7 +83,7 @@ public class Info implements CommandSupplier {
                 sendMessage(message.getChannel(), new EmbedBuilder()
                     .setLenient(true)
                     .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
-                    .withThumbnail(me.getAvatarURL())
+                    .withThumbnail("https://quantic.top/beepboop.png")
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
                     .withDescription("Hey! I'm here to help with **UGC Support** and **League Operations**.\n" +
                         "Check out the commands using `.help` or `.help more`")
