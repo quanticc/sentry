@@ -6,11 +6,8 @@ import org.springframework.web.client.RestTemplate;
 
 public class ApplicationTemplate extends AbstractDiscordOperations implements ApplicationOperations {
 
-    private final RestTemplate restTemplate;
-
     public ApplicationTemplate(RestTemplate restTemplate, boolean isAuthorized) {
-        super(isAuthorized);
-        this.restTemplate = restTemplate;
+        super(restTemplate, isAuthorized);
     }
 
     @Override

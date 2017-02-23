@@ -13,11 +13,8 @@ import java.util.List;
 
 public class UserTemplate extends AbstractDiscordOperations implements UserOperations {
 
-    private final RestTemplate restTemplate;
-
     public UserTemplate(RestTemplate restTemplate, boolean isAuthorizedForUser) {
-        super(isAuthorizedForUser);
-        this.restTemplate = restTemplate;
+        super(restTemplate, isAuthorizedForUser);
     }
 
     @Override
