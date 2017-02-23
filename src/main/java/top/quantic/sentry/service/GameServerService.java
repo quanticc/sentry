@@ -430,6 +430,14 @@ public class GameServerService implements InitializingBean {
         if (getStatusMonitor(server).check(delay) != Monitor.State.BAD) {
             server.setLastValidPing(ZonedDateTime.now());
         }
+        // clear cached data if last valid ping was at least 30 minutes ago
+        if (server.getLastValidPing().plusMinutes(15).isBefore(ZonedDateTime.now())) {
+            log.info("[{}] Clearing cached data from {}", server, formatRelative(server.getLastValidPing()));
+            server.setMap("");
+            server.setPlayers(0);
+            server.setMaxPlayers(0);
+            server.setTvPort(0);
+        }
         return server;
     }
 
