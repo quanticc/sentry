@@ -1,7 +1,6 @@
 package org.springframework.social.discord.api;
 
 import org.springframework.social.ApiBinding;
-import org.springframework.web.client.RestOperations;
 
 public interface Discord extends ApiBinding {
 
@@ -9,5 +8,5 @@ public interface Discord extends ApiBinding {
 
     ApplicationOperations applicationOperations();
 
-    RestOperations restOperations();
+    InviteOperations inviteOperations();
 }

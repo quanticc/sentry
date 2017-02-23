@@ -4,15 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.social.discord.api.ApplicationOperations;
 import org.springframework.social.discord.api.Discord;
+import org.springframework.social.discord.api.InviteOperations;
 import org.springframework.social.discord.api.UserOperations;
 import org.springframework.social.discord.api.impl.json.DiscordModule;
 import org.springframework.social.oauth2.AbstractOAuth2ApiBinding;
-import org.springframework.web.client.RestOperations;
 
 public class DiscordTemplate extends AbstractOAuth2ApiBinding implements Discord {
 
     private UserOperations userOperations;
     private ApplicationOperations applicationOperations;
+    private InviteOperations inviteOperations;
 
     public DiscordTemplate() {
         super();
@@ -44,12 +45,13 @@ public class DiscordTemplate extends AbstractOAuth2ApiBinding implements Discord
     }
 
     @Override
-    public RestOperations restOperations() {
-        return getRestTemplate();
+    public InviteOperations inviteOperations() {
+        return inviteOperations;
     }
 
     private void initSubApis() {
         this.userOperations = new UserTemplate(getRestTemplate(), isAuthorized());
         this.applicationOperations = new ApplicationTemplate(getRestTemplate(), isAuthorized());
+        this.inviteOperations = new InviteTemplate(getRestTemplate(), isAuthorized());
     }
 }
