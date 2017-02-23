@@ -7,11 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.obj.Channel;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MessageList;
+import sx.blah.discord.util.MessageHistory;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
@@ -37,7 +39,54 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Collections.singletonList(delete());
+        return Arrays.asList(delete(), count());
+    }
+
+    private Command count() {
+        return CommandBuilder.of("count")
+            .describedAs("Get a count of the messages retrieved")
+            .in("Moderation")
+            .nonParsed()
+            .secured()
+            .onExecute(context -> {
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+
+                String withCommand = context.getContentAfterPrefix();
+                String content = withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : null;
+                if (isBlank(content)) {
+                    answer(message, "Missing number of messages to pull");
+                    return;
+                }
+
+                String limitStr = content.trim();
+                int limit;
+
+                try {
+                    limit = Integer.parseInt(limitStr);
+                } catch (NumberFormatException e) {
+                    answer(message, "Could not format number of messages to pull: " + limitStr);
+                    return;
+                }
+
+                MessageHistory history = channel.getMessageHistory();
+                int traversed = 0;
+                int index = 0;
+                while (traversed < limit) {
+                    if (index >= history.size()) {
+                        log.debug("Pulling a chunk of {} messages", Channel.MESSAGE_CHUNK_COUNT);
+                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
+                        index = 1; // the first message was already traversed
+                        if (index >= history.size()) {
+                            break; // beginning of the channel reached
+                        }
+                    }
+                    IMessage msg = history.get(index++);
+                    traversed++;
+                    log.debug("[{}] Message from {} with ID {}", traversed, humanize(msg.getAuthor()), msg.getID());
+                }
+                answer(message, "Got " + traversed + " messages");
+            }).build();
     }
 
     private Command delete() {
@@ -95,9 +144,6 @@ public class Moderator implements CommandSupplier {
                     sendPrivately(message, embed);
                     return;
                 }
-                MessageList messages = channel.getMessages();
-                int capacity = messages.getCacheCapacity();
-                messages.setCacheCapacity(MessageList.UNLIMITED_CAPACITY);
                 ZonedDateTime before = null;
                 ZonedDateTime after = null;
                 if (o.has(beforeSpec)) {
@@ -153,52 +199,55 @@ public class Moderator implements CommandSupplier {
 
                 // collect all offending messages
                 List<IMessage> toDelete = new ArrayList<>();
-                int i = 0;
+                int traversed = 0;
+                int index = 0;
                 int depth = Math.max(1, o.valueOf(depthSpec));
                 int limit = o.has(lastSpec) ? Math.max(1, o.valueOf(lastSpec)) : 100;
                 builder.appendField("Search Depth", "Last " + inflect(depth, "message"), true);
                 builder.appendField("Match Limit", "Up to " + inflect(limit, "message"), true);
                 builder.appendField("Include Request", o.has(includeRequestSpec) ? "Yes" : "No", true);
                 log.debug("Searching for up to {} and matching at most {} from {}", inflect(depth, "message"), limit, humanize(channel));
-                while (i < depth && toDelete.size() < limit) {
-                    try {
-                        IMessage msg = messages.get(i++);
-                        // skip the first message if it wasn't included
-                        if (!o.has(includeRequestSpec) && i == 1) {
-                            continue;
+                MessageHistory history = channel.getMessageHistory();
+                while (traversed < depth && toDelete.size() < limit) {
+                    if (index >= history.size()) {
+                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
+                        index = 1; // we already went through index 0
+                        if (index >= history.size()) {
+                            break; // beginning of the channel reached
                         }
-                        // continue (skip) if we are after "--before" timex
-                        if (before != null && msg.getTimestamp().isAfter(before.toLocalDateTime())) {
-                            continue;
-                        }
-                        // break if we reach "--after" timex
-                        if (after != null && msg.getTimestamp().isBefore(after.toLocalDateTime())) {
-                            log.debug("Search interrupted after hitting date constraint");
-                            break;
-                        }
-                        // only do these checks if message has text content
-                        // TODO: handle embed content
-                        if (msg.getContent() != null) {
-                            // exclude by content (.matches)
-                            if (o.has(matchingSpec) && !msg.getContent().matches(o.valueOf(matchingSpec))) {
-                                continue;
-                            }
-                            // exclude by content (.contains)
-                            if (o.has(likeSpec) && !msg.getContent().contains(o.valueOf(likeSpec))) {
-                                continue;
-                            }
-                        }
-                        // exclude by author
-                        if (!authorsToMatch.isEmpty() && !authorsToMatch.contains(msg.getAuthor())) {
-                            continue;
-                        }
-                        toDelete.add(msg);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        // we reached the end apparently
-                        log.warn("Could not retrieve messages to delete: {}", e.getMessage());
-                        i--;
+                    }
+                    IMessage msg = history.get(index++);
+                    traversed++;
+                    // skip the first message if it wasn't included
+                    if (!o.has(includeRequestSpec) && traversed == 1) {
+                        continue;
+                    }
+                    // continue (skip) if we are after "--before" timex
+                    if (before != null && msg.getTimestamp().isAfter(before.toLocalDateTime())) {
+                        continue;
+                    }
+                    // break if we reach "--after" timex
+                    if (after != null && msg.getTimestamp().isBefore(after.toLocalDateTime())) {
+                        log.debug("Search interrupted after hitting date constraint");
                         break;
                     }
+                    // only do these checks if message has text content
+                    // TODO: handle embed content
+                    if (msg.getContent() != null) {
+                        // exclude by content (.matches)
+                        if (o.has(matchingSpec) && !msg.getContent().matches(o.valueOf(matchingSpec))) {
+                            continue;
+                        }
+                        // exclude by content (.contains)
+                        if (o.has(likeSpec) && !msg.getContent().contains(o.valueOf(likeSpec))) {
+                            continue;
+                        }
+                    }
+                    // exclude by author
+                    if (!authorsToMatch.isEmpty() && !authorsToMatch.contains(msg.getAuthor())) {
+                        continue;
+                    }
+                    toDelete.add(msg);
                 }
 
                 if (toDelete.size() > 1) {
@@ -223,7 +272,7 @@ public class Moderator implements CommandSupplier {
                 }
 
                 builder.appendField("Deleting", inflect(toDelete.size(), "message"), true);
-                builder.appendField("Searched", inflect(i, "message"), true);
+                builder.appendField("Searched", inflect(traversed, "message"), true);
 
                 sendPrivately(message, builder
                     .withColor(new Color(0x00aa00))
@@ -232,7 +281,6 @@ public class Moderator implements CommandSupplier {
                 if (o.has(testSpec)) {
                     answerPrivately(message, (toDelete.size() == 0 ? "Dry run: No messages would be deleted" :
                         "Dry run: Would be deleting " + inflect(toDelete.size(), "message") + "\n" + messageSummary(toDelete, 50)));
-                    messages.setCacheCapacity(capacity);
                 } else {
                     // bulk delete requires at least 2 messages
                     CompletableFuture<Result<Integer>> future;
@@ -253,7 +301,7 @@ public class Moderator implements CommandSupplier {
                         if (error != null) {
                             answerPrivately(message, "Error while deleting messages");
                         }
-                    }).thenRun(() -> messages.setCacheCapacity(capacity));
+                    });
                 }
             }).build();
     }
