@@ -20,6 +20,8 @@ import top.quantic.sentry.event.ReconnectEvent;
 import top.quantic.sentry.event.ReconnectFailedEvent;
 import top.quantic.sentry.event.UserBannedEvent;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import static top.quantic.sentry.discord.util.DiscordUtil.ourBotName;
 
 @Component
@@ -30,21 +32,21 @@ public class Supervisor implements DiscordSubscriber {
 
     private final ApplicationEventPublisher publisher;
 
-    private Level jettyLevel = null;
-    private Level d4jLevel = null;
+    private final AtomicReference<Level> jettyLevel = new AtomicReference<>(Level.WARN);
+    private final AtomicReference<Level> d4jLevel = new AtomicReference<>(Level.DEBUG);
 
     @Autowired
     public Supervisor(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        this.jettyLevel.set(context.getLogger(WEBSOCKET_LOGGER_NAME).getLevel());
+        this.d4jLevel.set(context.getLogger(Discord4J.class).getLevel());
     }
 
     @EventSubscriber
     public void onReady(ReadyEvent event) {
         log.info("[{}] Discord bot is ready", ourBotName(event));
         publisher.publishEvent(new LogoutRequestEvent(event.getClient()));
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        jettyLevel = context.getLogger(WEBSOCKET_LOGGER_NAME).getLevel();
-        d4jLevel = context.getLogger(Discord4J.class).getLevel();
     }
 
     @EventSubscriber
@@ -77,11 +79,7 @@ public class Supervisor implements DiscordSubscriber {
 
     private void restoreLevel() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        if (jettyLevel != null) {
-            context.getLogger(WEBSOCKET_LOGGER_NAME).setLevel(jettyLevel);
-        }
-        if (d4jLevel != null) {
-            context.getLogger(Discord4J.class).setLevel(d4jLevel);
-        }
+        context.getLogger(WEBSOCKET_LOGGER_NAME).setLevel(jettyLevel.get());
+        context.getLogger(Discord4J.class).setLevel(d4jLevel.get());
     }
 }
