@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
@@ -39,54 +38,7 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return Arrays.asList(delete(), count());
-    }
-
-    private Command count() {
-        return CommandBuilder.of("count")
-            .describedAs("Get a count of the messages retrieved")
-            .in("Moderation")
-            .nonParsed()
-            .secured()
-            .onExecute(context -> {
-                IMessage message = context.getMessage();
-                IChannel channel = message.getChannel();
-
-                String withCommand = context.getContentAfterPrefix();
-                String content = withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : null;
-                if (isBlank(content)) {
-                    answer(message, "Missing number of messages to pull");
-                    return;
-                }
-
-                String limitStr = content.trim();
-                int limit;
-
-                try {
-                    limit = Integer.parseInt(limitStr);
-                } catch (NumberFormatException e) {
-                    answer(message, "Could not format number of messages to pull: " + limitStr);
-                    return;
-                }
-
-                MessageHistory history = channel.getMessageHistory();
-                int traversed = 0;
-                int index = 0;
-                while (traversed < limit) {
-                    if (index >= history.size()) {
-                        log.debug("Pulling a chunk of {} messages", Channel.MESSAGE_CHUNK_COUNT);
-                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
-                        index = 1; // the first message was already traversed
-                        if (index >= history.size()) {
-                            break; // beginning of the channel reached
-                        }
-                    }
-                    IMessage msg = history.get(index++);
-                    traversed++;
-                    log.debug("[{}] Message from {} with ID {}", traversed, humanize(msg.getAuthor()), msg.getID());
-                }
-                answer(message, "Got " + traversed + " messages");
-            }).build();
+        return Collections.singletonList(delete());
     }
 
     private Command delete() {
