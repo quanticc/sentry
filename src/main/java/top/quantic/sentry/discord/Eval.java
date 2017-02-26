@@ -14,6 +14,7 @@ import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordUtil;
 import top.quantic.sentry.service.ScriptService;
+import top.quantic.sentry.service.SettingService;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
@@ -31,10 +32,12 @@ public class Eval implements CommandSupplier {
     private static final Logger log = LoggerFactory.getLogger(Eval.class);
 
     private final ScriptService scriptService;
+    private final SettingService settingService;
 
     @Autowired
-    public Eval(ScriptService scriptService) {
+    public Eval(ScriptService scriptService, SettingService settingService) {
         this.scriptService = scriptService;
+        this.settingService = settingService;
     }
 
     @Override
@@ -50,9 +53,8 @@ public class Eval implements CommandSupplier {
             .secured()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
-                IChannel channel = message.getChannel();
-                String withCommand = context.getContentAfterPrefix();
-                String content = withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : withCommand;
+                IChannel channel = getTrustedChannel(settingService, message);
+                String content = context.getContentAfterCommand();
                 if (isBlank(content)) {
                     answer(message, "Please input a script, code blocks optional");
                     return;
@@ -74,12 +76,8 @@ public class Eval implements CommandSupplier {
                     }
                     String title = result.isSuccessful() ? "Response" : "Error";
                     if (response.length() > Message.MAX_MESSAGE_LENGTH) {
-                        String msg = "Response too long";
-                        if (!channel.isPrivate()) {
-                            msg += ", check your PMs!";
-                        }
-                        sendMessage(channel, builder.appendField(title, msg, false).build()).get();
-                        answerPrivately(message, response).get();
+                        sendMessage(channel, builder.appendField(title, "Response too long", false).build()).get();
+                        sendMessage(channel, response).get();
                     } else {
                         sendMessage(channel, builder.appendField(title, response, false).build()).get();
                     }
