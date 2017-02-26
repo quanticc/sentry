@@ -61,4 +61,9 @@ public class CommandContext {
         }
         return content.substring(prefix.length());
     }
+
+    public String getContentAfterCommand() {
+        String withCommand = getContentAfterPrefix();
+        return withCommand.contains(" ") ? withCommand.split(" ", 2)[1] : "";
+    }
 }
