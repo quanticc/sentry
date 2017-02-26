@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
 import top.quantic.sentry.SentryApp;
 
 import javax.inject.Inject;
@@ -23,11 +24,14 @@ public class GameQueryIntTest {
     @Inject
     private SettingService settingService;
 
+    @Inject
+    private RestTemplate restTemplate;
+
     private GameQueryService gameQueryService;
 
     @Before
     public void setup() {
-        gameQueryService = new GameQueryService(steamWebApiClient, settingService);
+        gameQueryService = new GameQueryService(steamWebApiClient, settingService, restTemplate);
     }
 
     @Test

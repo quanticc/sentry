@@ -40,6 +40,7 @@ public class CacheConfiguration {
         builderMap.put("player", threeHoursBuilder);
         builderMap.put("banList", threeHoursBuilder);
         builderMap.put("transactions", thirtyMinuteBuilder);
+        builderMap.put("overwatch", threeHoursBuilder);
 
         GuavaCacheManager guavaCacheManager = new GuavaCacheManager() {
             @Override

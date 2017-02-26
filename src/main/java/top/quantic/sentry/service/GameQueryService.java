@@ -17,11 +17,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import top.quantic.sentry.service.util.Key;
+import top.quantic.sentry.web.rest.vm.OverwatchStats;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -33,11 +41,13 @@ public class GameQueryService implements DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(GameQueryService.class);
     private static final Pattern COMMUNITY_URL = Pattern.compile("(https?://steamcommunity\\.com/)(id|profiles)/([\\w-]+)/?");
+    private static final String OW_API_URL = "https://owapi.net/api/v3/u/{tag}/stats";
     private static final int APP_ID = 440;
     private static final int DEFAULT_VERSION = 1;
 
     private final SteamWebApiClient steamWebApiClient;
     private final SettingService settingService;
+    private final RestTemplate restTemplate;
 
     private final SteamApps steamApps;
     private final SteamUser steamUser;
@@ -52,9 +62,10 @@ public class GameQueryService implements DisposableBean {
     private int versionCacheExpirationMinutes = Key.VERSION_CACHE_EXPIRATION_MINUTES.getDefaultValue();
 
     @Autowired
-    public GameQueryService(SteamWebApiClient steamWebApiClient, SettingService settingService) {
+    public GameQueryService(SteamWebApiClient steamWebApiClient, SettingService settingService, RestTemplate restTemplate) {
         this.steamWebApiClient = steamWebApiClient;
         this.settingService = settingService;
+        this.restTemplate = restTemplate;
         this.steamApps = new SteamApps(steamWebApiClient);
         this.steamUser = new SteamUser(steamWebApiClient);
         this.sourceQueryClient = new SourceQueryClient();
@@ -190,19 +201,27 @@ public class GameQueryService implements DisposableBean {
         }
     }
 
+    // Overwatch API
+
+    @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
+    @Cacheable("overwatch")
+    public OverwatchStats getOverwatchStats(String tag) throws RestClientException {
+        Map<String, Object> vars = new LinkedHashMap<>();
+        vars.put("tag", tag.replace("#", "-"));
+        ResponseEntity<OverwatchStats> responseEntity = restTemplate.getForEntity(OW_API_URL, OverwatchStats.class, vars);
+        log.trace("[Overwatch] {}", responseEntity);
+        if (responseEntity.getStatusCode().is4xxClientError() || responseEntity.getStatusCode().is5xxServerError()) {
+            log.warn("Could not retrieve Overwatch data: {}", responseEntity.toString());
+        }
+        return responseEntity.getBody();
+    }
+
+    // Lifecycle management
+
     @Override
     public void destroy() throws Exception {
         steamWebApiClient.close();
         sourceQueryClient.close();
         sourceRconClient.close();
-    }
-
-    private Long checkedParseLong(Object value) {
-        try {
-            return Long.parseLong(value.toString());
-        } catch (NumberFormatException e) {
-            log.debug("Invalid format of value: {}", value);
-            return null;
-        }
     }
 }
