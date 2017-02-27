@@ -267,9 +267,8 @@ public class DiscordUtil {
      */
     public static IChannel getTrustedChannel(SettingService settingService, IMessage message) {
         IChannel channel = message.getChannel();
-        String guildId = channel.getGuild().getID();
         String channelId = channel.getID();
-        if (channel.isPrivate() || !settingService.findSetting(guildId, channelId, Constants.TRUSTED).isEmpty()) {
+        if (channel.isPrivate() || !settingService.findSetting(channel.getGuild().getID(), channelId, Constants.TRUSTED).isEmpty()) {
             return message.getChannel();
         } else {
             return message.getAuthor().getOrCreatePMChannel();
