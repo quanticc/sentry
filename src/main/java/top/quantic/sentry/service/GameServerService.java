@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.truncate;
 import static top.quantic.sentry.service.util.DateUtil.formatRelative;
 import static top.quantic.sentry.service.util.DateUtil.humanizeShort;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
@@ -294,7 +295,10 @@ public class GameServerService implements InitializingBean {
             }
         }
 
-        return gameQueryService.execute(address, command).join();
+        log.debug("[{}] rcon {}", server.getShortNameAndAddress(), command);
+        String response = gameQueryService.execute(address, command).join();
+        log.debug("[{}] {}", server.getShortNameAndAddress(), truncate(response, 100));
+        return response;
     }
 
     public Result<String> tryRcon(GameServer server, String command) {
