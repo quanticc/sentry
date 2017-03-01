@@ -159,7 +159,7 @@ public class ScriptService {
         scope.put("author", message.getAuthor());
         FutureTask<String> evalTask = new FutureTask<>(() -> evalWithScope(script, scope));
         try {
-            evalTask.run();
+            CompletableFuture.runAsync(evalTask);
             resultMap.put("result", evalTask.get(1, TimeUnit.MINUTES));
         } catch (Throwable t) {
             log.error("Could not bind result", t);
