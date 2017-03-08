@@ -152,7 +152,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.github.austinv11:Discord4j:63330cb"
+    compile "com.github.austinv11:Discord4j:326fa03"
     compile "net.sf.jopt-simple:jopt-simple:6.0-alpha-1"
     compile "org.ocpsoft.prettytime:prettytime:4.0.1.Final"
     compile "org.ocpsoft.prettytime:prettytime-nlp:4.0.0.Final"
