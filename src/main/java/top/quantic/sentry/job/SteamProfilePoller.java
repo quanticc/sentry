@@ -45,7 +45,7 @@ public class SteamProfilePoller implements Job {
                 return null;
             }).join();
             if (id != null) {
-                profileMap.remove(id);
+                profileMap.put(id, getPlayerProfile(id));
                 registerGauges(id);
                 checked.add(id);
             }
@@ -61,8 +61,8 @@ public class SteamProfilePoller implements Job {
 
     private void registerGauges(Long id) {
         if (metricRegistry.getGauges((name, metric) -> name.contains("steamId:" + id)).isEmpty()) {
-            metricRegistry.register("steam.profile.status[steamId:" + id + "]", (Gauge<Integer>) () -> profileMap.computeIfAbsent(id, this::getPlayerProfile).getPersonaState());
-            metricRegistry.register("steam.profile.lastLogOff[steamId:" + id + "]", (Gauge<Long>) () -> profileMap.computeIfAbsent(id, this::getPlayerProfile).getLastLogOff());
+            metricRegistry.register("steam.profile.status[steamId:" + id + "]", (Gauge<Integer>) () -> profileMap.get(id).getPersonaState());
+            metricRegistry.register("steam.profile.lastLogOff[steamId:" + id + "]", (Gauge<Long>) () -> profileMap.get(id).getLastLogOff());
         }
     }
 
