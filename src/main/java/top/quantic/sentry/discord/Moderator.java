@@ -7,11 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.obj.Channel;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MessageHistory;
 import sx.blah.discord.util.RequestBuffer;
@@ -61,6 +60,7 @@ public class Moderator implements CommandSupplier {
             .withExamples("Usage: **softban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
             .nonParsed()
             .secured()
+            .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
@@ -74,23 +74,27 @@ public class Moderator implements CommandSupplier {
                     answerToChannel(reply, "This command does not work in private messages");
                     return;
                 }
+                IGuild guild = channel.getGuild();
                 Set<IUser> usersToSoftban = new LinkedHashSet<>();
                 for (String key : content.split(" ")) {
                     String id = key.replaceAll("<@!?([0-9]+)>", "$1");
-                    List<IUser> matching = channel.getGuild().getUsers().stream()
-                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
+                    List<IUser> matching = guild.getUsers().stream()
+                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
                         .distinct().collect(Collectors.toList());
-                    if (matching.size() == 1) {
-                        usersToSoftban.addAll(matching);
-                    } else {
-                        answerToChannel(reply, "No users matching " + key);
-                    }
 
                     if (matching.size() == 1) {
-                        usersToSoftban.add(matching.get(0));
+                        IUser user = matching.get(0);
+                        if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+                            usersToSoftban.add(user);
+                        } else {
+                            sendMessage(reply, authoredErrorEmbed(message)
+                                .withTitle("Softban")
+                                .withDescription("I cannot ban " + user.mention() + " because one of their roles is higher than mine!")
+                                .build()).get();
+                        }
                     } else if (matching.size() > 1) {
                         sendMessage(reply, authoredWarningEmbed(message)
-                            .withTitle("User Search")
+                            .withTitle("Softban")
                             .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
                             .appendField("Users", matching.stream()
                                 .map(DiscordUtil::humanizeShort)
@@ -98,7 +102,7 @@ public class Moderator implements CommandSupplier {
                             .build()).get();
                     } else {
                         sendMessage(reply, authoredErrorEmbed(message)
-                            .withTitle("User Search")
+                            .withTitle("Softban")
                             .withDescription("No users matching " + key)
                             .build()).get();
                     }
@@ -110,8 +114,7 @@ public class Moderator implements CommandSupplier {
 
                 List<IMessage> offenders = new ArrayList<>();
                 int index = 0;
-                int depth = 1000;
-                log.debug("Searching for up to {} and matching users {} from {}", inflect(depth, "message"),
+                log.debug("Searching for all messages and matching users {} from {}",
                     humanizeAll(usersToSoftban, ", "), humanize(channel));
                 MessageHistory history = channel.getMessageHistory();
                 while (true) {
@@ -135,14 +138,25 @@ public class Moderator implements CommandSupplier {
                     offenders.add(msg);
                 }
 
+                sendMessage(reply, authoredSuccessEmbed(message)
+                    .withTitle("Softban")
+                    .withDescription("Performing soft-ban on " + inflect(usersToSoftban.size(), "user"))
+                    .appendField("Users", usersToSoftban.stream()
+                        .map(IUser::mention)
+                        .collect(Collectors.joining("\n")), false)
+                    .build()).get();
+
                 for (IUser user : usersToSoftban) {
-                    answerToChannel(reply, "Performing soft-ban on " + humanize(user));
-                    RequestBuffer.request(() -> channel.getGuild().banUser(user, 1)).get();
-                    RequestBuffer.request(() -> channel.getGuild().pardonUser(user.getID())).get();
+                    log.debug("Banning {}", humanize(user));
+                    RequestBuffer.request(() -> guild.banUser(user, 1)).get();
+                    log.debug("Pardoning {}", humanize(user));
+                    RequestBuffer.request(() -> guild.pardonUser(user.getID())).get();
                 }
 
-                answerPrivately(message, (offenders.size() == 0 ? "No offending messages" :
-                    "Found " + inflect(offenders.size(), "offending message") + "\n" + messageSummary(offenders, Integer.MAX_VALUE)));
+                if (!usersToSoftban.isEmpty()) {
+                    answerPrivately(message, (offenders.size() == 0 ? "No offending messages found" :
+                        "Found " + inflect(offenders.size(), "offending message") + "\n" + messageSummary(offenders, Integer.MAX_VALUE)));
+                }
             }).build();
     }
 
