@@ -10,10 +10,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.Event;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RequestBuffer;
+import sx.blah.discord.util.*;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.service.SettingService;
@@ -25,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -458,6 +456,33 @@ public class DiscordUtil {
                 humanize(channel), e);
         }
         return null;
+    }
+
+    public static Result<Void> request(Runnable runnable) {
+        return RequestBuffer.request(() -> {
+            try {
+                runnable.run();
+                return Result.<Void>ok(null);
+            } catch (RateLimitException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Request failed due to an exception", e);
+                return Result.<Void>error(e.getMessage(), e);
+            }
+        }).get();
+    }
+
+    public static <T> Result<T> request(Callable<T> callable) {
+        return RequestBuffer.request(() -> {
+            try {
+                return Result.ok(callable.call());
+            } catch (RateLimitException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Request failed due to an exception", e);
+                return Result.<T>error(e.getMessage(), e);
+            }
+        }).get();
     }
 
     public static EmbedBuilder authoredEmbed(IMessage message) {
