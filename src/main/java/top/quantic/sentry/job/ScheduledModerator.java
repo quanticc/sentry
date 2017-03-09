@@ -93,7 +93,7 @@ public class ScheduledModerator implements Job {
                     after.toOffsetDateTime().toString(), before.toOffsetDateTime().toString());
 
                 // collect all offending messages
-                MessageHistory history = target.getMessageHistory();
+                MessageHistory history = target.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
                 List<IMessage> toDelete = new ArrayList<>();
                 int traversed = 0;
                 int index = 0;

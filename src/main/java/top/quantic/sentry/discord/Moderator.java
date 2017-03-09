@@ -145,7 +145,7 @@ public class Moderator implements CommandSupplier {
             int index = 0;
             log.debug("Searching for all messages and matching users {} from {}",
                 humanizeAll(usersToBan, ", "), humanize(affectedChannel));
-            MessageHistory history = affectedChannel.getMessageHistory();
+            MessageHistory history = affectedChannel.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
             while (true) {
                 if (index >= history.size()) {
                     history = affectedChannel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
@@ -309,7 +309,7 @@ public class Moderator implements CommandSupplier {
                 builder.appendField("Match Limit", "Up to " + inflect(limit, "message"), true);
                 builder.appendField("Include Request", o.has(includeRequestSpec) ? "Yes" : "No", true);
                 log.debug("Searching for up to {} and matching at most {} from {}", inflect(depth, "message"), limit, humanize(channel));
-                MessageHistory history = channel.getMessageHistory();
+                MessageHistory history = channel.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
                 while (traversed < depth && toDelete.size() < limit) {
                     if (index >= history.size()) {
                         history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
