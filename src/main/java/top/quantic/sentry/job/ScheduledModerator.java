@@ -9,17 +9,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.handle.impl.obj.Channel;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.util.MessageHistory;
 import top.quantic.sentry.discord.core.ClientRegistry;
+import top.quantic.sentry.discord.util.HistoryQuery;
 import top.quantic.sentry.event.ChannelPurgeEvent;
 import top.quantic.sentry.service.util.Result;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -93,35 +91,16 @@ public class ScheduledModerator implements Job {
                     after.toOffsetDateTime().toString(), before.toOffsetDateTime().toString());
 
                 // collect all offending messages
-                MessageHistory history = target.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
-                List<IMessage> toDelete = new ArrayList<>();
-                int traversed = 0;
-                int index = 0;
-                while (true) {
-                    if (index >= history.size()) {
-                        history = target.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
-                        index = 1; // we already went through index 0
-                        if (index >= history.size()) {
-                            break; // beginning of the channel reached
-                        }
-                    }
-                    IMessage msg = history.get(index++);
-                    traversed++;
-                    if (msg.getTimestamp().isAfter(before.toLocalDateTime())) {
-                        continue;
-                    }
-                    if (msg.getTimestamp().isBefore(after.toLocalDateTime())) {
-                        log.debug("Search interrupted after hitting date constraint");
-                        break;
-                    }
-                    toDelete.add(msg);
-                }
+                HistoryQuery query = new HistoryQuery(target)
+                    .after(after)
+                    .before(before);
+                List<IMessage> toDelete = query.find();
 
                 if (toDelete.size() > 1 && (before.isBefore(thisMinute.minusWeeks(2)) || after.isBefore(thisMinute.minusWeeks(2)))) {
                     throw new JobExecutionException("Cannot bulk delete messages before 2 weeks ago");
                 }
 
-                log.info("Deleting {} after searching through {}", inflect(toDelete.size(), "message"), inflect(traversed, "message"));
+                log.info("Deleting {} after searching through {}", inflect(toDelete.size(), "message"), inflect(query.getTraversed(), "message"));
 
                 // bulk delete requires at least 2 messages
                 CompletableFuture<Result<Integer>> future;

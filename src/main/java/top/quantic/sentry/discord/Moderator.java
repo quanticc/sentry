@@ -9,21 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.obj.Channel;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MessageHistory;
-import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordUtil;
+import top.quantic.sentry.discord.util.HistoryQuery;
 import top.quantic.sentry.service.SettingService;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -32,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
@@ -51,7 +49,182 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return asList(delete(), softban(), ban());
+        return asList(delete(), softban(), ban(), unban(), silence(), unsilence());
+    }
+
+    private Command silence() {
+        return CommandBuilder.of("silence")
+            .describedAs("Silence a user - Disable their ability to send messages")
+            .in("Moderation")
+            .withExamples("Usage: **silence** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .nonParsed()
+            .secured()
+            .onExecute(context -> doSilence(context, true))
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .build();
+    }
+
+    private Command unsilence() {
+        return CommandBuilder.of("unsilence")
+            .describedAs("Unsilence a user - Enable their ability to send messages")
+            .in("Moderation")
+            .withExamples("Usage: **unsilence** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .nonParsed()
+            .secured()
+            .onExecute(context -> doSilence(context, false))
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .build();
+    }
+
+    private void doSilence(CommandContext context, boolean silence) {
+        IMessage message = context.getMessage();
+        IChannel channel = message.getChannel();
+        IChannel reply = getTrustedChannel(settingService, message);
+        String content = context.getContentAfterCommand();
+        if (isBlank(content)) {
+            answerToChannel(reply, "Please include a user ID, name, nickname or mention");
+            return;
+        }
+        if (channel.isPrivate()) {
+            answerToChannel(reply, "This command does not work in private messages");
+            return;
+        }
+        String title = silence ? "Silence" : "Unsilence";
+        IGuild guild = channel.getGuild();
+        Set<IUser> usersToSilence = new LinkedHashSet<>();
+        for (String key : content.split(" ")) {
+            String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+            List<IUser> matching = guild.getUsers().stream()
+                .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+                .distinct().collect(Collectors.toList());
+            handleUserMatches(message, reply, key, matching, usersToSilence, title);
+        }
+
+        if (usersToSilence.isEmpty()) {
+            return;
+        }
+
+        sendMessage(reply, authoredInfoEmbed(message)
+            .withTitle(title)
+            .withDescription((silence ? "Silencing " : "Unsilencing ") + inflect(usersToSilence.size(), "user"))
+            .appendField("Users", usersToSilence.stream()
+                .map(IUser::mention)
+                .collect(Collectors.joining("\n")), false)
+            .build());
+
+        EnumSet<Permissions> sendMessages = EnumSet.of(Permissions.SEND_MESSAGES);
+        for (IUser user : usersToSilence) {
+            log.debug("{} {}", (silence ? "Silencing" : "Unsilencing"), humanize(user));
+            Result<Void> overrideResult = request(() -> channel.overrideUserPermissions(user,
+                silence ? null : sendMessages,
+                silence ? sendMessages : null));
+            if (!overrideResult.isSuccessful()) {
+                sendMessage(reply, authoredErrorEmbed(message)
+                    .withTitle(title)
+                    .withDescription("Could not perform operation on " + user.mention())
+                    .appendField("Cause", overrideResult.getMessage(), false)
+                    .build());
+            } else if (!silence) {
+                try {
+                    SECONDS.sleep(5);
+                } catch (InterruptedException ignore) {
+                }
+                IChannel.PermissionOverride overrides = channel.getUserOverrides().get(user.getID());
+                if (overrides != null &&
+                    overrides.allow().size() == 1 && overrides.deny().isEmpty() &&
+                    overrides.allow().contains(Permissions.SEND_MESSAGES)) {
+                    log.info("Removing permissions override for user {}", humanize(user));
+                    Result<Void> resetOverridesResult = request(() -> channel.removePermissionsOverride(user));
+                    if (!resetOverridesResult.isSuccessful()) {
+                        sendMessage(reply, authoredErrorEmbed(message)
+                            .withTitle(title)
+                            .withDescription("Could not reset overrides of " + user.mention())
+                            .appendField("Cause", overrideResult.getMessage(), false)
+                            .build());
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleUserMatches(IMessage message, IChannel target, String query,
+                                   List<IUser> matching, Set<IUser> users, String title) {
+        if (matching.size() == 1) {
+            users.add(matching.get(0));
+        } else if (matching.size() > 1) {
+            sendMessage(target, authoredWarningEmbed(message)
+                .withTitle(title)
+                .withDescription("Multiple matches for " + query + "\nUse exact ID to match at most 1 user.")
+                .appendField("Users", matching.stream()
+                    .map(DiscordUtil::humanizeShort)
+                    .collect(Collectors.joining("\n")), false)
+                .build()).get();
+        } else {
+            sendMessage(target, authoredErrorEmbed(message)
+                .withTitle(title)
+                .withDescription("No users matching " + query)
+                .build()).get();
+        }
+    }
+
+    private Command unban() {
+        return CommandBuilder.of("unban")
+            .describedAs("Unban a user")
+            .in("Moderation")
+            .withExamples("Usage: **unban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names or mentions.")
+            .nonParsed()
+            .secured()
+            .requires(EnumSet.of(Permissions.BAN))
+            .onExecute(context -> {
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+                IChannel reply = getTrustedChannel(settingService, message);
+                String content = context.getContentAfterCommand();
+                if (isBlank(content)) {
+                    answerToChannel(reply, "Please include a user ID, name, nickname or mention");
+                    return;
+                }
+                if (channel.isPrivate()) {
+                    answerToChannel(reply, "This command does not work in private messages");
+                    return;
+                }
+                String title = "Unban Request";
+                IGuild guild = channel.getGuild();
+                Set<IUser> usersToPardon = new LinkedHashSet<>();
+                for (String key : content.split(" ")) {
+                    String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+                    List<IUser> matching = guild.getBannedUsers().stream()
+                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+                        .distinct().collect(Collectors.toList());
+                    handleUserMatches(message, reply, key, matching, usersToPardon, title);
+                }
+
+                if (usersToPardon.isEmpty()) {
+                    return;
+                }
+
+                sendMessage(reply, authoredInfoEmbed(message)
+                    .withTitle(title)
+                    .withDescription("Performing unban on " + inflect(usersToPardon.size(), "user"))
+                    .appendField("Users", usersToPardon.stream()
+                        .map(IUser::mention)
+                        .collect(Collectors.joining("\n")), false)
+                    .build());
+
+                for (IUser user : usersToPardon) {
+                    log.debug("Pardoning {}", humanize(user));
+                    Result<Void> result = request(() -> guild.pardonUser(user.getID()));
+                    if (!result.isSuccessful()) {
+                        sendMessage(reply, authoredErrorEmbed(message)
+                            .withTitle(title)
+                            .withDescription("Could not pardon " + user.mention())
+                            .appendField("Cause", result.getMessage(), false)
+                            .build());
+                    }
+                }
+            })
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .build();
     }
 
     private Command ban() {
@@ -64,7 +237,6 @@ public class Moderator implements CommandSupplier {
             .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> ban(context, false))
             .onAuthorDenied(CommandBuilder.noPermission())
-            .onBotDenied(CommandBuilder.noBotPermission())
             .build();
     }
 
@@ -78,7 +250,6 @@ public class Moderator implements CommandSupplier {
             .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> ban(context, true))
             .onAuthorDenied(CommandBuilder.noPermission())
-            .onBotDenied(CommandBuilder.noBotPermission())
             .build();
     }
 
@@ -134,6 +305,14 @@ public class Moderator implements CommandSupplier {
             return;
         }
 
+        sendMessage(reply, authoredInfoEmbed(message)
+            .withTitle(title)
+            .withDescription((thenPardon ? "Performing soft-ban on " : "Performing ban on ") + inflect(usersToBan.size(), "user"))
+            .appendField("Users", usersToBan.stream()
+                .map(IUser::mention)
+                .collect(Collectors.joining("\n")), false)
+            .build());
+
         List<IMessage> offenders = new ArrayList<>();
         List<IChannel> affectedChannels = guild.getChannels().stream()
             .filter(ch -> usersToBan.stream()
@@ -142,46 +321,31 @@ public class Moderator implements CommandSupplier {
                 .anyMatch(Permissions.SEND_MESSAGES::equals))
             .collect(Collectors.toList());
         for (IChannel affectedChannel : affectedChannels) {
-            int index = 0;
-            log.debug("Searching for all messages and matching users {} from {}",
-                humanizeAll(usersToBan, ", "), humanize(affectedChannel));
-            MessageHistory history = affectedChannel.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
-            while (true) {
-                if (index >= history.size()) {
-                    history = affectedChannel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
-                    index = 1; // we already went through index 0
-                    if (index >= history.size()) {
-                        break; // beginning of the channel reached
-                    }
-                }
-                IMessage msg = history.get(index++);
-                // break if we reach 1 day worth of history
-                if (msg.getTimestamp().isBefore(LocalDateTime.now().minusDays(1))) {
-                    log.debug("Search interrupted after hitting date constraint");
-                    break;
-                }
-                // skip if the author is not being banned
-                if (!usersToBan.contains(msg.getAuthor())) {
-                    continue;
-                }
-                offenders.add(msg);
-            }
+            offenders.addAll(new HistoryQuery(affectedChannel)
+                .authors(usersToBan)
+                .after(ZonedDateTime.now().minusDays(1))
+                .find());
         }
-
-        sendMessage(reply, authoredSuccessEmbed(message)
-            .withTitle(title)
-            .withDescription((thenPardon ? "Performing soft-ban on " : "Performing ban on ") + inflect(usersToBan.size(), "user"))
-            .appendField("Users", usersToBan.stream()
-                .map(IUser::mention)
-                .collect(Collectors.joining("\n")), false)
-            .build()).get();
 
         for (IUser user : usersToBan) {
             log.debug("Banning {}", humanize(user));
-            RequestBuffer.request(() -> guild.banUser(user, 1)).get();
-            if (thenPardon) {
+            Result<Void> banResult = request(() -> guild.banUser(user, 1));
+            if (!banResult.isSuccessful()) {
+                sendMessage(reply, authoredErrorEmbed(message)
+                    .withTitle(title)
+                    .withDescription("Could not ban user " + user.mention())
+                    .appendField("Cause", banResult.getMessage(), false)
+                    .build());
+            } else if (thenPardon) {
                 log.debug("Pardoning {}", humanize(user));
-                RequestBuffer.request(() -> guild.pardonUser(user.getID())).get();
+                Result<Void> result = request(() -> guild.pardonUser(user.getID()));
+                if (!result.isSuccessful()) {
+                    sendMessage(reply, authoredErrorEmbed(message)
+                        .withTitle(title)
+                        .withDescription("Could not pardon user " + user.mention())
+                        .appendField("Cause", banResult.getMessage(), false)
+                        .build());
+                }
             }
         }
 
@@ -300,57 +464,21 @@ public class Moderator implements CommandSupplier {
                 }
 
                 // collect all offending messages
-                List<IMessage> toDelete = new ArrayList<>();
-                int traversed = 0;
-                int index = 0;
                 int depth = Math.max(1, o.valueOf(depthSpec));
                 int limit = o.has(lastSpec) ? Math.max(1, o.valueOf(lastSpec)) : 100;
                 builder.appendField("Search Depth", "Last " + inflect(depth, "message"), true);
                 builder.appendField("Match Limit", "Up to " + inflect(limit, "message"), true);
                 builder.appendField("Include Request", o.has(includeRequestSpec) ? "Yes" : "No", true);
-                log.debug("Searching for up to {} and matching at most {} from {}", inflect(depth, "message"), limit, humanize(channel));
-                MessageHistory history = channel.getMessageHistory(Channel.MESSAGE_CHUNK_COUNT);
-                while (traversed < depth && toDelete.size() < limit) {
-                    if (index >= history.size()) {
-                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
-                        index = 1; // we already went through index 0
-                        if (index >= history.size()) {
-                            break; // beginning of the channel reached
-                        }
-                    }
-                    IMessage msg = history.get(index++);
-                    traversed++;
-                    // skip the first message if it wasn't included
-                    if (!o.has(includeRequestSpec) && traversed == 1) {
-                        continue;
-                    }
-                    // continue (skip) if we are after "--before" timex
-                    if (before != null && msg.getTimestamp().isAfter(before.toLocalDateTime())) {
-                        continue;
-                    }
-                    // break if we reach "--after" timex
-                    if (after != null && msg.getTimestamp().isBefore(after.toLocalDateTime())) {
-                        log.debug("Search interrupted after hitting date constraint");
-                        break;
-                    }
-                    // only do these checks if message has text content
-                    // TODO: handle embed content
-                    if (msg.getContent() != null) {
-                        // exclude by content (.matches)
-                        if (o.has(matchingSpec) && !msg.getContent().matches(o.valueOf(matchingSpec))) {
-                            continue;
-                        }
-                        // exclude by content (.contains)
-                        if (o.has(likeSpec) && !msg.getContent().contains(o.valueOf(likeSpec))) {
-                            continue;
-                        }
-                    }
-                    // exclude by author
-                    if (!authorsToMatch.isEmpty() && !authorsToMatch.contains(msg.getAuthor())) {
-                        continue;
-                    }
-                    toDelete.add(msg);
-                }
+                HistoryQuery query = new HistoryQuery(channel)
+                    .depth(depth)
+                    .limit(limit)
+                    .after(after)
+                    .before(before)
+                    .authors(authorsToMatch)
+                    .includeLatest(o.has(includeRequestSpec))
+                    .like(o.has(likeSpec) ? o.valueOf(likeSpec) : null)
+                    .matching(o.has(matchingSpec) ? o.valueOf(matchingSpec) : null);
+                List<IMessage> toDelete = query.find();
 
                 if (toDelete.size() > 1) {
                     if (before != null && before.isBefore(ZonedDateTime.now().truncatedTo(ChronoUnit.MINUTES).minusWeeks(2))) {
@@ -374,7 +502,7 @@ public class Moderator implements CommandSupplier {
                 }
 
                 builder.appendField("Deleting", inflect(toDelete.size(), "message"), true);
-                builder.appendField("Searched", inflect(traversed, "message"), true);
+                builder.appendField("Searched", inflect(query.getTraversed(), "message"), true);
 
                 sendPrivately(message, builder
                     .withColor(new Color(0x00aa00))
