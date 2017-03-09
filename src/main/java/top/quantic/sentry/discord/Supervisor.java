@@ -11,14 +11,12 @@ import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserPardonEvent;
 import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
 import sx.blah.discord.handle.impl.events.shard.ReconnectFailureEvent;
 import sx.blah.discord.handle.impl.events.shard.ReconnectSuccessEvent;
 import top.quantic.sentry.discord.module.DiscordSubscriber;
-import top.quantic.sentry.event.LogoutRequestEvent;
-import top.quantic.sentry.event.ReconnectEvent;
-import top.quantic.sentry.event.ReconnectFailedEvent;
-import top.quantic.sentry.event.UserBannedEvent;
+import top.quantic.sentry.event.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -69,6 +67,11 @@ public class Supervisor implements DiscordSubscriber {
     @EventSubscriber
     public void onUserBanned(UserBanEvent event) {
         publisher.publishEvent(new UserBannedEvent(event));
+    }
+
+    @EventSubscriber
+    public void onUserPardon(UserPardonEvent event) {
+        publisher.publishEvent(new UserPardonedEvent(event));
     }
 
     private void setTraceLevel() {

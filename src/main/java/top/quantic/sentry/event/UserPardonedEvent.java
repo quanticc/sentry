@@ -3,7 +3,7 @@ package top.quantic.sentry.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserPardonEvent;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -12,22 +12,22 @@ import java.util.Map;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.emoji;
 
-public class UserBannedEvent extends SentryEvent {
+public class UserPardonedEvent extends SentryEvent {
 
-    private static final Logger log = LoggerFactory.getLogger(UserBannedEvent.class);
+    private static final Logger log = LoggerFactory.getLogger(UserPardonedEvent.class);
 
-    public UserBannedEvent(UserBanEvent event) {
+    public UserPardonedEvent(UserPardonEvent event) {
         super(event);
     }
 
     @Override
-    public UserBanEvent getSource() {
-        return (UserBanEvent) source;
+    public UserPardonEvent getSource() {
+        return (UserPardonEvent) source;
     }
 
     @Override
     public String getContentId() {
-        return "ban:" + getSource().getClient().getOurUser().getID()
+        return "pardon:" + getSource().getClient().getOurUser().getID()
             + ":" + getSource().getGuild().getID()
             + ":" + getSource().getUser().getID()
             + "@" + getTimestamp();
@@ -45,7 +45,7 @@ public class UserBannedEvent extends SentryEvent {
             return null;
         }
         if (guilds.contains(getSource().getGuild().getID())) {
-            return getSource().getUser().getName() + " " + emoji("hammer");
+            return getSource().getUser().getName() + " " + emoji("angel");
         } else {
             return null;
         }
