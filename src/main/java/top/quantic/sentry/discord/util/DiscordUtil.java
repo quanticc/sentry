@@ -2,6 +2,8 @@ package top.quantic.sentry.discord.util;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.vdurmont.emoji.Emoji;
+import com.vdurmont.emoji.EmojiManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.IDiscordClient;
@@ -498,6 +500,15 @@ public class DiscordUtil {
     public static EmbedBuilder errorEmbed() {
         return lenientEmbed()
             .withColor(new Color(0xaa0000));
+    }
+
+    public static String emoji(String alias) {
+        return emoji(alias, "");
+    }
+
+    public static String emoji(String alias, String fallback) {
+        Emoji emoji = EmojiManager.getForAlias(alias);
+        return emoji != null ? emoji.getUnicode() : fallback;
     }
 
     private DiscordUtil() {
