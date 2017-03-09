@@ -21,10 +21,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -103,6 +101,10 @@ public class DiscordUtil {
 
     public static String humanize(IUser user) {
         return String.format("%s#%s (%s)", user.getName(), user.getDiscriminator(), user.getID());
+    }
+
+    public static String humanizeAll(Collection<IUser> users, String delimiter) {
+        return users.stream().map(DiscordUtil::humanize).collect(Collectors.joining(delimiter));
     }
 
     public static String withDiscriminator(IUser user) {

@@ -5,6 +5,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.obj.Channel;
@@ -13,12 +14,16 @@ import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MessageHistory;
+import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
+import top.quantic.sentry.discord.util.DiscordUtil;
+import top.quantic.sentry.service.SettingService;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -27,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
@@ -36,9 +42,108 @@ public class Moderator implements CommandSupplier {
 
     private static final Logger log = LoggerFactory.getLogger(Moderator.class);
 
+    private final SettingService settingService;
+
+    @Autowired
+    public Moderator(SettingService settingService) {
+        this.settingService = settingService;
+    }
+
     @Override
     public List<Command> getCommands() {
-        return Collections.singletonList(delete());
+        return asList(delete(), softban());
+    }
+
+    private Command softban() {
+        return CommandBuilder.of("softban")
+            .describedAs("Ban then pardon user")
+            .in("Moderation")
+            .withExamples("Usage: **softban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .nonParsed()
+            .secured()
+            .onExecute(context -> {
+                IMessage message = context.getMessage();
+                IChannel channel = message.getChannel();
+                IChannel reply = getTrustedChannel(settingService, message);
+                String content = context.getContentAfterCommand();
+                if (isBlank(content)) {
+                    answerToChannel(reply, "Please include a user ID, name, nickname or mention");
+                    return;
+                }
+                if (channel.isPrivate()) {
+                    answerToChannel(reply, "This command does not work in private messages");
+                    return;
+                }
+                Set<IUser> usersToSoftban = new LinkedHashSet<>();
+                for (String key : content.split(" ")) {
+                    String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+                    List<IUser> matching = channel.getGuild().getUsers().stream()
+                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
+                        .distinct().collect(Collectors.toList());
+                    if (matching.size() == 1) {
+                        usersToSoftban.addAll(matching);
+                    } else {
+                        answerToChannel(reply, "No users matching " + key);
+                    }
+
+                    if (matching.size() == 1) {
+                        usersToSoftban.add(matching.get(0));
+                    } else if (matching.size() > 1) {
+                        sendMessage(reply, authoredWarningEmbed(message)
+                            .withTitle("User Search")
+                            .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
+                            .appendField("Users", matching.stream()
+                                .map(DiscordUtil::humanizeShort)
+                                .collect(Collectors.joining("\n")), false)
+                            .build()).get();
+                    } else {
+                        sendMessage(reply, authoredErrorEmbed(message)
+                            .withTitle("User Search")
+                            .withDescription("No users matching " + key)
+                            .build()).get();
+                    }
+                }
+
+                if (usersToSoftban.isEmpty()) {
+                    return;
+                }
+
+                List<IMessage> offenders = new ArrayList<>();
+                int index = 0;
+                int depth = 1000;
+                log.debug("Searching for up to {} and matching users {} from {}", inflect(depth, "message"),
+                    humanizeAll(usersToSoftban, ", "), humanize(channel));
+                MessageHistory history = channel.getMessageHistory();
+                while (true) {
+                    if (index >= history.size()) {
+                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
+                        index = 1; // we already went through index 0
+                        if (index >= history.size()) {
+                            break; // beginning of the channel reached
+                        }
+                    }
+                    IMessage msg = history.get(index++);
+                    // break if we reach 1 day worth of history
+                    if (msg.getTimestamp().isBefore(LocalDateTime.now().minusDays(1))) {
+                        log.debug("Search interrupted after hitting date constraint");
+                        break;
+                    }
+                    // skip if the author is not being banned
+                    if (!usersToSoftban.contains(msg.getAuthor())) {
+                        continue;
+                    }
+                    offenders.add(msg);
+                }
+
+                for (IUser user : usersToSoftban) {
+                    answerToChannel(reply, "Performing soft-ban on " + humanize(user));
+                    RequestBuffer.request(() -> channel.getGuild().banUser(user, 1)).get();
+                    RequestBuffer.request(() -> channel.getGuild().pardonUser(user.getID())).get();
+                }
+
+                answerPrivately(message, (offenders.size() == 0 ? "No offending messages" :
+                    "Found " + inflect(offenders.size(), "offending message") + "\n" + messageSummary(offenders, Integer.MAX_VALUE)));
+            }).build();
     }
 
     private Command delete() {
