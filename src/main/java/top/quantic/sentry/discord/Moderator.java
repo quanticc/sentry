@@ -16,6 +16,7 @@ import sx.blah.discord.util.MessageHistory;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
+import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.DiscordUtil;
 import top.quantic.sentry.service.SettingService;
@@ -50,114 +51,144 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return asList(delete(), softban());
+        return asList(delete(), softban(), ban());
+    }
+
+    private Command ban() {
+        return CommandBuilder.of("ban")
+            .describedAs("Ban user, retrieving their messages in the past 24 hours")
+            .in("Moderation")
+            .withExamples("Usage: **ban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .nonParsed()
+            .secured()
+            .requires(EnumSet.of(Permissions.BAN))
+            .onExecute(context -> ban(context, false))
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .onBotDenied(CommandBuilder.noBotPermission())
+            .build();
     }
 
     private Command softban() {
         return CommandBuilder.of("softban")
-            .describedAs("Ban then pardon user")
+            .describedAs("Ban then pardon user, retrieving their messages in the past 24 hours")
             .in("Moderation")
             .withExamples("Usage: **softban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
             .nonParsed()
             .secured()
             .requires(EnumSet.of(Permissions.BAN))
-            .onExecute(context -> {
-                IMessage message = context.getMessage();
-                IChannel channel = message.getChannel();
-                IChannel reply = getTrustedChannel(settingService, message);
-                String content = context.getContentAfterCommand();
-                if (isBlank(content)) {
-                    answerToChannel(reply, "Please include a user ID, name, nickname or mention");
-                    return;
-                }
-                if (channel.isPrivate()) {
-                    answerToChannel(reply, "This command does not work in private messages");
-                    return;
-                }
-                IGuild guild = channel.getGuild();
-                Set<IUser> usersToSoftban = new LinkedHashSet<>();
-                for (String key : content.split(" ")) {
-                    String id = key.replaceAll("<@!?([0-9]+)>", "$1");
-                    List<IUser> matching = guild.getUsers().stream()
-                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
-                        .distinct().collect(Collectors.toList());
+            .onExecute(context -> ban(context, true))
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .onBotDenied(CommandBuilder.noBotPermission())
+            .build();
+    }
 
-                    if (matching.size() == 1) {
-                        IUser user = matching.get(0);
-                        if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
-                            usersToSoftban.add(user);
-                        } else {
-                            sendMessage(reply, authoredErrorEmbed(message)
-                                .withTitle("Softban")
-                                .withDescription("I cannot ban " + user.mention() + " because one of their roles is higher than mine!")
-                                .build()).get();
-                        }
-                    } else if (matching.size() > 1) {
-                        sendMessage(reply, authoredWarningEmbed(message)
-                            .withTitle("Softban")
-                            .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
-                            .appendField("Users", matching.stream()
-                                .map(DiscordUtil::humanizeShort)
-                                .collect(Collectors.joining("\n")), false)
-                            .build()).get();
-                    } else {
-                        sendMessage(reply, authoredErrorEmbed(message)
-                            .withTitle("Softban")
-                            .withDescription("No users matching " + key)
-                            .build()).get();
-                    }
-                }
+    private void ban(CommandContext context, boolean thenPardon) {
+        IMessage message = context.getMessage();
+        IChannel channel = message.getChannel();
+        IChannel reply = getTrustedChannel(settingService, message);
+        String content = context.getContentAfterCommand();
+        if (isBlank(content)) {
+            answerToChannel(reply, "Please include a user ID, name, nickname or mention");
+            return;
+        }
+        if (channel.isPrivate()) {
+            answerToChannel(reply, "This command does not work in private messages");
+            return;
+        }
+        String title = thenPardon ? "Softban Request" : "Ban Request";
+        IGuild guild = channel.getGuild();
+        Set<IUser> usersToBan = new LinkedHashSet<>();
+        for (String key : content.split(" ")) {
+            String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+            List<IUser> matching = guild.getUsers().stream()
+                .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+                .distinct().collect(Collectors.toList());
 
-                if (usersToSoftban.isEmpty()) {
-                    return;
+            if (matching.size() == 1) {
+                IUser user = matching.get(0);
+                if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+                    usersToBan.add(user);
+                } else {
+                    sendMessage(reply, authoredErrorEmbed(message)
+                        .withTitle(title)
+                        .withDescription("Cannot ban " + user.mention() + " because one of their roles is higher than mine!")
+                        .build()).get();
                 }
-
-                List<IMessage> offenders = new ArrayList<>();
-                int index = 0;
-                log.debug("Searching for all messages and matching users {} from {}",
-                    humanizeAll(usersToSoftban, ", "), humanize(channel));
-                MessageHistory history = channel.getMessageHistory();
-                while (true) {
-                    if (index >= history.size()) {
-                        history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
-                        index = 1; // we already went through index 0
-                        if (index >= history.size()) {
-                            break; // beginning of the channel reached
-                        }
-                    }
-                    IMessage msg = history.get(index++);
-                    // break if we reach 1 day worth of history
-                    if (msg.getTimestamp().isBefore(LocalDateTime.now().minusDays(1))) {
-                        log.debug("Search interrupted after hitting date constraint");
-                        break;
-                    }
-                    // skip if the author is not being banned
-                    if (!usersToSoftban.contains(msg.getAuthor())) {
-                        continue;
-                    }
-                    offenders.add(msg);
-                }
-
-                sendMessage(reply, authoredSuccessEmbed(message)
-                    .withTitle("Softban")
-                    .withDescription("Performing soft-ban on " + inflect(usersToSoftban.size(), "user"))
-                    .appendField("Users", usersToSoftban.stream()
-                        .map(IUser::mention)
+            } else if (matching.size() > 1) {
+                sendMessage(reply, authoredWarningEmbed(message)
+                    .withTitle(title)
+                    .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
+                    .appendField("Users", matching.stream()
+                        .map(DiscordUtil::humanizeShort)
                         .collect(Collectors.joining("\n")), false)
                     .build()).get();
+            } else {
+                sendMessage(reply, authoredErrorEmbed(message)
+                    .withTitle(title)
+                    .withDescription("No users matching " + key)
+                    .build()).get();
+            }
+        }
 
-                for (IUser user : usersToSoftban) {
-                    log.debug("Banning {}", humanize(user));
-                    RequestBuffer.request(() -> guild.banUser(user, 1)).get();
-                    log.debug("Pardoning {}", humanize(user));
-                    RequestBuffer.request(() -> guild.pardonUser(user.getID())).get();
-                }
+        if (usersToBan.isEmpty()) {
+            return;
+        }
 
-                if (!usersToSoftban.isEmpty()) {
-                    answerPrivately(message, (offenders.size() == 0 ? "No offending messages found" :
-                        "Found " + inflect(offenders.size(), "offending message") + "\n" + messageSummary(offenders, Integer.MAX_VALUE)));
+        List<IMessage> offenders = new ArrayList<>();
+        List<IChannel> affectedChannels = guild.getChannels().stream()
+            .filter(ch -> usersToBan.stream()
+                .map(ch::getModifiedPermissions)
+                .flatMap(EnumSet::stream)
+                .anyMatch(Permissions.SEND_MESSAGES::equals))
+            .collect(Collectors.toList());
+        for (IChannel affectedChannel : affectedChannels) {
+            int index = 0;
+            log.debug("Searching for all messages and matching users {} from {}",
+                humanizeAll(usersToBan, ", "), humanize(affectedChannel));
+            MessageHistory history = affectedChannel.getMessageHistory();
+            while (true) {
+                if (index >= history.size()) {
+                    history = affectedChannel.getMessageHistoryFrom(history.getEarliestMessage().getID(), Channel.MESSAGE_CHUNK_COUNT);
+                    index = 1; // we already went through index 0
+                    if (index >= history.size()) {
+                        break; // beginning of the channel reached
+                    }
                 }
-            }).build();
+                IMessage msg = history.get(index++);
+                // break if we reach 1 day worth of history
+                if (msg.getTimestamp().isBefore(LocalDateTime.now().minusDays(1))) {
+                    log.debug("Search interrupted after hitting date constraint");
+                    break;
+                }
+                // skip if the author is not being banned
+                if (!usersToBan.contains(msg.getAuthor())) {
+                    continue;
+                }
+                offenders.add(msg);
+            }
+        }
+
+        sendMessage(reply, authoredSuccessEmbed(message)
+            .withTitle(title)
+            .withDescription((thenPardon ? "Performing soft-ban on " : "Performing ban on ") + inflect(usersToBan.size(), "user"))
+            .appendField("Users", usersToBan.stream()
+                .map(IUser::mention)
+                .collect(Collectors.joining("\n")), false)
+            .build()).get();
+
+        for (IUser user : usersToBan) {
+            log.debug("Banning {}", humanize(user));
+            RequestBuffer.request(() -> guild.banUser(user, 1)).get();
+            if (thenPardon) {
+                log.debug("Pardoning {}", humanize(user));
+                RequestBuffer.request(() -> guild.pardonUser(user.getID())).get();
+            }
+        }
+
+        if (!usersToBan.isEmpty()) {
+            answerPrivately(message, (offenders.size() == 0 ? "No offending messages found" :
+                "Found " + inflect(offenders.size(), "offending message") + "\n" + messageSummary(offenders, Integer.MAX_VALUE)));
+        }
     }
 
     private Command delete() {

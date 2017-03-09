@@ -18,6 +18,8 @@ public class CommandBuilder {
 
     private static final Consumer<CommandContext> GENERIC_NO_PERMISSION =
         context -> answerPrivately(context.getMessage(), "You don't have permission to execute this command");
+    private static final Consumer<CommandContext> GENERIC_NO_BOT_PERMISSION =
+        context -> answerPrivately(context.getMessage(), "I don't have permission to execute this command");
 
     private String name;
     private Set<String> aliases = new HashSet<>();
@@ -51,6 +53,10 @@ public class CommandBuilder {
 
     public static Consumer<CommandContext> noPermission() {
         return GENERIC_NO_PERMISSION;
+    }
+
+    public static Consumer<CommandContext> noBotPermission() {
+        return GENERIC_NO_BOT_PERMISSION;
     }
 
     public CommandBuilder name(String name) {
