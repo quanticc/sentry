@@ -538,7 +538,7 @@ public class Moderator implements CommandSupplier {
 
     private String deleteExamples() {
         return "Usage: **delete** [**last** __number__] [**from** __user__] [**after** __timex__] [**before** __timex__] [**like** __content__] [**matching** __regex__] [**depth** __number__] [**include-this**] [**test**] [__user1__ [__user2__ ...]]\n\n" +
-            "This command let's you set a bunch of criteria, so let me explain this step by step:\n" +
+            "This command lets you set a bunch of criteria, so let me explain this step by step:\n" +
             "- Option **last** specifies the maximum number of messages to be deleted. For example, if you set 1 it will delete the most recent message matching your criteria. If you omit this it defaults to 100.\n" +
             "- Option **from** lets you set the user that will have their messages deleted. It can be an ID, a name, a nickname or a mention.\n" +
             "- Options **after** and **before** expect a temporal expression like \"2 hours ago\" or a date/time. Take note that Discord does not allow deleting messages older than 2 weeks in bulk and they must be deleted manually or with 'last 1' option.\n" +
