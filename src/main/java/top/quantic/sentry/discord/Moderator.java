@@ -29,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
@@ -49,122 +48,7 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return asList(delete(), softban(), ban(), unban(), silence(), unsilence());
-    }
-
-    private Command silence() {
-        return CommandBuilder.of("silence")
-            .describedAs("Silence a user - Disable their ability to send messages")
-            .in("Moderation")
-            .withExamples("Usage: **silence** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
-            .nonParsed()
-            .secured()
-            .onExecute(context -> doSilence(context, true))
-            .onAuthorDenied(CommandBuilder.noPermission())
-            .build();
-    }
-
-    private Command unsilence() {
-        return CommandBuilder.of("unsilence")
-            .describedAs("Unsilence a user - Enable their ability to send messages")
-            .in("Moderation")
-            .withExamples("Usage: **unsilence** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
-            .nonParsed()
-            .secured()
-            .onExecute(context -> doSilence(context, false))
-            .onAuthorDenied(CommandBuilder.noPermission())
-            .build();
-    }
-
-    private void doSilence(CommandContext context, boolean silence) {
-        IMessage message = context.getMessage();
-        IChannel channel = message.getChannel();
-        IChannel reply = getTrustedChannel(settingService, message);
-        String content = context.getContentAfterCommand();
-        if (isBlank(content)) {
-            answerToChannel(reply, "Please include a user ID, name, nickname or mention");
-            return;
-        }
-        if (channel.isPrivate()) {
-            answerToChannel(reply, "This command does not work in private messages");
-            return;
-        }
-        String title = silence ? "Silence" : "Unsilence";
-        IGuild guild = channel.getGuild();
-        Set<IUser> usersToSilence = new LinkedHashSet<>();
-        for (String key : content.split(" ")) {
-            String id = key.replaceAll("<@!?([0-9]+)>", "$1");
-            List<IUser> matching = guild.getUsers().stream()
-                .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
-                .distinct().collect(Collectors.toList());
-            handleUserMatches(message, reply, key, matching, usersToSilence, title);
-        }
-
-        if (usersToSilence.isEmpty()) {
-            return;
-        }
-
-        sendMessage(reply, authoredInfoEmbed(message)
-            .withTitle(title)
-            .withDescription((silence ? "Silencing " : "Unsilencing ") + inflect(usersToSilence.size(), "user"))
-            .appendField("Users", usersToSilence.stream()
-                .map(IUser::mention)
-                .collect(Collectors.joining("\n")), false)
-            .build());
-
-        EnumSet<Permissions> sendMessages = EnumSet.of(Permissions.SEND_MESSAGES);
-        for (IUser user : usersToSilence) {
-            log.debug("{} {}", (silence ? "Silencing" : "Unsilencing"), humanize(user));
-            Result<Void> overrideResult = request(() -> channel.overrideUserPermissions(user,
-                silence ? null : sendMessages,
-                silence ? sendMessages : null));
-            if (!overrideResult.isSuccessful()) {
-                sendMessage(reply, authoredErrorEmbed(message)
-                    .withTitle(title)
-                    .withDescription("Could not perform operation on " + user.mention())
-                    .appendField("Cause", overrideResult.getMessage(), false)
-                    .build());
-            } else if (!silence) {
-                try {
-                    SECONDS.sleep(5);
-                } catch (InterruptedException ignore) {
-                }
-                IChannel.PermissionOverride overrides = channel.getUserOverrides().get(user.getID());
-                if (overrides != null &&
-                    overrides.allow().size() == 1 && overrides.deny().isEmpty() &&
-                    overrides.allow().contains(Permissions.SEND_MESSAGES)) {
-                    log.info("Removing permissions override for user {}", humanize(user));
-                    Result<Void> resetOverridesResult = request(() -> channel.removePermissionsOverride(user));
-                    if (!resetOverridesResult.isSuccessful()) {
-                        sendMessage(reply, authoredErrorEmbed(message)
-                            .withTitle(title)
-                            .withDescription("Could not reset overrides of " + user.mention())
-                            .appendField("Cause", overrideResult.getMessage(), false)
-                            .build());
-                    }
-                }
-            }
-        }
-    }
-
-    private void handleUserMatches(IMessage message, IChannel target, String query,
-                                   List<IUser> matching, Set<IUser> users, String title) {
-        if (matching.size() == 1) {
-            users.add(matching.get(0));
-        } else if (matching.size() > 1) {
-            sendMessage(target, authoredWarningEmbed(message)
-                .withTitle(title)
-                .withDescription("Multiple matches for " + query + "\nUse exact ID to match at most 1 user.")
-                .appendField("Users", matching.stream()
-                    .map(DiscordUtil::humanizeShort)
-                    .collect(Collectors.joining("\n")), false)
-                .build()).get();
-        } else {
-            sendMessage(target, authoredErrorEmbed(message)
-                .withTitle(title)
-                .withDescription("No users matching " + query)
-                .build()).get();
-        }
+        return asList(delete(), softban(), ban(), unban());
     }
 
     private Command unban() {
@@ -225,6 +109,26 @@ public class Moderator implements CommandSupplier {
             })
             .onAuthorDenied(CommandBuilder.noPermission())
             .build();
+    }
+
+    private void handleUserMatches(IMessage message, IChannel target, String query,
+                                        List<IUser> matching, Set<IUser> users, String title) {
+        if (matching.size() == 1) {
+            users.add(matching.get(0));
+        } else if (matching.size() > 1) {
+            sendMessage(target, authoredWarningEmbed(message)
+                .withTitle(title)
+                .withDescription("Multiple matches for " + query + "\nUse exact ID to match at most 1 user.")
+                .appendField("Users", matching.stream()
+                    .map(DiscordUtil::humanizeShort)
+                    .collect(Collectors.joining("\n")), false)
+                .build()).get();
+        } else {
+            sendMessage(target, authoredErrorEmbed(message)
+                .withTitle(title)
+                .withDescription("No users matching " + query)
+                .build()).get();
+        }
     }
 
     private Command ban() {
