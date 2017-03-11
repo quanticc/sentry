@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.Event;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.obj.Message;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 import top.quantic.sentry.config.Constants;
@@ -253,7 +254,7 @@ public class DiscordUtil {
     }
 
     private static boolean shouldSplit(StringBuilder builder, String content) {
-        return builder.length() + content.length() > MessageSplitter.LENGTH_LIMIT;
+        return builder.length() + content.length() > Message.MAX_MESSAGE_LENGTH;
     }
 
     public static CompletableFuture<RequestBuffer.RequestFuture<IMessage>> updateMessage(RequestBuffer.RequestFuture<IMessage> message, String content) {
@@ -338,9 +339,9 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerToChannel(IChannel channel, String content, boolean tts) {
-        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
+        if (content.length() > Message.MAX_MESSAGE_LENGTH) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(Message.MAX_MESSAGE_LENGTH);
             return RequestBuffer.request(() -> {
                 IMessage last = null;
                 for (String split : splits) {
@@ -354,9 +355,9 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, File file) {
-        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
+        if (content.length() > Message.MAX_MESSAGE_LENGTH) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(Message.MAX_MESSAGE_LENGTH);
             return RequestBuffer.request(() -> {
                 for (int i = 0; i < splits.size() - 1; i++) {
                     sendMessage(channel, splits.get(i), null, false).get();
@@ -369,9 +370,9 @@ public class DiscordUtil {
     }
 
     public static RequestBuffer.RequestFuture<IMessage> answerToChannelWithFile(IChannel channel, String content, InputStream stream, String fileName) {
-        if (content.length() > MessageSplitter.LENGTH_LIMIT) {
+        if (content.length() > Message.MAX_MESSAGE_LENGTH) {
             MessageSplitter messageSplitter = new MessageSplitter(content);
-            List<String> splits = messageSplitter.split(MessageSplitter.LENGTH_LIMIT);
+            List<String> splits = messageSplitter.split(Message.MAX_MESSAGE_LENGTH);
             return RequestBuffer.request(() -> {
                 for (int i = 0; i < splits.size() - 1; i++) {
                     sendMessage(channel, splits.get(i), null, false).get();

@@ -1,13 +1,16 @@
 package top.quantic.sentry.discord.util;
 
-import org.springframework.util.StringUtils;
+import net.logstash.logback.encoder.org.apache.commons.lang.WordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 public class MessageSplitter {
 
-    public static final int LENGTH_LIMIT = 1990;
+    private static final Logger log = LoggerFactory.getLogger(MessageSplitter.class);
 
     private final String message;
 
@@ -16,28 +19,36 @@ public class MessageSplitter {
     }
 
     public List<String> split(int maxLength) {
+        return splitString(message, maxLength);
+    }
+
+    private List<String> splitString(String str, int maxLength) {
         List<String> splits = new ArrayList<>();
-        String str = message;
-        int end;
-        while (str != null && !str.isEmpty()) {
-            int codeBlockTags = StringUtils.countOccurrencesOf(str, "```");
-            if (str.length() <= Math.max(1, maxLength - (codeBlockTags > 0 ? 4 : 0))) {
-                splits.add(str);
-                str = "";
-            } else {
-                end = Math.min(str.length(), str.lastIndexOf("\n", maxLength));
-                if (end <= 0) {
-                    end = Math.min(str.length(), maxLength);
+        String codeBlock = "```";
+        StringTokenizer tokenizer = new StringTokenizer(str, "\n", true);
+        StringBuilder builder = new StringBuilder();
+        boolean hasUnmatchedCodeBlock = false;
+        while (tokenizer.hasMoreTokens()) {
+            String line = tokenizer.nextToken();
+            if (builder.length() > 0 && builder.length() + line.length() > maxLength - (hasUnmatchedCodeBlock ? codeBlock.length() : 0)) {
+                if (hasUnmatchedCodeBlock) {
+                    builder.append(codeBlock);
                 }
-                String split = str.substring(0, end);
-                str = str.substring(end);
-                int tagsAfterSplit = StringUtils.countOccurrencesOf(split, "```");
-                if (codeBlockTags > 0 && tagsAfterSplit < codeBlockTags && tagsAfterSplit % 2 != 0) {
-                    split = split + "```";
-                    str = "```\n" + str;
+                splits.add(builder.toString());
+                builder = new StringBuilder();
+                if (hasUnmatchedCodeBlock) {
+                    builder.append(codeBlock).append('\n');
                 }
-                splits.add(split);
             }
+            if (line.contains(codeBlock)) {
+                hasUnmatchedCodeBlock = !hasUnmatchedCodeBlock;
+            }
+            builder.append(line);
+        }
+        if (builder.length() > maxLength) {
+            splits.addAll(splitString(WordUtils.wrap(builder.toString(), maxLength), maxLength));
+        } else {
+            splits.add(builder.toString());
         }
         return splits;
     }
