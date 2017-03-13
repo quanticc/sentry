@@ -273,7 +273,8 @@ public class GameServerService implements InitializingBean {
     }
 
     public boolean isMissingOrExpiredRcon(GameServer server) {
-        return server.getRconPassword() == null || (server.getLastRconDate().isBefore(server.getExpirationDate()) && server.getExpirationDate().isBefore(ZonedDateTime.now()));
+        return server.getRconPassword() == null || server.getLastRconDate() == null || server.getExpirationDate() == null
+            || (server.getLastRconDate().isBefore(server.getExpirationDate()) && server.getExpirationDate().isBefore(ZonedDateTime.now()));
     }
 
     public String rcon(GameServer server, String cmd) {
