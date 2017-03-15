@@ -16,6 +16,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import top.quantic.sentry.domain.GameServer;
@@ -277,7 +279,8 @@ public class GameServerService implements InitializingBean {
             || (server.getLastRconDate().isBefore(server.getExpirationDate()) && server.getExpirationDate().isBefore(ZonedDateTime.now()));
     }
 
-    public String rcon(GameServer server, String cmd) {
+    @Retryable(include = {IOException.class}, backoff = @Backoff(2000L))
+    public String rcon(GameServer server, String cmd) throws IOException {
         InetSocketAddress address = getInetSocketAddress(server);
         boolean needsRconRefresh = isMissingOrExpiredRcon(server);
         String password = needsRconRefresh ? refreshPasswordAndGet(server) : server.getRconPassword();
@@ -291,7 +294,7 @@ public class GameServerService implements InitializingBean {
                 authStatus = gameQueryService.authenticate(address, refreshPasswordAndGet(server)).join();
                 if (!authStatus.isAuthenticated()) {
                     log.warn("[{}] Could not re-authenticate: {}", server.getShortNameAndAddress(), authStatus.getReason());
-                    return null;
+                    throw new IOException("Could not re-authenticate");
                 }
             }
         }
