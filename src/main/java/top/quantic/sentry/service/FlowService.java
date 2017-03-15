@@ -68,7 +68,8 @@ public class FlowService implements InitializingBean {
     @EventListener
     public void onSentryEvent(SentryEvent event) {
         String className = event.getClass().getSimpleName();
-        log.debug("[{}] {}", className, event.asContent(new LinkedHashMap<>()));
+        String content = event.asContent(new LinkedHashMap<>());
+        log.debug("[{}] {}", className, content != null ? content : "");
         flowRepository.findByEnabledIsTrueAndInputAndMessage(SENTRY_EVENT, className)
             .forEach(flow -> executeEventFlow(flow, event));
     }
