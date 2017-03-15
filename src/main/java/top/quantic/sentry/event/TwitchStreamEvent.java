@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static top.quantic.sentry.discord.util.DiscordUtil.stripMarkdown;
 import static top.quantic.sentry.service.util.DateUtil.formatRelative;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
@@ -66,10 +67,10 @@ public class TwitchStreamEvent extends SentryEvent {
             announcement = null;
         }
         if (announcement == null) {
-            return "@here " + stream.getChannel().getDisplayName() + getDivisionContent(dataMap)
-                + " is now live on <" + stream.getChannel().getUrl() + "> !";
+            return stripMarkdown("@here " + stream.getChannel().getDisplayName() + getDivisionContent(dataMap)
+                + " is now live on <" + stream.getChannel().getUrl() + "> !");
         } else {
-            return announcement;
+            return stripMarkdown(announcement);
         }
     }
 
