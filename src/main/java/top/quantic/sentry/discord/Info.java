@@ -80,18 +80,26 @@ public class Info implements CommandSupplier {
                 RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
                 long uptime = rb.getUptime();
                 IUser me = message.getClient().getOurUser();
+                String discordVersion = "";
+                try (InputStream stream = Discord4J.class.getClassLoader().getResourceAsStream("app.properties")) {
+                    Properties properties = new Properties();
+                    properties.load(stream);
+                    discordVersion = properties.getProperty("application.version") + " (" + properties.getProperty("application.git.commit") + ")";
+                } catch (IOException e) {
+                    log.warn("", e);
+                }
                 sendMessage(message.getChannel(), new EmbedBuilder()
                     .setLenient(true)
                     .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
-                    .withThumbnail("https://quantic.top/beepboop.png")
+                    .withThumbnail("http://i.imgur.com/SFF4jLF.png")
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
                     .withDescription("Hey! I'm here to help with **UGC Support** and **League Operations**.\n" +
                         "Check out the commands using `.help` or `.help more`")
                     .appendField("Version", version, true)
-                    .appendField("Discord4J", Discord4J.VERSION, true)
-                    .appendField("Uptime", humanize(Duration.ofMillis(uptime), false, true), true)
+                    .appendField("Discord4J", discordVersion, true)
+                    .appendField("Uptime", humanize(Duration.ofMillis(uptime), false, true), false)
                     .appendField("Author", "<@134127815531560960>", true)
-                    .appendField("Website", "https://sentry.quantic.top/", false)
+                    .appendField("Website", "https://sentry.quantic.top/", true)
                     .build());
             }).build();
     }
@@ -201,7 +209,7 @@ public class Info implements CommandSupplier {
     private String formatRoles(List<IRole> roles) {
         String names = roles.stream()
             .map(IRole::getName)
-            .filter(s -> !"@everyone" .equals(s))
+            .filter(s -> !"@everyone".equals(s))
             .collect(Collectors.joining(", "));
         if (names.isEmpty()) {
             return "*none*";
