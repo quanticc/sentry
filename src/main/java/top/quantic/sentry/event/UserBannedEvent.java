@@ -1,9 +1,8 @@
 package top.quantic.sentry.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
+import sx.blah.discord.handle.obj.IUser;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -13,8 +12,6 @@ import java.util.Map;
 import static top.quantic.sentry.discord.util.DiscordUtil.emoji;
 
 public class UserBannedEvent extends SentryEvent {
-
-    private static final Logger log = LoggerFactory.getLogger(UserBannedEvent.class);
 
     public UserBannedEvent(UserBanEvent event) {
         super(event);
@@ -41,11 +38,11 @@ public class UserBannedEvent extends SentryEvent {
             guilds = Arrays.asList(guildSpec.split(",|;"));
         }
         if (guilds == null) {
-            log.info("No guilds specified - Add 'guilds' to dataMap");
             return null;
         }
         if (guilds.contains(getSource().getGuild().getID())) {
-            return getSource().getUser().getName() + " " + emoji("hammer");
+            IUser user = getSource().getUser();
+            return user.getName() + "#" + user.getDiscriminator() + " " + emoji("hammer");
         } else {
             return null;
         }
