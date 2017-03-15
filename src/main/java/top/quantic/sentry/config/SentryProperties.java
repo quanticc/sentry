@@ -53,6 +53,7 @@ public class SentryProperties {
         private List<String> managers = new ArrayList<>();
         private List<String> supporters = new ArrayList<>();
         private List<String> defaultPrefixes = Lists.newArrayList("!");
+        private String cleverBotApiKey = "";
 
         public List<String> getAdministrators() {
             return administrators;
@@ -84,6 +85,14 @@ public class SentryProperties {
 
         public void setDefaultPrefixes(List<String> defaultPrefixes) {
             this.defaultPrefixes = defaultPrefixes;
+        }
+
+        public String getCleverBotApiKey() {
+            return cleverBotApiKey;
+        }
+
+        public void setCleverBotApiKey(String cleverBotApiKey) {
+            this.cleverBotApiKey = cleverBotApiKey;
         }
     }
 
