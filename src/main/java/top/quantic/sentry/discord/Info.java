@@ -69,7 +69,7 @@ public class Info implements CommandSupplier {
     }
 
     private Command info() {
-        return CommandBuilder.of("info")
+        return CommandBuilder.of("info", "about")
             .describedAs("Get Discord information about the bot")
             .in("General")
             .nonParsed()
