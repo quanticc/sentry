@@ -152,7 +152,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.github.austinv11:Discord4j:326fa03"
+    compile "com.github.austinv11:Discord4j:7b18909"
     compile "net.sf.jopt-simple:jopt-simple:6.0-alpha-1"
     compile "org.ocpsoft.prettytime:prettytime:4.0.1.Final"
     compile "org.ocpsoft.prettytime:prettytime-nlp:4.0.0.Final"
@@ -209,7 +209,9 @@ dependencies {
     }
     compile "org.springframework.boot:spring-boot-starter-undertow"
     compile "org.springframework.boot:spring-boot-starter-websocket"
-    compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+    compile("org.springframework.boot:spring-boot-starter-thymeleaf") {
+        exclude(module: 'groovy')
+    }
     compile "org.springframework.boot:spring-boot-starter-cloud-connectors"
     compile("org.springframework:spring-context-support") {
         exclude(module: 'quartz')
