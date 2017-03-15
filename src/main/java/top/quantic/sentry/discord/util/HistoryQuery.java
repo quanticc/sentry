@@ -11,6 +11,7 @@ import sx.blah.discord.util.MessageHistory;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.humanize;
@@ -23,6 +24,7 @@ public class HistoryQuery {
     private final IChannel channel;
 
     private int queryChunkSize = Channel.MESSAGE_CHUNK_COUNT;
+
     private Integer depth;
     private Integer limit;
     private Boolean includeLatest;
@@ -32,10 +34,22 @@ public class HistoryQuery {
     private String like;
     private Collection<IUser> authors;
 
+    private boolean reverseResults = false;
+
     private int traversed = 0;
 
-    public HistoryQuery(IChannel channel) {
+    private HistoryQuery(IChannel channel) {
         this.channel = channel;
+    }
+
+    public static HistoryQuery of(IChannel channel) {
+        return new HistoryQuery(channel);
+    }
+
+    public static HistoryQuery between(IChannel channel, ZonedDateTime start, ZonedDateTime end) {
+        return of(channel)
+            .after(start)
+            .before(end);
     }
 
     public int getTraversed() {
@@ -92,6 +106,9 @@ public class HistoryQuery {
             }
             found.add(msg);
         }
+        if (reverseResults) {
+            Collections.reverse(found);
+        }
         return found;
     }
 
@@ -140,6 +157,11 @@ public class HistoryQuery {
 
     public HistoryQuery authors(Collection<IUser> authors) {
         this.authors = authors;
+        return this;
+    }
+
+    public HistoryQuery reverseResults(boolean reverseResults) {
+        this.reverseResults = reverseResults;
         return this;
     }
 
@@ -217,5 +239,13 @@ public class HistoryQuery {
 
     public void setAuthors(Collection<IUser> authors) {
         this.authors = authors;
+    }
+
+    public boolean isReverseResults() {
+        return reverseResults;
+    }
+
+    public void setReverseResults(boolean reverseResults) {
+        this.reverseResults = reverseResults;
     }
 }

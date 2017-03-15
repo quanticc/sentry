@@ -225,9 +225,10 @@ public class Moderator implements CommandSupplier {
                 .anyMatch(Permissions.SEND_MESSAGES::equals))
             .collect(Collectors.toList());
         for (IChannel affectedChannel : affectedChannels) {
-            offenders.addAll(new HistoryQuery(affectedChannel)
+            offenders.addAll(HistoryQuery.of(affectedChannel)
                 .authors(usersToBan)
                 .after(ZonedDateTime.now().minusDays(1))
+                .reverseResults(true)
                 .find());
         }
 
@@ -373,7 +374,7 @@ public class Moderator implements CommandSupplier {
                 builder.appendField("Search Depth", "Last " + inflect(depth, "message"), true);
                 builder.appendField("Match Limit", "Up to " + inflect(limit, "message"), true);
                 builder.appendField("Include Request", o.has(includeRequestSpec) ? "Yes" : "No", true);
-                HistoryQuery query = new HistoryQuery(channel)
+                HistoryQuery query = HistoryQuery.of(channel)
                     .depth(depth)
                     .limit(limit)
                     .after(after)
@@ -381,7 +382,8 @@ public class Moderator implements CommandSupplier {
                     .authors(authorsToMatch)
                     .includeLatest(o.has(includeRequestSpec))
                     .like(o.has(likeSpec) ? o.valueOf(likeSpec) : null)
-                    .matching(o.has(matchingSpec) ? o.valueOf(matchingSpec) : null);
+                    .matching(o.has(matchingSpec) ? o.valueOf(matchingSpec) : null)
+                    .reverseResults(true);
                 List<IMessage> toDelete = query.find();
 
                 if (toDelete.size() > 1) {
