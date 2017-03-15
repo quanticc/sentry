@@ -88,8 +88,7 @@ public class Info implements CommandSupplier {
                 } catch (IOException e) {
                     log.warn("", e);
                 }
-                sendMessage(message.getChannel(), new EmbedBuilder()
-                    .setLenient(true)
+                sendMessage(message.getChannel(), authoredEmbed(message)
                     .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
                     .withThumbnail("http://i.imgur.com/SFF4jLF.png")
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
@@ -155,20 +154,17 @@ public class Info implements CommandSupplier {
         if (user == null) {
             return null;
         }
-        IUser author = context.getMessage().getAuthor();
         IGuild guild = context.getMessage().getGuild();
         IPresence presence = user.getPresence();
-        EmbedBuilder builder = new EmbedBuilder()
-            .setLenient(true)
+        EmbedBuilder builder = authoredEmbed(context.getMessage())
             .withThumbnail(user.getAvatarURL())
             .withColor(getDominantColor(asInputStream(user.getAvatarURL()), new Color(0x00aa00)))
-            .withFooterIcon(author.getAvatarURL())
-            .withFooterText("Requested by " + withDiscriminator(author))
             .appendField((user.isBot() ? "Bot" : "User"), user.getName() + '#' + user.getDiscriminator(), false);
         if (guild != null && !user.getName().equals(user.getNicknameForGuild(guild).orElse(user.getName()))) {
             builder.appendField("Nickname", user.getDisplayName(guild), false);
         }
-        builder.appendField("ID", user.getID(), false)
+        builder.appendField("ID", user.getID(), true)
+            .appendField("Mention", user.mention(), true)
             .appendField("Joined", withRelative(systemToInstant(user.getCreationDate())), false)
             .appendField("Status", formatStatus(presence.getStatus()), true);
         if (presence.getPlayingText().isPresent()) {
@@ -292,13 +288,9 @@ public class Info implements CommandSupplier {
         boolean mentionable = role.isMentionable();
         boolean managed = role.isManaged();
         boolean isEveryone = role.isEveryoneRole();
-        IUser author = context.getMessage().getAuthor();
 
-        EmbedBuilder builder = new EmbedBuilder()
-            .setLenient(true)
+        EmbedBuilder builder = authoredEmbed(context.getMessage())
             .withColor(role.getColor() != null ? role.getColor() : new Color(0))
-            .withFooterIcon(author.getAvatarURL())
-            .withFooterText("Requested by " + withDiscriminator(author))
             .appendField("Role", mentionBuster(role.getName()), false)
             .appendField("ID", "<" + role.getID() + ">", false)
             .appendField("Color", hex, true)
@@ -404,12 +396,7 @@ public class Info implements CommandSupplier {
             return embeds;
         }
         String created = systemToInstant(channel.getCreationDate()).toString();
-        IUser author = context.getMessage().getAuthor();
-
-        EmbedBuilder builder = new EmbedBuilder()
-            .setLenient(true)
-            .withFooterIcon(author.getAvatarURL())
-            .withFooterText("Requested by " + withDiscriminator(author))
+        EmbedBuilder builder = authoredEmbed(context.getMessage())
             .appendField("Channel", channel.getName(), false)
             .appendField("ID", "<" + channel.getID() + ">", false)
             .appendField("Created", created, false);

@@ -194,7 +194,7 @@ public class DiscordUtil {
                 List<IMessage> subList = toDelete.subList(x * 100, Math.min(toDelete.size(), (x + 1) * 100));
                 result = RequestBuffer.request(() -> {
                     try {
-                        channel.getMessages().bulkDelete(subList);
+                        channel.bulkDelete(subList);
                         return Result.ok(subList.size());
                     } catch (MissingPermissionsException | DiscordException e) {
                         log.warn("Failed to delete messages", e);

@@ -286,12 +286,9 @@ public class Moderator implements CommandSupplier {
                 String content = message.getContent();
                 content = content.contains(" ") ? content.split(" ", 2)[1] : content;
 
-                EmbedBuilder builder = new EmbedBuilder()
-                    .setLenient(true)
+                EmbedBuilder builder = authoredEmbed(message)
                     .withTitle("Delete")
-                    .withDescription("`" + content + "`")
-                    .withFooterIcon(message.getAuthor().getAvatarURL())
-                    .withFooterText("Requested by " + withDiscriminator(message.getAuthor()));
+                    .withDescription("`" + content + "`");
 
                 if (channel.isPrivate()) {
                     EmbedObject embed = builder

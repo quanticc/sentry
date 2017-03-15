@@ -61,10 +61,7 @@ public class Eval implements CommandSupplier {
                 }
                 RequestBuffer.RequestFuture<IMessage> header = answer(message, "Running script, please wait...");
                 doEval(message).whenComplete((result, error) -> {
-                    EmbedBuilder builder = new EmbedBuilder()
-                        .setLenient(true)
-                        .withFooterIcon(message.getAuthor().getAvatarURL())
-                        .withFooterText("Requested by " + withDiscriminator(message.getAuthor()))
+                    EmbedBuilder builder = authoredEmbed(message)
                         .appendField("Command", content, false);
                     String response;
                     if (result.isSuccessful()) {
