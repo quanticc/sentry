@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.util.EmbedBuilder;
+import top.quantic.sentry.discord.util.MarkdownUtil;
 import top.quantic.sentry.domain.Streamer;
 import top.quantic.sentry.web.rest.vm.TwitchStream;
 
@@ -11,7 +12,6 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static top.quantic.sentry.discord.util.DiscordUtil.stripMarkdown;
 import static top.quantic.sentry.service.util.DateUtil.formatRelative;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
@@ -66,11 +66,13 @@ public class TwitchStreamEvent extends SentryEvent {
             log.warn("Announcement appears to be badly formatted: {}", announcement);
             announcement = null;
         }
+        String displayName = stream.getChannel().getDisplayName();
+        String url = stream.getChannel().getUrl();
         if (announcement == null) {
-            return stripMarkdown("@here " + stream.getChannel().getDisplayName() + getDivisionContent(dataMap)
-                + " is now live on <" + stream.getChannel().getUrl() + "> !");
+            return "@here " + MarkdownUtil.escape(displayName) + getDivisionContent(dataMap) + " is now live on <" + MarkdownUtil.escape(url) + "> !";
         } else {
-            return stripMarkdown(announcement);
+            return announcement.replace(displayName, MarkdownUtil.escape(displayName))
+                .replace(url, MarkdownUtil.escape(url));
         }
     }
 

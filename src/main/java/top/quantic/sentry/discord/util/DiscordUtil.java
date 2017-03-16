@@ -211,14 +211,10 @@ public class DiscordUtil {
         }
     }
 
-    public static String stripMarkdown(String str) {
-        return MarkdownStripper.strip(str);
-    }
-
     public static String messageSummary(List<IMessage> messages, int maxChars) {
         return messages.stream()
             .map(message -> String.format("• [%s] %s: %s", humanizeShort(message.getChannel()), humanize(message.getAuthor()),
-                truncate(stripMarkdown(message.getContent()), maxChars)))
+                truncate(MarkdownUtil.strip(message.getContent()), maxChars)))
             .collect(Collectors.joining("\n"));
     }
 

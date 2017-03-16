@@ -1,12 +1,14 @@
 package top.quantic.sentry.discord.util;
 
+import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
+import org.apache.commons.lang3.text.translate.LookupTranslator;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class MarkdownStripper {
+public class MarkdownUtil {
 
     private static final Pair<Pattern, String> STRIKE_THROUGH = Pair.of(Pattern.compile("~~"), "");
     private static final Pair<Pattern, String> FENCED_CODE_BLOCK = Pair.of(Pattern.compile("`{3}.*\\n"), "");
@@ -16,6 +18,14 @@ public class MarkdownStripper {
 
     private static final List<Pair<Pattern, String>> PATTERNS = Arrays.asList(STRIKE_THROUGH, FENCED_CODE_BLOCK, STYLING, CODE_MULTILINE, CODE);
 
+    private static final CharSequenceTranslator ESCAPE_MARKDOWN = new LookupTranslator(
+        new String[][] {
+            {"_", "\\_"},
+            {"*", "\\*"},
+            {"`", "\\`"},
+            {"~", "\\~"}
+        });
+
     public static String strip(String input) {
         String str = input;
         for (Pair<Pattern, String> spec : PATTERNS) {
@@ -24,6 +34,10 @@ public class MarkdownStripper {
         return str;
     }
 
-    private MarkdownStripper() {
+    public static String escape(String input) {
+        return ESCAPE_MARKDOWN.translate(input);
+    }
+
+    private MarkdownUtil() {
     }
 }
