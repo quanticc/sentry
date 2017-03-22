@@ -78,7 +78,7 @@ public class Chatter implements DiscordSubscriber, InitializingBean {
         IMessage message = event.getMessage();
         IChannel channel = event.getMessage().getChannel();
         IUser author = event.getMessage().getAuthor();
-        boolean everyone = message.mentionsEveryone();
+        boolean everyone = message.mentionsEveryone() || message.mentionsHere();
         boolean dm = channel.isPrivate();
         boolean self = event.getClient().getOurUser().equals(author);
         if (!everyone && !dm && !self) {
