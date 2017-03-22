@@ -29,6 +29,9 @@ public class BotCheck implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        if (clientRegistry.getClients().isEmpty()) {
+            log.warn("No bots to track data for");
+        }
         for (Map.Entry<Bot, IDiscordClient> entry : clientRegistry.getClients().entrySet()) {
             IDiscordClient client = entry.getValue();
             if (client.isReady()) {
@@ -55,6 +58,8 @@ public class BotCheck implements Job {
                     metricRegistry.histogram(connectedMetric).update(connected);
                     metricRegistry.histogram(joinedMetric).update(joined);
                 }
+            } else {
+                log.warn("Bot {} is not ready!", entry.getKey().getName());
             }
         }
     }
