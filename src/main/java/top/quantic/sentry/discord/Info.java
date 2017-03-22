@@ -160,7 +160,7 @@ public class Info implements CommandSupplier {
             .withThumbnail(user.getAvatarURL())
             .withColor(getDominantColor(asInputStream(user.getAvatarURL()), new Color(0x00aa00)))
             .appendField((user.isBot() ? "Bot" : "User"), user.getName() + '#' + user.getDiscriminator(), false);
-        if (guild != null && !user.getName().equals(user.getNicknameForGuild(guild).orElse(user.getName()))) {
+        if (guild != null && !user.getName().equals(Optional.ofNullable(user.getNicknameForGuild(guild)).orElse(user.getName()))) {
             builder.appendField("Nickname", user.getDisplayName(guild), false);
         }
         builder.appendField("ID", user.getID(), true)

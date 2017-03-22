@@ -150,7 +150,7 @@ public class DiscordUtil {
         }
         boolean equalsNickname = false;
         if (guild != null) {
-            String nickname = user.getNicknameForGuild(guild).orElse(null);
+            String nickname = user.getNicknameForGuild(guild);
             equalsNickname = name.equalsIgnoreCase(nickname);
         }
         return equalsNickname
