@@ -59,8 +59,20 @@ public class TwitchStreamEvent extends SentryEvent {
         return "@" + System.currentTimeMillis(); // de-dupe is handled elsewhere
     }
 
+    private boolean include(Map<String, Object> flowDataMap) {
+        String league = getAsString(flowDataMap.get("league"));
+        return league == null || streamer.getLeague().equals(league);
+    }
+
+    private String getAsString(Object value) {
+        return value == null ? null : value.toString();
+    }
+
     @Override
     public String asContent(Map<String, Object> dataMap) {
+        if (!include(dataMap)) {
+            return null;
+        }
         TwitchStream stream = getSource();
         if (announcement != null && (announcement.contains("{{") || announcement.contains("}}"))) {
             log.warn("Announcement appears to be badly formatted: {}", announcement);
@@ -95,6 +107,9 @@ public class TwitchStreamEvent extends SentryEvent {
 
     @Override
     public EmbedObject asEmbed(Map<String, Object> dataMap) {
+        if (!include(dataMap)) {
+            return null;
+        }
         String league = streamer.getLeague();
         String division = streamer.getDivision();
         String hideDivisionRegex = null;
