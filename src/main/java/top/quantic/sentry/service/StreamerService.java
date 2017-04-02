@@ -126,6 +126,7 @@ public class StreamerService {
                             .peek(streamer -> logStreamData(stream, streamer))
                             .filter(streamer -> checkFilter(stream, streamer, mappings))
                             .peek(streamer -> published.incrementAndGet())
+                            .distinct()
                             .forEach(streamer -> publishStream(stream, streamer));
                     }
                 } else {
