@@ -344,16 +344,24 @@ public class Moderator implements CommandSupplier {
                     keys.add(o.valueOf(fromSpec));
                 }
                 if (!keys.isEmpty()) {
+                    List<String> keysWithoutMatches = new ArrayList<>();
                     for (String key : keys) {
                         String id = key.replaceAll("<@!?([0-9]+)>", "$1");
                         List<IUser> matching = channel.getGuild().getUsers().stream()
                             .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
-                            .distinct().collect(Collectors.toList());
+                            .collect(Collectors.toList());
                         if (!matching.isEmpty()) {
                             authorsToMatch.addAll(matching);
                         } else {
-                            answerPrivately(message, "No users matching " + key);
+                            keysWithoutMatches.add(key);
                         }
+                    }
+                    if (authorsToMatch.isEmpty()) {
+                        answerPrivately(message, "User filter did not match anyone\nDouble-check or use ID if necessary");
+                        return;
+                    } else if (!keysWithoutMatches.isEmpty()) {
+                        answerPrivately(message, "No users matching " +
+                            keysWithoutMatches.stream().collect(Collectors.joining(", ")));
                     }
                 }
 
