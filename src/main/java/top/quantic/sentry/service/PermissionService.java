@@ -4,8 +4,6 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -83,8 +81,7 @@ public class PermissionService {
         return checkPermissions(roles, operation, Collections.singleton(resource));
     }
 
-    @Cacheable("permissions")
-    public Set<PermissionType> checkPermissions(Set<String> roles, String operation, Set<String> resources) {
+    private Set<PermissionType> checkPermissions(Set<String> roles, String operation, Set<String> resources) {
         if (resources.isEmpty()) {
             return Collections.emptySet();
         } else {
@@ -95,15 +92,11 @@ public class PermissionService {
                 .collect(Collectors.toSet());
             roles.addAll(translated);
             log.trace("Checking '{}' on {} for {}", operation, resources, roles);
-            return getPermissions(roles, operation, resources)
+            return permissionRepository.findByRoleInAndOperationAndResourceIn(roles, operation, resources)
                 .stream()
                 .map(Permission::getType)
                 .collect(Collectors.toSet());
         }
-    }
-
-    private List<Permission> getPermissions(Set<String> roles, String operation, Set<String> resources) {
-        return permissionRepository.findByRoleInAndOperationAndResourceIn(roles, operation, resources);
     }
 
     /**
@@ -112,7 +105,6 @@ public class PermissionService {
      * @param permission the entity to save
      * @return the persisted entity
      */
-    @CacheEvict(cacheNames = "permissions", allEntries = true)
     public Permission save(Permission permission) {
         log.debug("Request to save Permission : {}", permission);
         Permission result = permissionRepository.save(permission);
@@ -148,9 +140,12 @@ public class PermissionService {
      *
      * @param id the id of the entity
      */
-    @CacheEvict(cacheNames = "permissions", allEntries = true)
     public void delete(String id) {
         log.debug("Request to delete Permission : {}", id);
         permissionRepository.delete(id);
+    }
+
+    public static boolean isAllowed(Set<PermissionType> typeSet) {
+        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
     }
 }
