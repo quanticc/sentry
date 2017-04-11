@@ -30,6 +30,7 @@ public class CacheConfiguration {
         CacheBuilder<Object, Object> thirtyMinuteBuilder = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).recordStats();
         CacheBuilder<Object, Object> oneHourBuilder = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).recordStats();
         CacheBuilder<Object, Object> threeHoursBuilder = CacheBuilder.newBuilder().expireAfterAccess(3, TimeUnit.HOURS).recordStats();
+        CacheBuilder<Object, Object> oneMonthBuilder = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.DAYS).recordStats();
 
         Map<String, CacheBuilder<Object, Object>> builderMap = new LinkedHashMap<>();
         builderMap.put("schedule", oneHourBuilder);
@@ -41,6 +42,7 @@ public class CacheConfiguration {
         builderMap.put("banList", threeHoursBuilder);
         builderMap.put("transactions", thirtyMinuteBuilder);
         builderMap.put("overwatch", threeHoursBuilder);
+        builderMap.put("permissions", oneMonthBuilder);
 
         GuavaCacheManager guavaCacheManager = new GuavaCacheManager() {
             @Override

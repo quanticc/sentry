@@ -1,6 +1,7 @@
 package top.quantic.sentry.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.access.annotation.Secured;
 import top.quantic.sentry.domain.Privilege;
 
@@ -48,6 +49,7 @@ public class PrivilegeResource {
     @PostMapping("/privileges")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
+    @CacheEvict(cacheNames = "permissions", allEntries = true)
     public ResponseEntity<Privilege> createPrivilege(@Valid @RequestBody Privilege privilege) throws URISyntaxException {
         log.debug("REST request to save Privilege : {}", privilege);
         if (privilege.getId() != null) {
@@ -71,6 +73,7 @@ public class PrivilegeResource {
     @PutMapping("/privileges")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
+    @CacheEvict(cacheNames = "permissions", allEntries = true)
     public ResponseEntity<Privilege> updatePrivilege(@Valid @RequestBody Privilege privilege) throws URISyntaxException {
         log.debug("REST request to update Privilege : {}", privilege);
         if (privilege.getId() == null) {
@@ -128,6 +131,7 @@ public class PrivilegeResource {
     @DeleteMapping("/privileges/{id}")
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
+    @CacheEvict(cacheNames = "permissions", allEntries = true)
     public ResponseEntity<Void> deletePrivilege(@PathVariable String id) {
         log.debug("REST request to delete Privilege : {}", id);
         privilegeRepository.delete(id);
