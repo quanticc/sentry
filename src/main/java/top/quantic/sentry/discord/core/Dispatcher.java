@@ -86,7 +86,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
 
                 // check permissions to execute the command
                 // will check for "execute" permission on "command" and "command category" resources
-                Set<PermissionType> perms = permissionService.check(message, Operations.EXECUTE, command.get(), true);
+                Set<PermissionType> perms = permissionService.check(message, Operations.EXECUTE, command.get(), false);
                 boolean isAllowed = perms.contains(PermissionType.ALLOW);
                 boolean isDenied = perms.contains(PermissionType.DENY);
                 boolean isSecured = command.get().isSecured();
