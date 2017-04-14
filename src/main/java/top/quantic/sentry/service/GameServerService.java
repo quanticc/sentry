@@ -463,7 +463,7 @@ public class GameServerService implements InitializingBean {
         ZonedDateTime lastAvailableUpdate = gameAdminService.getLastAvailableUpdate(server.getId());
         log.trace("[{}] Update check - Current: {} - Latest: {}", server, server.getLastGameUpdate(), lastAvailableUpdate);
 
-        if (lastAvailableUpdate != null && lastAvailableUpdate.isBefore(server.getLastGameUpdate())) {
+        if (server.getUpdateAttempts() < 30 && lastAvailableUpdate != null && lastAvailableUpdate.isBefore(server.getLastGameUpdate())) {
             // panel might not have the version ready yet! wait for a bit
             server.setUpdateAttempts(server.getUpdateAttempts() + 1);
             return server;

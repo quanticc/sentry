@@ -294,7 +294,7 @@ public class GameAdminService implements InitializingBean {
             if (text != null) {
                 LocalDateTime localDateTime = LocalDateTime.parse(text,
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH));
-                return ZonedDateTime.of(localDateTime, ZoneOffset.ofHours(-3));
+                return ZonedDateTime.of(localDateTime, ZoneOffset.systemDefault());
             }
         } catch (IOException e) {
             log.warn("Could not get server #{} mods data: {}", subId, e.toString());
