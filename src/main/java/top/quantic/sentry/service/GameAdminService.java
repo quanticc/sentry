@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.config.Constants.USER_AGENT;
@@ -53,8 +54,9 @@ public class GameAdminService implements InitializingBean {
 
     private boolean enabled = true;
 
-    private volatile Instant lastServerModsCheck = Instant.EPOCH;
-    private volatile Map<String, String> lastServerMods = new ConcurrentHashMap<>();
+    private final AtomicReference<Instant> lastServerModsCheck = new AtomicReference<>(Instant.EPOCH);
+    private final Map<String, String> lastServerMods = new ConcurrentHashMap<>();
+    private final Object lock = new Object();
 
     @Autowired
     public GameAdminService(SentryProperties sentryProperties) {
@@ -251,33 +253,36 @@ public class GameAdminService implements InitializingBean {
      */
     @Retryable(backoff = @Backoff(2000L))
     public Map<String, String> getServerMods(String subId) throws IOException {
-        Instant now = Instant.now();
-        if (lastServerMods.isEmpty() || lastServerModsCheck.plusSeconds(120).isBefore(now)) {
-            Map<String, String> map = new HashMap<>();
-            Document document = validate(getPanelView(subId, "server_mods"));
-            Elements mods = document.select("td.section_tabs table[style=\"margin-top: 10px;\"] tr");
-            mods.stream().skip(1).filter(el -> {
-                Elements cols = el.children();
-                return cols.size() == 3 && "Server Update".equals(cols.get(0).text());
-            }).forEach(el -> map.put("latest-update", extractDate(el.children().get(1).text())));
-            log.debug("Latest available update: {}", map.getOrDefault("latest-update", "Not found!"));
-            Elements history = document.select("span.page_subtitle + table tr");
-            history.stream().skip(1).findFirst().ifPresent(el -> {
-                Elements cols = el.children();
-                if (cols.size() == 3) {
-                    String date = cols.get(0).text();
-                    String author = cols.get(1).text();
-                    String mod = cols.get(2).text();
-                    map.put("last-mod-date", date);
-                    map.put("last-mod-by", author);
-                    map.put("last-mod-type", mod);
-                    log.debug("Most recent update: {} @ {} by {}", mod, date, author);
-                } else {
-                    log.warn("Invalid mod history row, must be size 3 (found {})", cols.size());
-                }
-            });
-            lastServerMods = map;
-            lastServerModsCheck = now;
+        synchronized (lock) {
+            Instant now = Instant.now();
+            if (lastServerMods.isEmpty() || lastServerModsCheck.get().plusSeconds(120).isBefore(now)) {
+                Map<String, String> map = new HashMap<>();
+                Document document = validate(getPanelView(subId, "server_mods"));
+                Elements mods = document.select("td.section_tabs table[style=\"margin-top: 10px;\"] tr");
+                mods.stream().skip(1).filter(el -> {
+                    Elements cols = el.children();
+                    return cols.size() == 3 && "Server Update".equals(cols.get(0).text());
+                }).forEach(el -> map.put("latest-update", extractDate(el.children().get(1).text())));
+                log.debug("Latest available update: {}", map.getOrDefault("latest-update", "Not found!"));
+                Elements history = document.select("span.page_subtitle + table tr");
+                history.stream().skip(1).findFirst().ifPresent(el -> {
+                    Elements cols = el.children();
+                    if (cols.size() == 3) {
+                        String date = cols.get(0).text();
+                        String author = cols.get(1).text();
+                        String mod = cols.get(2).text();
+                        map.put("last-mod-date", date);
+                        map.put("last-mod-by", author);
+                        map.put("last-mod-type", mod);
+                        log.debug("Most recent update: {} @ {} by {}", mod, date, author);
+                        lastServerMods.clear();
+                        lastServerMods.putAll(map);
+                        lastServerModsCheck.set(now);
+                    } else {
+                        log.warn("Invalid mod history row, must be size 3 (found {})", cols.size());
+                    }
+                });
+            }
         }
         return lastServerMods;
     }
