@@ -55,10 +55,9 @@ public class Moderator implements CommandSupplier {
         return CommandBuilder.of("unban")
             .describedAs("Unban a user")
             .in("Moderation")
-            .withExamples("Usage: **unban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names or mentions.")
+            .withExamples("Usage: **unban** __user__\n\nYou can use IDs, names or mentions.")
             .nonParsed()
             .secured()
-            .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 IChannel channel = message.getChannel();
@@ -75,13 +74,12 @@ public class Moderator implements CommandSupplier {
                 String title = "Unban Request";
                 IGuild guild = channel.getGuild();
                 Set<IUser> usersToPardon = new LinkedHashSet<>();
-                for (String key : content.split(" ")) {
-                    String id = key.replaceAll("<@!?([0-9]+)>", "$1");
-                    List<IUser> matching = guild.getBannedUsers().stream()
-                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
-                        .distinct().collect(Collectors.toList());
-                    handleUserMatches(message, reply, key, matching, usersToPardon, title);
-                }
+                String key = content.trim();
+                String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+                List<IUser> matching = guild.getBannedUsers().stream()
+                    .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+                    .distinct().collect(Collectors.toList());
+                handleUserMatches(message, reply, key, matching, usersToPardon, title);
 
                 if (usersToPardon.isEmpty()) {
                     return;
@@ -135,10 +133,9 @@ public class Moderator implements CommandSupplier {
         return CommandBuilder.of("ban")
             .describedAs("Ban user, retrieving their messages in the past 24 hours")
             .in("Moderation")
-            .withExamples("Usage: **ban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .withExamples("Usage: **ban** __user__\n\nYou can use IDs, names, nicknames or mentions.")
             .nonParsed()
             .secured()
-            .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> ban(context, false))
             .onAuthorDenied(CommandBuilder.noPermission())
             .build();
@@ -148,10 +145,9 @@ public class Moderator implements CommandSupplier {
         return CommandBuilder.of("softban")
             .describedAs("Ban then pardon user, retrieving their messages in the past 24 hours")
             .in("Moderation")
-            .withExamples("Usage: **softban** __user__\n\nYou can add multiple __users__ separated by spaces. You can use IDs, names, nicknames or mentions.")
+            .withExamples("Usage: **softban** __user__\n\nYou can use IDs, names, nicknames or mentions.")
             .nonParsed()
             .secured()
-            .requires(EnumSet.of(Permissions.BAN))
             .onExecute(context -> ban(context, true))
             .onAuthorDenied(CommandBuilder.noPermission())
             .build();
@@ -173,36 +169,35 @@ public class Moderator implements CommandSupplier {
         String title = thenPardon ? "Softban Request" : "Ban Request";
         IGuild guild = channel.getGuild();
         Set<IUser> usersToBan = new LinkedHashSet<>();
-        for (String key : content.split(" ")) {
-            String id = key.replaceAll("<@!?([0-9]+)>", "$1");
-            List<IUser> matching = guild.getUsers().stream()
-                .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
-                .distinct().collect(Collectors.toList());
+        String key = content.trim();
+        String id = key.replaceAll("<@!?([0-9]+)>", "$1");
+        List<IUser> matching = guild.getUsers().stream()
+            .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+            .distinct().collect(Collectors.toList());
 
-            if (matching.size() == 1) {
-                IUser user = matching.get(0);
-                if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
-                    usersToBan.add(user);
-                } else {
-                    sendMessage(reply, authoredErrorEmbed(message)
-                        .withTitle(title)
-                        .withDescription("Cannot ban " + user.mention() + " because one of their roles is higher than mine!")
-                        .build()).get();
-                }
-            } else if (matching.size() > 1) {
-                sendMessage(reply, authoredWarningEmbed(message)
-                    .withTitle(title)
-                    .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
-                    .appendField("Users", matching.stream()
-                        .map(DiscordUtil::humanizeShort)
-                        .collect(Collectors.joining("\n")), false)
-                    .build()).get();
+        if (matching.size() == 1) {
+            IUser user = matching.get(0);
+            if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+                usersToBan.add(user);
             } else {
                 sendMessage(reply, authoredErrorEmbed(message)
                     .withTitle(title)
-                    .withDescription("No users matching " + key)
+                    .withDescription("Cannot ban " + user.mention() + " because one of their roles is higher than mine!")
                     .build()).get();
             }
+        } else if (matching.size() > 1) {
+            sendMessage(reply, authoredWarningEmbed(message)
+                .withTitle(title)
+                .withDescription("Multiple matches for " + key + "\nUse exact ID to match at most 1 user.")
+                .appendField("Users", matching.stream()
+                    .map(DiscordUtil::humanizeShort)
+                    .collect(Collectors.joining("\n")), false)
+                .build()).get();
+        } else {
+            sendMessage(reply, authoredErrorEmbed(message)
+                .withTitle(title)
+                .withDescription("No users matching " + key)
+                .build()).get();
         }
 
         if (usersToBan.isEmpty()) {
