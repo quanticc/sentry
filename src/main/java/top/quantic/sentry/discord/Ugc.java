@@ -29,6 +29,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
+import static top.quantic.sentry.service.util.SteamIdConverter.steamId64To3;
 
 @Component
 public class Ugc implements CommandSupplier, InitializingBean {
@@ -93,7 +94,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
                     String fieldContent = "";
                     for (UgcTeam.RosteredPlayer player : team.getRoster()) {
                         fieldContent += "• " + player.getMemName() +
-                            (player.getMemType().equals("Leader") ? " (Leader) - " : " - ") + player.getSid() + "\n";
+                            (player.getMemType().equals("Leader") ? " (Leader) - " : " - ") + steamId64To3(player.getSid()) + "\n";
                     }
                     builder.appendField("Roster", fieldContent, false)
                         .appendField("Team Page", "http://www.ugcleague.com/team_page.cfm?clan_id=" + team.getClanId(), false);
