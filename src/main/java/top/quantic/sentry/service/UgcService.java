@@ -236,7 +236,7 @@ public class UgcService implements InitializingBean {
             throw new CustomParameterizedException("UGC API returned status " + responseEntity.getStatusCode());
         }
         UgcPlayer player = responseEntity.getBody();
-        if (player.getTeam().isEmpty()) {
+        if (player != null && (player.getTeam() == null || player.getTeam().isEmpty())) {
             player.setUgcPage("http://www.ugcleague.com/players_page.cfm?player_id=" + id);
         }
         return player;
