@@ -46,7 +46,7 @@ public class Roster implements CommandSupplier {
 
     private static final Pattern STATUS = Pattern.compile("^.+\"(.+)\"\\s+(\\[([a-zA-Z]):([0-5]):([0-9]+)(:[0-9]+)?])\\s+.*$", Pattern.MULTILINE);
     private static final Pattern LOG_LINE = Pattern.compile("^.*\"(.+)<([0-9]+)><(\\[([a-zA-Z]):([0-5]):([0-9]+)(:[0-9]+)?])>.*$", Pattern.MULTILINE);
-    private static final Pattern STEAM_3 = Pattern.compile("(\\[U:([0-5]):([0-9]+)(:[0-9]+)?])", Pattern.MULTILINE);
+    private static final Pattern STEAM_3 = Pattern.compile("(\\[?U:([0-5]):([0-9]+)(:[0-9]+)?]?)", Pattern.MULTILINE);
     private static final Pattern STEAM_ID_64 = Pattern.compile("([0-9]{17,19})", Pattern.MULTILINE);
 
     private final UgcService ugcService;
@@ -98,7 +98,7 @@ public class Roster implements CommandSupplier {
                             } else {
                                 sendMessage(message.getChannel(), authoredErrorEmbed(message)
                                     .withTitle("Roster Check")
-                                    .withDescription("Operation could not be completed")
+                                    .withDescription("No results, make sure ID is properly formatted.")
                                     .build());
                             }
                         } else {
@@ -150,7 +150,7 @@ public class Roster implements CommandSupplier {
         }
         while (steam3Matcher.find()) {
             RosterData player = new RosterData();
-            player.setModernId(steam3Matcher.group(1));
+            player.setModernId(clean3Id(steam3Matcher.group(1)));
             player.setCommunityId(gameQueryService.getSteamId64(player.getModernId())
                 .exceptionally(t -> {
                     log.warn("Could not resolve {} to a steamId64", player.getModernId(), t);
@@ -250,6 +250,22 @@ public class Roster implements CommandSupplier {
             }
         }
         return Result.ok(Pair.of(builder.append("```").append(teamSummary).toString(), recentJoins));
+    }
+
+    private String clean3Id(String id) {
+        if (id == null) {
+            return "";
+        } else {
+            String result = "";
+            if (!id.startsWith("[")) {
+                result += "[";
+            }
+            result += id;
+            if (!id.endsWith("]")) {
+                result += "]";
+            }
+            return result;
+        }
     }
 
     private String getProfileName(Long steamId64) {
