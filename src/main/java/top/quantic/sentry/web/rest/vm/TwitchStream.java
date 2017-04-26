@@ -16,7 +16,7 @@ public class TwitchStream {
     @JsonProperty("video_height")
     private long videoHeight;
     @JsonProperty("average_fps")
-    private long averageFps;
+    private double averageFps;
     private long delay;
     @JsonProperty("created_at")
     private Instant createdAt;
@@ -57,7 +57,7 @@ public class TwitchStream {
         this.videoHeight = videoHeight;
     }
 
-    public long getAverageFps() {
+    public double getAverageFps() {
         return averageFps;
     }
 
