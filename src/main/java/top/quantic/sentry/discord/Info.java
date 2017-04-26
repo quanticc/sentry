@@ -96,7 +96,7 @@ public class Info implements CommandSupplier, InitializingBean {
                 String appGitCommit = properties.getProperty("application.git.commit");
                 String discordVersion = appVersion == null || appGitCommit == null ? "" : (appVersion + " (" + appGitCommit + ")");
                 sendMessage(message.getChannel(), authoredEmbed(message)
-                    .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
+                    .withColor(new Color(0xd5bb59))
                     .withThumbnail("http://i.imgur.com/SFF4jLF.png")
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
                     .withDescription("Hey! I'm here to help with **UGC Support** and **League Operations**.\n" +
