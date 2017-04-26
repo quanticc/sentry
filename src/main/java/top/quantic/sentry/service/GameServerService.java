@@ -607,23 +607,35 @@ public class GameServerService implements InitializingBean {
     }
 
     private boolean isUnclaimedCase(GameServer s, List<String> keys) {
+        if (s.getExpirationDate() == null) {
+            return false;
+        }
         ZonedDateTime now = ZonedDateTime.now();
         return keys.stream().anyMatch("unclaimed"::equals)
             && now.isAfter(s.getExpirationDate());
     }
 
     private boolean isClaimedCase(GameServer s, List<String> keys) {
+        if (s.getExpirationDate() == null) {
+            return false;
+        }
         ZonedDateTime now = ZonedDateTime.now();
         return keys.stream().anyMatch("claimed"::equals)
             && now.isBefore(s.getExpirationDate());
     }
 
     private boolean isUnclaimedCase(GameServer s, String key) {
+        if (s.getExpirationDate() == null) {
+            return false;
+        }
         ZonedDateTime now = ZonedDateTime.now();
         return "unclaimed".equals(key) && now.isAfter(s.getExpirationDate());
     }
 
     private boolean isClaimedCase(GameServer s, String key) {
+        if (s.getExpirationDate() == null) {
+            return false;
+        }
         ZonedDateTime now = ZonedDateTime.now();
         return "claimed".equals(key) && now.isBefore(s.getExpirationDate());
     }

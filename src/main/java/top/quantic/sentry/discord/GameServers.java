@@ -137,7 +137,7 @@ public class GameServers implements CommandSupplier {
                                 if (target.getTvPort() != null && target.getTvPort() > 0) {
                                     builder.appendField("SourceTV", "steam://connect/" + getIPAddress(target.getAddress()) + ":" + target.getTvPort() + "/", false);
                                 }
-                                if (target.getExpirationDate().isAfter(ZonedDateTime.now())) {
+                                if (target.getExpirationDate() != null && target.getExpirationDate().isAfter(ZonedDateTime.now())) {
                                     builder.appendField("Expires", withRelative(target.getExpirationDate()), false);
                                 }
                             }
