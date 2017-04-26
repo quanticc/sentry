@@ -119,15 +119,17 @@ public class StreamerService {
                     TwitchStreamResponse response = responseEntity.getBody();
                     // send individually, but throttle
                     eventLimiter.setRate(eventsPerSecond);
-                    for (TwitchStream stream : response.getStreams()) {
-                        streams.incrementAndGet();
-                        twitchStreamers.parallelStream()
-                            .filter(streamer -> stream.getChannel().getName().equalsIgnoreCase(streamer.getName()))
-                            .peek(streamer -> logStreamData(stream, streamer))
-                            .filter(streamer -> checkFilter(stream, streamer, mappings))
-                            .peek(streamer -> published.incrementAndGet())
-                            .distinct()
-                            .forEach(streamer -> publishStream(stream, streamer));
+                    if (response.getStreams() != null) {
+                        for (TwitchStream stream : response.getStreams()) {
+                            streams.incrementAndGet();
+                            twitchStreamers.parallelStream()
+                                .filter(streamer -> stream.getChannel().getName().equalsIgnoreCase(streamer.getName()))
+                                .peek(streamer -> logStreamData(stream, streamer))
+                                .filter(streamer -> checkFilter(stream, streamer, mappings))
+                                .peek(streamer -> published.incrementAndGet())
+                                .distinct()
+                                .forEach(streamer -> publishStream(stream, streamer));
+                        }
                     }
                 } else {
                     log.warn("Could not retrieve streamers: {}", responseEntity);
