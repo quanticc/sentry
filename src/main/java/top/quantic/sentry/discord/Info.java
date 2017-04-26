@@ -5,6 +5,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.io.Resource;
@@ -48,7 +49,7 @@ import static top.quantic.sentry.service.util.DateUtil.*;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
 
 @Component
-public class Info implements CommandSupplier {
+public class Info implements CommandSupplier, InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(Info.class);
 
@@ -56,11 +57,23 @@ public class Info implements CommandSupplier {
     private final BuildProperties buildProperties;
     private final RestTemplate restTemplate;
 
+    private final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+    private final Properties properties = new Properties();
+
     @Autowired
     public Info(PermissionService permissionService, BuildProperties buildProperties, RestTemplate restTemplate) {
         this.permissionService = permissionService;
         this.buildProperties = buildProperties;
         this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try (InputStream stream = Discord4J.class.getClassLoader().getResourceAsStream("app.properties")) {
+            properties.load(stream);
+        } catch (IOException e) {
+            log.warn("", e);
+        }
     }
 
     @Override
@@ -77,17 +90,11 @@ public class Info implements CommandSupplier {
                 IMessage message = context.getMessage();
                 String version = buildProperties.getVersion();
                 version = (version == null ? "snapshot" : version);
-                RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-                long uptime = rb.getUptime();
+                long uptime = runtimeMXBean.getUptime();
                 IUser me = message.getClient().getOurUser();
-                String discordVersion = "";
-                try (InputStream stream = Discord4J.class.getClassLoader().getResourceAsStream("app.properties")) {
-                    Properties properties = new Properties();
-                    properties.load(stream);
-                    discordVersion = properties.getProperty("application.version") + " (" + properties.getProperty("application.git.commit") + ")";
-                } catch (IOException e) {
-                    log.warn("", e);
-                }
+                String appVersion = properties.getProperty("application.version");
+                String appGitCommit = properties.getProperty("application.git.commit");
+                String discordVersion = appVersion == null || appGitCommit == null ? "" : (appVersion + " (" + appGitCommit + ")");
                 sendMessage(message.getChannel(), authoredEmbed(message)
                     .withColor(getDominantColor(asInputStream(me.getAvatarURL()), new Color(0xd5bb59)))
                     .withThumbnail("http://i.imgur.com/SFF4jLF.png")
