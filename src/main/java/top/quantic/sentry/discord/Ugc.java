@@ -13,6 +13,7 @@ import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.module.CommandSupplier;
 import top.quantic.sentry.discord.util.MessageSplitter;
 import top.quantic.sentry.service.UgcService;
+import top.quantic.sentry.web.rest.errors.CustomParameterizedException;
 import top.quantic.sentry.web.rest.vm.UgcSchedule;
 import top.quantic.sentry.web.rest.vm.UgcTeam;
 
@@ -115,7 +116,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
             .in("Integrations")
             .withExamples("Usage: **schedules** <__format__> <__season__> <__week__> <__division__>\n" +
                 "- **format** must be one of: HL, 6s, 4s\n" +
-                "- **division** can be a word like 'NA' for all NA divisions\n")
+                "- **division** can be a word like 'NAPlat' for NA platinum division\n")
             .nonParsed()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
@@ -181,6 +182,9 @@ public class Ugc implements CommandSupplier, InitializingBean {
                     });
                     CompletableFuture.runAsync(() -> deleteMessage(header.get()));
                     sendMessage(message.getChannel(), builder.build());
+                } catch (CustomParameterizedException e) {
+                    log.warn("Could not get schedules", e);
+                    answer(message, "Could not get schedules: " + e.getMessage());
                 } catch (NumberFormatException e) {
                     answer(message, "Please enter valid numbers for season and week");
                 } catch (IOException e) {
