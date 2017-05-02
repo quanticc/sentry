@@ -58,6 +58,11 @@ public class PermissionService {
         return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
     }
 
+    public boolean hasPermission(String role, String operation, String resource) {
+        Set<PermissionType> typeSet = check(role, operation, resource);
+        return typeSet.contains(PermissionType.ALLOW) && !typeSet.contains(PermissionType.DENY);
+    }
+
     /**
      * Get the types of permissions assigned to the given roles, operation and resources.
      * The roles will be extracted from a Discord message's author and the resources from
