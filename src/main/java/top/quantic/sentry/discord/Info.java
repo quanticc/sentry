@@ -74,6 +74,7 @@ public class Info implements CommandSupplier, InitializingBean {
         } catch (IOException e) {
             log.warn("", e);
         }
+        properties.setProperty("startTime", "" + runtimeMXBean.getStartTime());
     }
 
     @Override
@@ -90,7 +91,7 @@ public class Info implements CommandSupplier, InitializingBean {
                 IMessage message = context.getMessage();
                 String version = buildProperties.getVersion();
                 version = (version == null ? "snapshot" : version);
-                long uptime = runtimeMXBean.getUptime();
+                long uptime = System.currentTimeMillis() - Long.parseLong(properties.getProperty("startTime"));
                 IUser me = message.getClient().getOurUser();
                 String appVersion = properties.getProperty("application.version");
                 String appGitCommit = properties.getProperty("application.git.commit");
