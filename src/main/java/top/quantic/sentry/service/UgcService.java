@@ -145,7 +145,7 @@ public class UgcService implements InitializingBean {
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
     @Cacheable("team")
-    public UgcTeam getTeam(Long id, boolean withRoster) throws IOException {
+    public UgcTeam getTeam(Long id, Boolean withRoster) throws IOException {
         Objects.requireNonNull(id, "ID must not be null");
         Map<String, Object> vars = getVariablesMap();
         vars.put("id", id);
