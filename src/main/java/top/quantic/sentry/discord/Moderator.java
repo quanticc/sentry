@@ -114,10 +114,10 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
             return;
         }
 
-        if (currentMinutes > 0) {
+        if (updatedMinutes > 0) {
             saveLimits();
             loadLimits(message.getClient());
-            answerToChannel(reply, "Slow mode: One message each " + inflect(currentMinutes, "minute") + ".");
+            answerToChannel(reply, "Slow mode: One message each " + inflect(updatedMinutes, "minute") + ".");
         } else {
             futures.entrySet().stream()
                 .filter(entry -> channel.getID().equals(entry.getKey().split("-")[0]))
