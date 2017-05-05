@@ -91,7 +91,9 @@ public class ScheduledModerator implements Job {
                     after.toOffsetDateTime().toString(), before.toOffsetDateTime().toString());
 
                 // collect all offending messages
-                HistoryQuery query = HistoryQuery.between(target, after, before).reverseResults(true);
+                HistoryQuery query = HistoryQuery.between(target, after, before)
+                    .excludePinned(true)
+                    .reverseResults(true);
                 List<IMessage> toDelete = query.find();
 
                 if (toDelete.size() > 1 && (before.isBefore(thisMinute.minusWeeks(2)) || after.isBefore(thisMinute.minusWeeks(2)))) {
