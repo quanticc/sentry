@@ -211,25 +211,25 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
                     EnumSet<Permissions> previousAllow = Permissions.getAllowedPermissionsForNumber(Integer.parseInt(allowDeny[0]));
                     EnumSet<Permissions> previousDeny = Permissions.getDeniedPermissionsForNumber(Integer.parseInt(allowDeny[1]));
                     if (previousAllow.isEmpty() && previousDeny.isEmpty()) {
-                        log.debug("[Slow mode] (1) Removing permission override of {} in {}", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Removing override of {} in {} because the user did not have overrides before slow-mode", humanize(user), humanize(channel));
                         channel.removePermissionsOverride(user);
                     } else {
-                        log.debug("[Slow mode] (2) Restoring previous permission override of {} in {}", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Restoring permission override of {} in {} to the ones before slow-mode", humanize(user), humanize(channel));
                         channel.overrideUserPermissions(user, previousAllow, previousDeny);
                     }
                     settingService.delete(setting.get().getId());
-                } else {
+                } else if (newUserOverrides != null) {
                     if (newUserOverrides.allow().isEmpty()
                         && newUserOverrides.deny().size() == 1
                         && newUserOverrides.deny().contains(Permissions.SEND_MESSAGES)) {
-                        log.debug("[Slow mode] (3) Removing permission override of {} in {}", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Removing permission override of {} in {} because there override is empty", humanize(user), humanize(channel));
                         channel.removePermissionsOverride(user);
                     } else {
                         EnumSet<Permissions> restoredAllow = newUserOverrides.allow().clone();
                         EnumSet<Permissions> restoredDeny = newUserOverrides.deny().clone();
                         restoredAllow.add(Permissions.SEND_MESSAGES);
                         restoredDeny.remove(Permissions.SEND_MESSAGES);
-                        log.debug("[Slow mode] (4) Restoring permission override of {} in {}", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Restoring permission override of {} in {} to allow message sending", humanize(user), humanize(channel));
                         channel.overrideUserPermissions(user, restoredAllow, restoredDeny);
                     }
                 }
@@ -245,12 +245,12 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
             humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
         // store pre-limit overrides for this user
         IChannel.PermissionOverride userOverrides = channel.getUserOverrides().get(user.getID());
-        int allow = Permissions.generatePermissionsNumber(userOverrides.allow());
-        int deny = Permissions.generatePermissionsNumber(userOverrides.deny());
+        int allow = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.allow());
+        int deny = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.deny());
         String key = channel.getID() + "-" + user.getID();
         settingService.createSetting(PREV_OVERRIDE_KEY, key, allow + ";" + deny);
-        EnumSet<Permissions> newAllow = userOverrides.allow().clone();
-        EnumSet<Permissions> newDeny = userOverrides.deny().clone();
+        EnumSet<Permissions> newAllow = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.allow().clone();
+        EnumSet<Permissions> newDeny = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.deny().clone();
         newAllow.remove(Permissions.SEND_MESSAGES);
         newDeny.add(Permissions.SEND_MESSAGES);
         RequestBuffer.request(() -> channel.overrideUserPermissions(user, newAllow, newDeny)).get();
