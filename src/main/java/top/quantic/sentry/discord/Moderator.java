@@ -191,8 +191,8 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
     }
 
     private ScheduledFuture<?> limitUserInFor(IUser user, IChannel channel, long millis) {
-        log.debug("[Slow mode] Disabling send message permissions for {} for {} in {}",
-            DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(user), humanize(channel));
+        log.debug("[Slow mode] Disabling send message permissions of {} for {} in {}",
+            humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
         RequestBuffer.request(() -> channel.overrideUserPermissions(user,
             EnumSet.noneOf(Permissions.class),
             EnumSet.of(Permissions.SEND_MESSAGES))).get();
@@ -201,8 +201,9 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         ScheduledFuture<?> future = executorService.schedule(() -> {
             try {
                 RequestBuffer.request(() -> {
+                    log.debug("[Slow mode] Restored send message permissions to {} in {}", humanize(user), humanize(channel));
                     channel.overrideUserPermissions(user,
-                        EnumSet.of(Permissions.SEND_MESSAGES),
+                        EnumSet.noneOf(Permissions.class),
                         EnumSet.noneOf(Permissions.class));
                     limitedUsersMap.remove(channel.getID() + "-" + user.getID());
                 }).get();
@@ -273,7 +274,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
     }
 
     private void handleUserMatches(IMessage message, IChannel target, String query,
-                                        List<IUser> matching, Set<IUser> users, String title) {
+                                   List<IUser> matching, Set<IUser> users, String title) {
         if (matching.size() == 1) {
             users.add(matching.get(0));
         } else if (matching.size() > 1) {
