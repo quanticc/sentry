@@ -197,7 +197,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
 
     private void saveLimits() {
         limitedUsersMap.forEach((key, value) -> settingService.createSetting("channelUserLimitedBefore", key, value + ""));
-        previousUserOverridesMap.forEach((key, value) -> settingService.createSetting("previousChannelUserOverrides", key, value);
+        previousUserOverridesMap.forEach((key, value) -> settingService.createSetting("previousChannelUserOverrides", key, value));
     }
 
     private void removeUserLimitIn(IUser user, IChannel channel) {
