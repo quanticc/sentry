@@ -136,8 +136,8 @@ public class Help implements CommandSupplier {
     }
 
     private boolean isRequested(List<String> keys, Command c) {
-        return keys.contains(c.getName().toLowerCase()) || (!c.getAliases().isEmpty()
-            && keys.stream().anyMatch(k -> c.getAliases().stream().anyMatch(a -> k.contains(a.toLowerCase()))));
+        return keys.stream().anyMatch(k -> k.equalsIgnoreCase(c.getName())) ||
+            (!c.getAliases().isEmpty() && keys.stream().anyMatch(k -> c.getAliases().stream().anyMatch(k::equalsIgnoreCase)));
     }
 
     private boolean canExecute(Command command, IMessage message, boolean deep) {
