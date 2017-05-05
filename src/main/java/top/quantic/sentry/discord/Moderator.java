@@ -7,25 +7,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
 import top.quantic.sentry.discord.core.CommandContext;
 import top.quantic.sentry.discord.module.CommandSupplier;
+import top.quantic.sentry.discord.module.DiscordSubscriber;
 import top.quantic.sentry.discord.util.DiscordUtil;
 import top.quantic.sentry.discord.util.HistoryQuery;
+import top.quantic.sentry.domain.Setting;
 import top.quantic.sentry.service.SettingService;
+import top.quantic.sentry.service.util.DateUtil;
 import top.quantic.sentry.service.util.Result;
 
 import java.awt.*;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -35,11 +44,16 @@ import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
-public class Moderator implements CommandSupplier {
+public class Moderator implements CommandSupplier, DiscordSubscriber {
 
     private static final Logger log = LoggerFactory.getLogger(Moderator.class);
 
     private final SettingService settingService;
+
+    private final Map<String, Long> slowRateMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> limitedUsersMap = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> futures = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public Moderator(SettingService settingService) {
@@ -48,7 +62,156 @@ public class Moderator implements CommandSupplier {
 
     @Override
     public List<Command> getCommands() {
-        return asList(delete(), softban(), ban(), unban());
+        return asList(delete(), softban(), ban(), unban(), slow());
+    }
+
+    private Command slow() {
+        return CommandBuilder.of("slow")
+            .describedAs("Turn slow mode on/off")
+            .in("Moderation")
+            .withExamples("Usage: **slow** [__rate__]\n\nWhere __rate__ is the number of minutes a user has to wait to post again in this channel, 0 to disable.")
+            .nonParsed()
+            .secured()
+            .requires(EnumSet.of(Permissions.MANAGE_PERMISSIONS))
+            .onExecute(this::doSlow)
+            .onAuthorDenied(CommandBuilder.noPermission())
+            .build();
+    }
+
+    private synchronized void doSlow(CommandContext context) {
+        IMessage message = context.getMessage();
+        IChannel channel = message.getChannel();
+        IChannel reply = getTrustedChannel(settingService, message);
+        String content = context.getContentAfterCommand();
+        if (channel.isPrivate()) {
+            answerToChannel(reply, "This command does not work in private messages");
+            return;
+        }
+        Setting currentRate = settingService.findMostRecentByGuildAndKey(channel.getGuild().getID(), "slow:" + channel.getID())
+            .orElseGet(() -> new Setting().guild(channel.getGuild().getID()).key("slow:" + channel.getID()).value("0"));
+        long currentMinutes = slowRateMap.getOrDefault(channel.getID(), Long.parseLong(currentRate.getValue()));
+        if (isBlank(content)) {
+            if (currentMinutes > 0) {
+                answerToChannel(reply, "Slow mode: One message each " + inflect(currentMinutes, "minute") + ". Use **slow 0 **to disable.");
+            } else {
+                answerToChannel(reply, "Slow mode is not enabled in this channel. Use **slow** __minutes__ to enable.");
+            }
+            return;
+        }
+
+        String rate = content.split(" ", 2)[0];
+        long updatedMinutes;
+        if ("off".equals(rate)) {
+            updatedMinutes = 0;
+        } else if (rate.matches("[0-9]+")) {
+            updatedMinutes = Long.parseLong(rate);
+        } else {
+            answerToChannel(reply, "Unsupported value, must be a positive number!");
+            return;
+        }
+        if (updatedMinutes < 0) {
+            answerToChannel(reply, "Unsupported value, must be a positive number!");
+            return;
+        }
+
+        if (currentMinutes > 0) {
+            saveLimits();
+            loadLimits(message.getClient());
+            answerToChannel(reply, "Slow mode: One message each " + inflect(currentMinutes, "minute") + ".");
+        } else {
+            futures.entrySet().stream()
+                .filter(entry -> channel.getID().equals(entry.getKey().split("-")[0]))
+                .forEach(entry -> {
+                    String[] args = entry.getKey().split("-");
+                    IUser user = channel.getClient().getUserByID(args[1]);
+                    boolean result = entry.getValue().cancel(true);
+                    log.debug("Future for {} in {} cancelled: {}",
+                        humanize(user), humanize(channel), result);
+                    removeUserLimitIn(user, channel);
+                });
+            answerToChannel(reply, "Slow mode disabled.");
+        }
+        settingService.updateValue(currentRate, updatedMinutes + "");
+        slowRateMap.put(channel.getID(), updatedMinutes);
+    }
+
+    @EventSubscriber
+    public void onReady(ReadyEvent event) {
+        loadLimits(event.getClient());
+    }
+
+    @EventSubscriber
+    public void onMessageReceived(MessageReceivedEvent event) {
+        IChannel channel = event.getChannel();
+        IUser author = event.getAuthor();
+        if (!channel.isPrivate()) {
+            long minutes = slowRateMap.getOrDefault(channel.getID(), 0L);
+            if (minutes > 0) {
+                limitUserInFor(author, channel, TimeUnit.MINUTES.toMillis(minutes));
+            }
+        }
+    }
+
+    private void loadLimits(IDiscordClient client) {
+        limitedUsersMap.clear();
+        slowRateMap.clear();
+        futures.clear();
+        for (Setting setting : settingService.findByGuild("channelUserLimitedBefore")) {
+            String[] args = setting.getKey().split("-");
+            IChannel channel = client.getChannelByID(args[0]);
+            IUser user = client.getUserByID(args[1]);
+            if (channel == null || user == null) {
+                log.debug("User {} or channel {} does not exist anymore", args[1], args[0]);
+                settingService.delete(setting.getId());
+            } else {
+                long endTimestamp = Long.parseLong(setting.getValue());
+                long remaining = endTimestamp - System.currentTimeMillis();
+                if (remaining <= 0) {
+                    removeUserLimitIn(user, channel);
+                } else {
+                    limitUserInFor(user, channel, remaining);
+                }
+            }
+        }
+    }
+
+    private void saveLimits() {
+        limitedUsersMap.forEach((key, value) -> settingService.createSetting("channelUserLimitedBefore", key, value + ""));
+    }
+
+    private void removeUserLimitIn(IUser user, IChannel channel) {
+        log.debug("[Slow mode] Enabling send message permissions again for {} in {}", humanize(user), humanize(channel));
+        try {
+            RequestBuffer.request(() -> channel.overrideUserPermissions(user,
+                EnumSet.of(Permissions.SEND_MESSAGES),
+                EnumSet.noneOf(Permissions.class))).get();
+        } catch (Exception e) {
+            log.warn("Could not remove permission override", e);
+        }
+    }
+
+    private ScheduledFuture<?> limitUserInFor(IUser user, IChannel channel, long millis) {
+        log.debug("[Slow mode] Disabling send message permissions for {} for {} in {}",
+            DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(user), humanize(channel));
+        RequestBuffer.request(() -> channel.overrideUserPermissions(user,
+            EnumSet.noneOf(Permissions.class),
+            EnumSet.of(Permissions.SEND_MESSAGES))).get();
+        String key = channel.getID() + "-" + user.getID();
+        limitedUsersMap.put(key, System.currentTimeMillis() + millis);
+        ScheduledFuture<?> future = executorService.schedule(() -> {
+            try {
+                RequestBuffer.request(() -> {
+                    channel.overrideUserPermissions(user,
+                        EnumSet.of(Permissions.SEND_MESSAGES),
+                        EnumSet.noneOf(Permissions.class));
+                    limitedUsersMap.remove(channel.getID() + "-" + user.getID());
+                }).get();
+            } catch (Exception e) {
+                log.warn("Could not remove permission override", e);
+            }
+        }, millis, TimeUnit.MILLISECONDS);
+        futures.put(key, future);
+        return future;
     }
 
     private Command unban() {
