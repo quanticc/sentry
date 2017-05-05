@@ -28,6 +28,7 @@ public class HistoryQuery {
     private Integer depth;
     private Integer limit;
     private Boolean includeLatest;
+    private Boolean excludePinned;
     private ZonedDateTime before;
     private ZonedDateTime after;
     private String matching;
@@ -77,6 +78,10 @@ public class HistoryQuery {
             traversed++;
             // skip the first message if it wasn't included
             if (includeLatest != null && !includeLatest && traversed == 1) {
+                continue;
+            }
+            // exclude pinned messages
+            if (excludePinned != null && excludePinned) {
                 continue;
             }
             // continue (skip) if we are after "--before" timex
@@ -132,6 +137,11 @@ public class HistoryQuery {
 
     public HistoryQuery includeLatest(Boolean includeLatest) {
         this.includeLatest = includeLatest;
+        return this;
+    }
+
+    public HistoryQuery excludePinned(Boolean excludePinned) {
+        this.excludePinned = excludePinned;
         return this;
     }
 
@@ -199,6 +209,14 @@ public class HistoryQuery {
 
     public void setIncludeLatest(Boolean includeLatest) {
         this.includeLatest = includeLatest;
+    }
+
+    public Boolean getExcludePinned() {
+        return excludePinned;
+    }
+
+    public void setExcludePinned(Boolean excludePinned) {
+        this.excludePinned = excludePinned;
     }
 
     public ZonedDateTime getBefore() {
