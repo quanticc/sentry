@@ -95,9 +95,9 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         long currentMinutes = slowRateMap.getOrDefault(channel.getID(), Long.parseLong(currentRate.getValue()));
         if (isBlank(content)) {
             if (currentMinutes > 0) {
-                answerToChannel(reply, "Slow mode: One message each " + inflect(currentMinutes, "minute") + " per user. Use **slow 0** to disable.");
+                answerToChannel(reply, "Slow mode: One message to " + channel.mention() + " each " + inflect(currentMinutes, "minute") + " per user.\nUse **slow 0** to disable.");
             } else {
-                answerToChannel(reply, "Slow mode is not enabled in this channel. Use **slow** __minutes__ to enable.");
+                answerToChannel(reply, "Slow mode is not enabled in " + channel.mention() + ". Use **slow** __minutes__ to enable.");
             }
             return;
         }
@@ -109,7 +109,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         } else if (rate.matches("[0-9]+")) {
             updatedMinutes = Long.parseLong(rate);
         } else {
-            answerToChannel(reply, "Unsupported value, must be a positive number!");
+            answerToChannel(reply, "Unsupported value, must be a number!");
             return;
         }
         if (updatedMinutes < 0) {
@@ -121,7 +121,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
             log.debug("[Slow mode] Updating limits for {} to {} per message per user", humanize(channel), inflect(updatedMinutes, "minute"));
             saveLimits();
             loadLimits(message.getClient());
-            answerToChannel(reply, "Slow mode: One message each " + inflect(updatedMinutes, "minute") + " per user.");
+            answerToChannel(reply, "Slow mode: One message to " + channel.mention() + " each " + inflect(updatedMinutes, "minute") + " per user.");
         } else {
             log.debug("[Slow mode] Cancelling current limits to {}", humanize(channel));
             futures.entrySet().stream()
@@ -130,11 +130,10 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
                     String[] args = entry.getKey().split("-");
                     IUser user = channel.getClient().getUserByID(args[1]);
                     boolean result = entry.getValue().cancel(true);
-                    log.debug("Future for {} in {} cancelled: {}",
-                        humanize(user), humanize(channel), result);
+                    log.debug("Future for {} in {} cancelled: {}", humanize(user), humanize(channel), result);
                     removeUserLimitIn(user, channel);
                 });
-            answerToChannel(reply, "Slow mode disabled.");
+            answerToChannel(reply, "Slow mode disabled for " + channel.mention());
         }
         settingService.updateValue(currentRate, updatedMinutes + "");
         slowRateMap.put(channel.getID(), updatedMinutes);
@@ -161,7 +160,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         limitedUsersMap.clear();
         slowRateMap.clear();
         futures.clear();
-        for (Setting setting : settingService.findByGuild("channelUserLimitedBefore")) {
+        for (Setting setting : settingService.findByGuild(USER_LIMIT_KEY)) {
             String[] args = setting.getKey().split("-");
             IChannel channel = client.getChannelByID(args[0]);
             IUser user = client.getUserByID(args[1]);
@@ -186,11 +185,7 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         }
         for (Setting setting : settingService.findByGuild(PREV_OVERRIDE_KEY)) {
             String[] channelUser = setting.getKey().split("-");
-            String channelId = channelUser[0];
-            String userId = channelUser[1];
-            String allowDeny = setting.getValue();
-            log.debug("[Slow mode] Saving previous overrides for {} in {}: {}", humanize(client.getUserByID(userId)),
-                humanize(client.getChannelByID(channelId)), allowDeny);
+            log.debug("[Slow mode] Saving previous overrides for {} in {}", humanize(client.getUserByID(channelUser[1])), humanize(client.getChannelByID(channelUser[0])));
             settingService.delete(setting.getId());
         }
     }
@@ -202,7 +197,6 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
     private void removeUserLimitIn(IUser user, IChannel channel) {
         try {
             RequestBuffer.request(() -> {
-                log.debug("[Slow mode] Restoring send message permissions to {} in {}", humanize(user), humanize(channel));
                 String key = channel.getID() + "-" + user.getID();
                 Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(PREV_OVERRIDE_KEY, key);
                 IChannel.PermissionOverride newUserOverrides = channel.getUserOverrides().get(user.getID());
@@ -211,10 +205,10 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
                     EnumSet<Permissions> previousAllow = Permissions.getAllowedPermissionsForNumber(Integer.parseInt(allowDeny[0]));
                     EnumSet<Permissions> previousDeny = Permissions.getDeniedPermissionsForNumber(Integer.parseInt(allowDeny[1]));
                     if (previousAllow.isEmpty() && previousDeny.isEmpty()) {
-                        log.debug("[Slow mode] Removing override of {} in {} because the user did not have overrides before slow-mode", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Removing override for {} in {}", humanize(user), humanize(channel));
                         channel.removePermissionsOverride(user);
                     } else {
-                        log.debug("[Slow mode] Restoring permission override of {} in {} to the ones before slow-mode", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Restoring pre-limit permission override for {} in {}", humanize(user), humanize(channel));
                         channel.overrideUserPermissions(user, previousAllow, previousDeny);
                     }
                     settingService.delete(setting.get().getId());
@@ -222,14 +216,14 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
                     if (newUserOverrides.allow().isEmpty()
                         && newUserOverrides.deny().size() == 1
                         && newUserOverrides.deny().contains(Permissions.SEND_MESSAGES)) {
-                        log.debug("[Slow mode] Removing permission override of {} in {} because there override is empty", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Removing empty permission override from {} in {}", humanize(user), humanize(channel));
                         channel.removePermissionsOverride(user);
                     } else {
                         EnumSet<Permissions> restoredAllow = newUserOverrides.allow().clone();
                         EnumSet<Permissions> restoredDeny = newUserOverrides.deny().clone();
                         restoredAllow.add(Permissions.SEND_MESSAGES);
                         restoredDeny.remove(Permissions.SEND_MESSAGES);
-                        log.debug("[Slow mode] Restoring permission override of {} in {} to allow message sending", humanize(user), humanize(channel));
+                        log.debug("[Slow mode] Allowing send permission to {} in {}", humanize(user), humanize(channel));
                         channel.overrideUserPermissions(user, restoredAllow, restoredDeny);
                     }
                 }
@@ -240,24 +234,28 @@ public class Moderator implements CommandSupplier, DiscordSubscriber {
         }
     }
 
-    private ScheduledFuture<?> limitUserInFor(IUser user, IChannel channel, long millis) {
-        log.debug("[Slow mode] Disabling send message permissions of {} for {} in {}",
-            humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
-        // store pre-limit overrides for this user
-        IChannel.PermissionOverride userOverrides = channel.getUserOverrides().get(user.getID());
-        int allow = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.allow());
-        int deny = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.deny());
-        String key = channel.getID() + "-" + user.getID();
-        settingService.createSetting(PREV_OVERRIDE_KEY, key, allow + ";" + deny);
-        EnumSet<Permissions> newAllow = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.allow().clone();
-        EnumSet<Permissions> newDeny = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.deny().clone();
-        newAllow.remove(Permissions.SEND_MESSAGES);
-        newDeny.add(Permissions.SEND_MESSAGES);
-        RequestBuffer.request(() -> channel.overrideUserPermissions(user, newAllow, newDeny)).get();
-        limitedUsersMap.put(key, System.currentTimeMillis() + millis);
-        ScheduledFuture<?> future = executorService.schedule(() -> removeUserLimitIn(user, channel), millis, TimeUnit.MILLISECONDS);
-        futures.put(key, future);
-        return future;
+    private void limitUserInFor(IUser user, IChannel channel, long millis) {
+        IGuild guild = channel.getGuild();
+        if (DiscordUtils.isUserHigher(guild, channel.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+            log.debug("[Slow mode] Disabling send message permissions of {} for {} in {}",
+                humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
+            // store pre-limit overrides for this user
+            IChannel.PermissionOverride userOverrides = channel.getUserOverrides().get(user.getID());
+            int allow = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.allow());
+            int deny = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.deny());
+            String key = channel.getID() + "-" + user.getID();
+            settingService.createSetting(PREV_OVERRIDE_KEY, key, allow + ";" + deny);
+            EnumSet<Permissions> newAllow = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.allow().clone();
+            EnumSet<Permissions> newDeny = userOverrides == null ? EnumSet.noneOf(Permissions.class) : userOverrides.deny().clone();
+            newAllow.remove(Permissions.SEND_MESSAGES);
+            newDeny.add(Permissions.SEND_MESSAGES);
+            RequestBuffer.request(() -> channel.overrideUserPermissions(user, newAllow, newDeny)).get();
+            limitedUsersMap.put(key, System.currentTimeMillis() + millis);
+            ScheduledFuture<?> future = executorService.schedule(() -> removeUserLimitIn(user, channel), millis, TimeUnit.MILLISECONDS);
+            futures.put(key, future);
+        } else {
+            log.debug("[Slow mode] Unable to limit {} because their roles are higher than mine", humanize(user));
+        }
     }
 
     private Command unban() {
