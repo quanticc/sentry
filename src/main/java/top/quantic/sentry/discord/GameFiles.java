@@ -91,7 +91,7 @@ public class GameFiles implements CommandSupplier {
                     answerToChannel(replyChannel, "Please specify at least 2 non-option arguments: logs/stv and server");
                     return;
                 }
-                List<GameServer> targets = gameServerService.findServersMultiple(asList(nonOptions.get(1).split(",|;")));
+                List<GameServer> targets = gameServerService.findServersMultiple(asList(nonOptions.get(1).split("[,;]")));
                 if (targets.isEmpty()) {
                     answerToChannel(replyChannel, "Must at least match 1 GameServer. Use IP address, name or region.");
                     return;

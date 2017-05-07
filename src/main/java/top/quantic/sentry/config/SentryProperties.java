@@ -17,6 +17,7 @@ public class SentryProperties {
     private final GameAdmin gameAdmin = new GameAdmin();
     private final GameQuery gameQuery = new GameQuery();
     private final Twitch twitch = new Twitch();
+    private final Stats stats = new Stats();
     private final Ugc ugc = new Ugc();
 
     public Discord getDiscord() {
@@ -41,6 +42,10 @@ public class SentryProperties {
 
     public Twitch getTwitch() {
         return twitch;
+    }
+
+    public Stats getStats() {
+        return stats;
     }
 
     public Ugc getUgc() {
@@ -328,6 +333,18 @@ public class SentryProperties {
 
         public void setClientId(String clientId) {
             this.clientId = clientId;
+        }
+    }
+
+    public static class Stats {
+        private Map<String, String> endpoints = new LinkedHashMap<>();
+
+        public Map<String, String> getEndpoints() {
+            return endpoints;
+        }
+
+        public void setEndpoints(Map<String, String> endpoints) {
+            this.endpoints = endpoints;
         }
     }
 
