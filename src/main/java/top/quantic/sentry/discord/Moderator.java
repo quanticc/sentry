@@ -44,7 +44,7 @@ import static top.quantic.sentry.service.util.DateUtil.parseTimeDate;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
-public class Moderator implements CommandSupplier, DiscordSubscriber {
+public class Moderator implements CommandSupplier {
 
     private static final Logger log = LoggerFactory.getLogger(Moderator.class);
 
