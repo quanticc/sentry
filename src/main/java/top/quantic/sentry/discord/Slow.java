@@ -9,6 +9,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
@@ -145,6 +146,12 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
                 limitUserInFor(author, channel, TimeUnit.MINUTES.toMillis(minutes));
             }
         }
+    }
+
+    @EventSubscriber
+    public void onDisconnected(DisconnectedEvent event) {
+        log.debug("Saving user limits");
+        saveLimits();
     }
 
     private void loadLimits(IDiscordClient client) {
