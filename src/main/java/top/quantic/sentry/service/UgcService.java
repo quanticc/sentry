@@ -155,12 +155,17 @@ public class UgcService implements InitializingBean {
             throw new CustomParameterizedException("UGC API returned status " + responseEntity.getStatusCode());
         }
         JsonUgcResponse response = objectMapper.readValue(clean(responseEntity.getBody()), JsonUgcResponse.class);
-        UgcTeam team = objectMapper.convertValue(convertTabularData(response).get(0), UgcTeam.class);
-        log.debug("Team {} ({}) retrieved", team.getClanName(), team.getClanId());
-        if (withRoster) {
-            team.setRoster(getRoster(id));
+        List<Map<String, Object>> raw = convertTabularData(response);
+        if (!raw.isEmpty()) {
+            UgcTeam team = objectMapper.convertValue(raw.get(0), UgcTeam.class);
+            log.debug("Team {} ({}) retrieved", team.getClanName(), team.getClanId());
+            if (withRoster) {
+                team.setRoster(getRoster(id));
+            }
+            return team;
+        } else {
+            throw new CustomParameterizedException("Could not find a team with id: " + id);
         }
-        return team;
     }
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))

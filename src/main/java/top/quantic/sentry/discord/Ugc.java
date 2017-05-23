@@ -40,6 +40,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
     private final UgcService ugcService;
 
     private final Map<String, Color> colorMap = new LinkedHashMap<>();
+    private final Map<String, String> statusMap = new LinkedHashMap<>();
 
     @Autowired
     public Ugc(UgcService ugcService) {
@@ -57,6 +58,15 @@ public class Ugc implements CommandSupplier, InitializingBean {
         colorMap.put("S", new Color(0xb94a48));
         colorMap.put("HP", new Color(0x3a87ad));
         colorMap.put("W", new Color(0x333333));
+        statusMap.put("DR", "Dropped");
+        statusMap.put("NC", "New Team");
+        statusMap.put("I", "Inactive");
+        statusMap.put("A", "Ready");
+        statusMap.put("NR", "Not Ready");
+        statusMap.put("NRF", "Not Ready due to Forfeit");
+        statusMap.put("S", "Suspended");
+        statusMap.put("HP", "Invited");
+        statusMap.put("W", "Waiting for Next Season");
     }
 
     @Override
@@ -90,7 +100,7 @@ public class Ugc implements CommandSupplier, InitializingBean {
                         .withColor(colorMap.get(team.getStatus()))
                         .appendField("League", team.getLadShort(), true)
                         .appendField("Division", team.getDivName(), true)
-                        .appendField("Status", team.getStatus(), true)
+                        .appendField("Status", statusMap.get(team.getStatus()), true)
                         .appendField("Steam Page", "http://" + team.getClanSteampage(), false);
                     String fieldContent = "";
                     for (UgcTeam.RosteredPlayer player : team.getRoster()) {
@@ -99,13 +109,16 @@ public class Ugc implements CommandSupplier, InitializingBean {
                     }
                     builder.appendField("Roster", fieldContent, false)
                         .appendField("Team Page", "http://www.ugcleague.com/team_page.cfm?clan_id=" + team.getClanId(), false);
-                    CompletableFuture.runAsync(() -> deleteMessage(header.get()));
                     sendMessage(message.getChannel(), builder.build());
                 } catch (NumberFormatException e) {
                     answer(message, "Please enter a valid team ID");
+                } catch (CustomParameterizedException e) {
+                    answer(message, e.getMessage());
                 } catch (IOException e) {
                     log.warn("Could not get team data", e);
                     answer(message, "Could not get team data this time, sorry!");
+                } finally {
+                    CompletableFuture.runAsync(() -> deleteMessage(header.get()));
                 }
             }).build();
     }
