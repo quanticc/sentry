@@ -42,14 +42,12 @@ public class UserBannedEvent extends SentryEvent {
         if (guilds.contains(getSource().getGuild().getID())) {
             IUser user = getSource().getUser();
             String imagesSpec = (String) dataMap.get("images");
-            String image;
+            String image = "";
             if (imagesSpec != null) {
                 String[] images = imagesSpec.split(";");
                 image = "\n" + images[random.nextInt(images.length)];
-            } else {
-                image = " " + emoji("hammer");
             }
-            return user.getName() + "#" + user.getDiscriminator() + image;
+            return user.getName() + "#" + user.getDiscriminator() + " " + emoji("hammer") + image;
         } else {
             return null;
         }
