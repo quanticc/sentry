@@ -81,7 +81,11 @@ public class TwitchStreamEvent extends SentryEvent {
         String displayName = stream.getChannel().getDisplayName();
         String url = stream.getChannel().getUrl();
         if (announcement == null) {
-            return "@here " + MarkdownUtil.escape(displayName) + getDivisionContent(dataMap) + " is now live on <" + url + "> !";
+            if (dataMap.containsKey("defaultAnnounce")) {
+                return "@here " + MarkdownUtil.escape(displayName) + getDivisionContent(dataMap) + " is now live on <" + url + "> !";
+            } else {
+                return null;
+            }
         } else {
             return announcement.replace(displayName, MarkdownUtil.escape(displayName));
         }
