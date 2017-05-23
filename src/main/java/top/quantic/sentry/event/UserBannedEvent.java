@@ -4,14 +4,13 @@ import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
 import sx.blah.discord.handle.obj.IUser;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.emoji;
 
 public class UserBannedEvent extends SentryEvent {
+
+    private Random random = new Random();
 
     public UserBannedEvent(UserBanEvent event) {
         super(event);
@@ -35,14 +34,22 @@ public class UserBannedEvent extends SentryEvent {
         String guildSpec = (String) dataMap.get("guilds");
         List<String> guilds = null;
         if (guildSpec != null) {
-            guilds = Arrays.asList(guildSpec.split(",|;"));
+            guilds = Arrays.asList(guildSpec.split("[,;]"));
         }
         if (guilds == null) {
             return null;
         }
         if (guilds.contains(getSource().getGuild().getID())) {
             IUser user = getSource().getUser();
-            return user.getName() + "#" + user.getDiscriminator() + " " + emoji("hammer");
+            String imagesSpec = (String) dataMap.get("images");
+            String image;
+            if (imagesSpec != null) {
+                String[] images = imagesSpec.split(";");
+                image = "\n" + images[random.nextInt(images.length)];
+            } else {
+                image = " " + emoji("hammer");
+            }
+            return user.getName() + "#" + user.getDiscriminator() + image;
         } else {
             return null;
         }
