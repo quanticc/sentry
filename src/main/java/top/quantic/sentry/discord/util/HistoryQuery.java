@@ -81,7 +81,7 @@ public class HistoryQuery {
                 continue;
             }
             // exclude pinned messages
-            if (excludePinned != null && excludePinned) {
+            if (excludePinned != null && excludePinned && msg.isPinned()) {
                 continue;
             }
             // continue (skip) if we are after "--before" timex

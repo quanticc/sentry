@@ -69,7 +69,7 @@ public class ScheduledModerator implements Job {
         }
 
         if ("purge".equals(action)) {
-            for (String channel : channels.split(";|,")) {
+            for (String channel : channels.split("[;,]")) {
                 IChannel target = client.getChannelByID(channel);
                 if (target == null) {
                     throw new JobExecutionException("Could not find channel with ID " + channel);
