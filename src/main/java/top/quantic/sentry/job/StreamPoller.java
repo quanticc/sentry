@@ -14,6 +14,7 @@ public class StreamPoller implements Job {
     private static final Logger log = LoggerFactory.getLogger(StreamPoller.class);
     private static final double EVENTS_PER_SECOND = 1.0;
     private static final int EXPIRE_MINUTES = 360;
+    private static final int GRACE_PERIOD = 0;
 
     @Autowired
     private StreamerService streamerService;
@@ -21,9 +22,11 @@ public class StreamPoller implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap dataMap = context.getMergedJobDataMap();
-        double eventsPerSecond = Math.max(0.1, doubleOrDefault(dataMap, "events_per_second", EVENTS_PER_SECOND));
-        long expireMinutes = Math.max(1, longOrDefault(dataMap, "expire_minutes", EXPIRE_MINUTES));
-        streamerService.publishStreams(expireMinutes, eventsPerSecond);
+        StreamerService.Config config = new StreamerService.Config();
+        config.setEventsPerSecond(Math.max(0.1, doubleOrDefault(dataMap, "events_per_second", EVENTS_PER_SECOND)));
+        config.setExpireMinutes(Math.max(1, longOrDefault(dataMap, "expire_minutes", EXPIRE_MINUTES)));
+        config.setGracePeriod(Math.max(0, longOrDefault(dataMap, "grace_period", GRACE_PERIOD)));
+        streamerService.publishStreams(config);
     }
 
     private long longOrDefault(JobDataMap map, String key, long defaultValue) {

@@ -79,18 +79,17 @@ public class StreamerService {
     /**
      * Publish streams that have gone past the given amount of minutes, at the specified rate.
      *
-     * @param expireMinutes   minutes since last announcement made for a streamer to trigger the event publishing.
-     * @param eventsPerSecond rate of events published per second, for throttling purposes.
+     * @param config Parameters of the publishing task
      */
-    public void publishStreams(long expireMinutes, double eventsPerSecond) {
+    public void publishStreams(Config config) {
         // Twitch
         List<Streamer> twitchStreamers = findEnabledByProvider("Twitch").stream()
-            .filter(streamer -> streamer.getLastAnnouncement().isBefore(ZonedDateTime.now().minusMinutes(expireMinutes)))
+            .filter(streamer -> streamer.getLastAnnouncement().isBefore(ZonedDateTime.now().minusMinutes(config.getExpireMinutes())))
             .sorted(Comparator.comparing(Streamer::getName))
             .collect(Collectors.toList());
 
         if (twitchStreamers.isEmpty()) {
-            log.debug("All streams were announced less than {} ago", inflect(expireMinutes, "minute"));
+            log.debug("All streams were announced less than {} ago", inflect(config.getExpireMinutes(), "minute"));
             return;
         }
 
@@ -118,14 +117,14 @@ public class StreamerService {
                 if (responseEntity.getStatusCode().is2xxSuccessful()) {
                     TwitchStreamResponse response = responseEntity.getBody();
                     // send individually, but throttle
-                    eventLimiter.setRate(eventsPerSecond);
+                    eventLimiter.setRate(config.getEventsPerSecond());
                     if (response.getStreams() != null) {
                         for (TwitchStream stream : response.getStreams()) {
                             streams.incrementAndGet();
                             twitchStreamers.parallelStream()
                                 .filter(streamer -> stream.getChannel().getName().equalsIgnoreCase(streamer.getName()))
                                 .peek(streamer -> logStreamData(stream, streamer))
-                                .filter(streamer -> checkFilter(stream, streamer, mappings))
+                                .filter(streamer -> checkFilter(stream, streamer, mappings, config))
                                 .peek(streamer -> published.incrementAndGet())
                                 .distinct()
                                 .forEach(streamer -> publishStream(stream, streamer));
@@ -151,7 +150,7 @@ public class StreamerService {
         log.debug("Processing {} with {}", stream, streamer);
     }
 
-    private boolean checkFilter(TwitchStream stream, Streamer streamer, Map<String, String> mappings) {
+    private boolean checkFilter(TwitchStream stream, Streamer streamer, Map<String, String> mappings, Config config) {
         // Filter if we have the same stream id than the last one
         // unless the stream started 3 hours ago (!)
         if (stream.getId().equals(streamer.getLastStreamId())
@@ -179,6 +178,12 @@ public class StreamerService {
                     streamer.getName(), status, statusFilter);
                 return false;
             }
+        }
+        // Filter if the stream is less than [grace_period] minutes old
+        if (stream.getCreatedAt().plusSeconds(60 * config.gracePeriod).isAfter(Instant.now())) {
+            log.info("[{}] Stream must have been running for at least {}, started {}",
+                streamer.getName(), inflect(config.getGracePeriod(), "minute"), withRelative(stream.getCreatedAt()));
+            return false;
         }
         return true;
     }
@@ -325,6 +330,36 @@ public class StreamerService {
                 "total=" + total +
                 ", streams=" + streams +
                 '}';
+        }
+    }
+
+    public static class Config {
+        private long expireMinutes;
+        private double eventsPerSecond;
+        private long gracePeriod = 0;
+
+        public long getExpireMinutes() {
+            return expireMinutes;
+        }
+
+        public void setExpireMinutes(long expireMinutes) {
+            this.expireMinutes = expireMinutes;
+        }
+
+        public double getEventsPerSecond() {
+            return eventsPerSecond;
+        }
+
+        public void setEventsPerSecond(double eventsPerSecond) {
+            this.eventsPerSecond = eventsPerSecond;
+        }
+
+        public long getGracePeriod() {
+            return gracePeriod;
+        }
+
+        public void setGracePeriod(long gracePeriod) {
+            this.gracePeriod = gracePeriod;
         }
     }
 }
