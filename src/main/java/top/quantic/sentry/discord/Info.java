@@ -98,7 +98,7 @@ public class Info implements CommandSupplier, InitializingBean {
                 String discordVersion = appVersion == null || appGitCommit == null ? "" : (appVersion + " (" + appGitCommit + ")");
                 sendMessage(message.getChannel(), authoredEmbed(message)
                     .withColor(new Color(0xd5bb59))
-                    .withThumbnail("http://i.imgur.com/SFF4jLF.png")
+                    //.withThumbnail("http://i.imgur.com/SFF4jLF.png")
                     .withTitle(me.getDisplayName(message.getChannel().getGuild()))
                     .withDescription("Hey! I'm here to help with **UGC Support** and **League Operations**.\n" +
                         "Check out the commands using `.help` or `.help more`")
@@ -106,7 +106,7 @@ public class Info implements CommandSupplier, InitializingBean {
                     .appendField("Discord4J", discordVersion, true)
                     .appendField("Uptime", humanize(Duration.ofMillis(uptime), false, true), false)
                     .appendField("Author", "<@134127815531560960>", true)
-                    .appendField("Website", "https://sentry.quantic.top/", true)
+                    .appendField("Website", "sentry.quantic.top", true)
                     .build());
             }).build();
     }
