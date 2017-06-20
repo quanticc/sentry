@@ -213,9 +213,9 @@ public class Roster implements CommandSupplier {
             .append(rightPad("Team", teamWidth)).append(rightPad("Division", divWidth))
             .append(rightPad("Mode", formatWidth)).append("\n")
             .append(repeat('-', idWidth + nameWidth + teamWidth + divWidth + formatWidth)).append("\n");
-        String teamSummary = "\nTeams appearing in the check:\n";
+        String teamSummary = "";
         List<Pair<RosterData, UgcPlayer.Membership>> recentJoins = new ArrayList<>();
-        Set<String> teamIds = new LinkedHashSet<>();
+        Set<TeamData> foundTeams = new LinkedHashSet<>();
         for (RosterData player : result) {
             if (Thread.interrupted()) {
                 log.warn("Roster check interrupted");
@@ -227,7 +227,7 @@ public class Roster implements CommandSupplier {
             } else {
                 boolean first = true;
                 for (UgcPlayer.Membership team : player.getPlayer().getTeam()) {
-                    teamIds.add(team.getClanId());
+                    foundTeams.add(new TeamData(team.getClanId(), team.getName(), team.getFormat()));
                     if (filter.isEmpty() || team.getFormat().equals(filter)) {
                         builder.append(rightPad(first ? player.getModernId() : "", idWidth))
                             .append(rightPad(first ? substring(player.getServerName(), 0, NAME_MAX_WIDTH) : "", nameWidth))
@@ -244,12 +244,41 @@ public class Roster implements CommandSupplier {
                 }
             }
         }
-        if (teamIds.size() > 0) {
-            for (String id : teamIds) {
-                teamSummary += "<http://www.ugcleague.com/team_page.cfm?clan_id=" + id + ">\n";
-            }
+        if (foundTeams.size() > 0) {
+            String ff = filter;
+            teamSummary = "\nTeams appearing in the check:\n" + foundTeams.stream()
+                .filter(td -> ff.isEmpty() || td.format.equals(ff))
+                .map(td -> td.name + " - <http://www.ugcleague.com/team_page.cfm?clan_id=" + td.id + ">")
+                .collect(Collectors.joining("\n"));
         }
         return Result.ok(Pair.of(builder.append("```").append(teamSummary).toString(), recentJoins));
+    }
+
+    private static class TeamData {
+        private final String id;
+        private final String name;
+        private final String format;
+
+        private TeamData(String id, String name, String format) {
+            this.id = id;
+            this.name = name;
+            this.format = format;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TeamData teamData = (TeamData) o;
+
+            return id != null ? id.equals(teamData.id) : teamData.id == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
     }
 
     private String clean3Id(String id) {
