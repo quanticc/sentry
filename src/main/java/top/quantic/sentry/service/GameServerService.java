@@ -280,7 +280,8 @@ public class GameServerService implements InitializingBean {
     }
 
     @Retryable(include = {IOException.class}, backoff = @Backoff(2000L))
-    public String rcon(GameServer server, String cmd) throws IOException {
+    public String rcon(GameServer gameServer, String cmd) throws IOException {
+        GameServer server = gameServerRepository.findOne(gameServer.getId());
         InetSocketAddress address = getInetSocketAddress(server);
         boolean needsRconRefresh = isMissingOrExpiredRcon(server);
         String password = needsRconRefresh ? refreshPasswordAndGet(server) : server.getRconPassword();
@@ -302,13 +303,19 @@ public class GameServerService implements InitializingBean {
         log.debug("[{}] rcon {}", server.getShortNameAndAddress(), command);
         String response = gameQueryService.execute(address, command).join();
         log.debug("[{}] {}", server.getShortNameAndAddress(), truncate(response, 100));
+        if (response == null || response.equals("Unable to re-authenticate from server")) {
+            // Expire rcon then retry
+            server.setLastRconDate(null);
+            gameServerRepository.save(server);
+            throw new IOException("Could not authenticate to server");
+        }
         return response;
     }
 
     public Result<String> tryRcon(GameServer server, String command) {
         try {
             String response = rcon(server, command);
-            if (response == null || response.equals("Unable to re-authenticate from server")) {
+            if (response == null) {
                 return Result.error("Could not authenticate to server");
             } else {
                 return Result.ok(response);
