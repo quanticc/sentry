@@ -74,19 +74,19 @@ public class GameServers implements CommandSupplier {
                 if ("restart".equals(action)) {
                     String response = "Restarting servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
-                        response = resultLine(target, gameServerService.tryRestart(target));
+                        response += resultLine(target, gameServerService.tryRestart(target));
                     }
                     answer(message, response);
                 } else if ("stop".equals(action)) {
                     String response = "Stopping servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
-                        response = resultLine(target, gameServerService.tryStop(target));
+                        response += resultLine(target, gameServerService.tryStop(target));
                     }
                     answer(message, response);
                 } else if ("update".equals(action)) {
                     String response = "Updating game version on servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
-                        response = resultLine(target, gameServerService.tryUpdate(target));
+                        response += resultLine(target, gameServerService.tryUpdate(target));
                     }
                     answer(message, response);
                 } else if ("install-mod".equals(action)) {
@@ -96,10 +96,10 @@ public class GameServers implements CommandSupplier {
                     }
                     String mod = args[2];
                     Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(Constants.ANY, mod);
-                    String modName = setting.isPresent() ? setting.get().getValue() : mod;
+                    String modName = setting.map(Setting::getValue).orElse(mod);
                     String response = "Installing mod " + modName + " on servers matching " + serverQuery + "\n";
                     for (GameServer target : targets) {
-                        response = resultLine(target, gameServerService.tryModInstall(target, modName));
+                        response += resultLine(target, gameServerService.tryModInstall(target, modName));
                     }
                     answerPrivately(message, response);
                 } else if ("status".equals(action)) {
@@ -173,9 +173,9 @@ public class GameServers implements CommandSupplier {
                     for (GameServer target : targets) {
                         Result<String> result = gameServerService.tryGetConsole(target);
                         if (result.isSuccessful()) {
-                            response = "• [**" + target.getShortName() + "**] (" + target.getAddress() + ")\n" + result.getContent() + "\n";
+                            response += "• [**" + target.getShortName() + "**] (" + target.getAddress() + ")\n" + result.getContent() + "\n";
                         } else {
-                            response = resultLine(target, result);
+                            response += resultLine(target, result);
                         }
                     }
                     answerPrivately(message, response);
