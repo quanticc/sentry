@@ -4,6 +4,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.ibasco.agql.core.exceptions.ConnectException;
 import com.ibasco.agql.core.exceptions.ReadTimeoutException;
 import com.ibasco.agql.protocols.valve.source.query.SourceRconAuthStatus;
 import com.ibasco.agql.protocols.valve.source.query.pojos.SourceServer;
@@ -279,7 +280,7 @@ public class GameServerService implements InitializingBean {
             || (server.getLastRconDate().isBefore(server.getExpirationDate()) && server.getExpirationDate().isBefore(ZonedDateTime.now()));
     }
 
-    @Retryable(include = {IOException.class}, backoff = @Backoff(2000L))
+    @Retryable(include = {IOException.class, ConnectException.class}, backoff = @Backoff(2000L))
     public String rcon(GameServer gameServer, String cmd) throws IOException {
         GameServer server = gameServerRepository.findOne(gameServer.getId());
         InetSocketAddress address = getInetSocketAddress(server);
