@@ -6,8 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import sx.blah.discord.handle.impl.obj.Message;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.config.Constants;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -63,6 +66,7 @@ public class GameServers implements CommandSupplier {
             .secured()
             .onExecute(context -> {
                 IMessage message = context.getMessage();
+                IChannel channel = getTrustedChannel(settingService, message);
                 String[] args = safeSplit(context.getArgs(), 3);
                 if (args == null || args.length < 2) {
                     answer(message, "Please specify at least two arguments: action, server");
@@ -70,25 +74,46 @@ public class GameServers implements CommandSupplier {
                 }
                 String action = args[0];
                 String serverQuery = args[1];
-                List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split(",|;")));
+                List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split("[,;]")));
                 if ("restart".equals(action)) {
-                    String response = "Restarting servers matching " + serverQuery + "\n";
+                    answerToChannel(channel, "Restarting servers matching " + serverQuery);
+                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    int completed = 0;
                     for (GameServer target : targets) {
-                        response += resultLine(target, gameServerService.tryRestart(target));
+                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryRestart(target));
+                        String current = status.get().getContent();
+                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                            status = answerToChannel(channel, toAppend);
+                        } else {
+                            updateMessage(status, current + toAppend);
+                        }
                     }
-                    answer(message, response);
                 } else if ("stop".equals(action)) {
-                    String response = "Stopping servers matching " + serverQuery + "\n";
+                    answerToChannel(channel, "Stopping servers matching " + serverQuery);
+                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    int completed = 0;
                     for (GameServer target : targets) {
-                        response += resultLine(target, gameServerService.tryStop(target));
+                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryStop(target));
+                        String current = status.get().getContent();
+                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                            status = answerToChannel(channel, toAppend);
+                        } else {
+                            updateMessage(status, current + toAppend);
+                        }
                     }
-                    answer(message, response);
                 } else if ("update".equals(action)) {
-                    String response = "Updating game version on servers matching " + serverQuery + "\n";
+                    answerToChannel(channel, "Updating game version on servers matching " + serverQuery);
+                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    int completed = 0;
                     for (GameServer target : targets) {
-                        response += resultLine(target, gameServerService.tryUpdate(target));
+                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryUpdate(target));
+                        String current = status.get().getContent();
+                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                            status = answerToChannel(channel, toAppend);
+                        } else {
+                            updateMessage(status, current + toAppend);
+                        }
                     }
-                    answer(message, response);
                 } else if ("install-mod".equals(action)) {
                     if (args.length < 3) {
                         answer(message, "You must add an extra argument with the mod ID or name");
@@ -97,11 +122,18 @@ public class GameServers implements CommandSupplier {
                     String mod = args[2];
                     Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(Constants.ANY, mod);
                     String modName = setting.map(Setting::getValue).orElse(mod);
-                    String response = "Installing mod " + modName + " on servers matching " + serverQuery + "\n";
+                    answerToChannel(channel, "Installing mod " + modName + " on servers matching " + serverQuery);
+                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    int completed = 0;
                     for (GameServer target : targets) {
-                        response += resultLine(target, gameServerService.tryModInstall(target, modName));
+                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryModInstall(target, modName));
+                        String current = status.get().getContent();
+                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                            status = answerToChannel(channel, toAppend);
+                        } else {
+                            updateMessage(status, current + toAppend);
+                        }
                     }
-                    answerPrivately(message, response);
                 } else if ("status".equals(action)) {
                     answerPrivately(message, "Retrieving status for servers matching " + serverQuery);
                     int latest = gameServerService.getLatestVersion();
@@ -169,16 +201,17 @@ public class GameServers implements CommandSupplier {
                         }
                     }
                 } else if ("console".equals(action)) {
-                    String response = "Retrieving console for servers matching " + serverQuery + "\n";
+                    answerPrivately(message, "Retrieving console for servers matching " + serverQuery);
                     for (GameServer target : targets) {
                         Result<String> result = gameServerService.tryGetConsole(target);
+                        String response;
                         if (result.isSuccessful()) {
-                            response += "• [**" + target.getShortName() + "**] (" + target.getAddress() + ")\n" + result.getContent() + "\n";
+                            response = "• [**" + target.getShortName() + "**] (" + target.getAddress() + ")\n" + result.getContent() + "\n";
                         } else {
-                            response += resultLine(target, result);
+                            response = resultLine(target, result);
                         }
+                        answerPrivately(message, response);
                     }
-                    answerPrivately(message, response);
                 } else {
                     answer(message, "Invalid action, must be one of: restart, stop, update, install-mod, status or console.");
                 }
@@ -243,7 +276,7 @@ public class GameServers implements CommandSupplier {
                 String serverQuery = args[0];
                 String command = args[1];
                 boolean quiet = command.contains("exec");
-                List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split(",|;")));
+                List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split("[,;]")));
                 if (targets.isEmpty()) {
                     answer(message, "Could not find any server given your query");
                     return;
