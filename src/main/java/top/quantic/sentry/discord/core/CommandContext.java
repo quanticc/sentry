@@ -8,6 +8,7 @@ public class CommandContext {
     private IMessage message;
     private String prefix;
     private Command command;
+    private String commandName;
     private String[] args;
     private OptionSet optionSet;
 
@@ -33,6 +34,14 @@ public class CommandContext {
 
     public void setCommand(Command command) {
         this.command = command;
+    }
+
+    public String getCommandName() {
+        return commandName;
+    }
+
+    public void setCommandName(String commandName) {
+        this.commandName = commandName;
     }
 
     public String[] getArgs() {

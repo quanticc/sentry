@@ -74,30 +74,32 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
         Optional<String> prefix = prefixes.stream().filter(content::startsWith).findAny();
         if (prefix.isPresent()) {
             List<Command> commands = commandRegistry.getCommands(event.getClient());
-            String name = content.substring(prefix.get().length(), content.contains(" ") ? content.indexOf(" ") : content.length());
-            Optional<Command> command = commands.stream()
-                .filter(c -> c.getName().equals(name.toLowerCase()) || c.getAliases().contains(name.toLowerCase()))
+            String name = content.substring(prefix.get().length(), content.contains(" ") ? content.indexOf(" ") : content.length()).toLowerCase();
+            Optional<Command> cmd = commands.stream()
+                .filter(c -> c.getName().equals(name) || c.getAliases().contains(name))
                 .findAny();
-            if (command.isPresent()) {
+            if (cmd.isPresent()) {
+                Command command = cmd.get();
                 CommandContext context = new CommandContext();
                 context.setMessage(message);
-                context.setCommand(command.get());
+                context.setCommand(command);
+                context.setCommandName(name);
                 context.setPrefix(prefix.get());
 
                 // check permissions to execute the command
                 // will check for "execute" permission on "command" and "command category" resources
-                Set<PermissionType> perms = permissionService.check(message, Operations.EXECUTE, command.get(), true);
+                Set<PermissionType> perms = permissionService.check(message, Operations.EXECUTE, command, true);
                 boolean isAllowed = perms.contains(PermissionType.ALLOW);
                 boolean isDenied = perms.contains(PermissionType.DENY);
-                boolean isSecured = command.get().isSecured();
+                boolean isSecured = command.isSecured();
                 boolean hasPermission = message.getChannel().getModifiedPermissions(message.getAuthor())
-                    .containsAll(command.get().getRequiredPermissions());
+                    .containsAll(command.getRequiredPermissions());
                 boolean canExecute = (isSecured && isAllowed && !isDenied) || (!isSecured && !isDenied);
                 if (canExecute && hasPermission) {
                     // clean up and parse arguments
-                    String args = content.substring(content.indexOf(command.get().getName()) + command.get().getName().length());
+                    String args = content.substring(content.indexOf(name) + name.length());
                     args = args.startsWith(" ") ? args.split(" ", 2)[1] : null; // nullify if ran with no args
-                    OptionParser parser = command.get().getParser();
+                    OptionParser parser = command.getParser();
                     boolean parseError = false;
                     boolean forHelp = false;
                     if (parser == null || parser.recognizedOptions().isEmpty()) {
@@ -110,9 +112,9 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                     } else {
                         try {
                             if (args != null) {
-                                int limit = command.get().getArgumentLimit();
-                                boolean unquote = !command.get().isPreserveQuotes();
-                                Map<String, String> aliases = command.get().getParameterAliases();
+                                int limit = command.getArgumentLimit();
+                                boolean unquote = !command.isPreserveQuotes();
+                                Map<String, String> aliases = command.getParameterAliases();
                                 String[] splitArgs = splitAndConvert(args, limit, unquote, aliases);
                                 context.setArgs(splitArgs);
                                 context.setOptionSet(parser.parse(splitArgs));
@@ -123,24 +125,24 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                         } catch (OptionException e) {
                             log.info("[{}] User {} executing command {}{} failed parsing: {}",
                                 message.getClient().getOurUser().getName(),
-                                humanize(message.getAuthor()), command.get().getName(),
+                                humanize(message.getAuthor()), name,
                                 args == null ? "" : " with args: " + args, e.toString());
-                            help.replyWithHelp(command.get(), context, e.getMessage());
+                            help.replyWithHelp(command, context, e.getMessage());
                             parseError = true;
                         }
                     }
 
                     // finally, execute the command
                     log.info("[{}] User {} executing command {}{}", message.getClient().getOurUser().getName(),
-                        humanize(message.getAuthor()), command.get().getName(), args == null ? "" : " with args: " + args);
+                        humanize(message.getAuthor()), name, args == null ? "" : " with args: " + args);
 
                     // intercept with help if parse failed or was explicitly requested
                     if (forHelp) {
-                        help.replyWithHelp(command.get(), context);
+                        help.replyWithHelp(command, context);
                     } else if (!parseError) {
-                        command.get().onExecute().accept(context);
+                        command.onExecute().accept(context);
                     }
-                    if (command.get().isDeleteRequest()) {
+                    if (command.isDeleteRequest()) {
                         RequestBuffer.request(() -> {
                             try {
                                 message.delete();
@@ -148,7 +150,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                                 log.warn("[{}] Missing permissions in {}: {}",
                                     event.getClient().getOurUser().getName(),
                                     humanize(message.getChannel()), e.getErrorMessage());
-                                command.get().onBotDenied().accept(context);
+                                command.onBotDenied().accept(context);
                             } catch (DiscordException e) {
                                 log.warn("[{}] Failed to delete message in {}: {}",
                                     event.getClient().getOurUser().getName(),
@@ -157,11 +159,11 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
                         });
                     }
                     log.info("[{}] User {} completed execution of command {}{}", message.getClient().getOurUser().getName(),
-                        humanize(message.getAuthor()), command.get().getName(), args == null ? "" : " with args: " + args);
+                        humanize(message.getAuthor()), name, args == null ? "" : " with args: " + args);
                 } else {
                     log.info("[{}] User {} was denied command execution: {}", message.getClient().getOurUser().getName(),
-                        humanize(message.getAuthor()), command.get().getName());
-                    command.get().onAuthorDenied().accept(context);
+                        humanize(message.getAuthor()), name);
+                    command.onAuthorDenied().accept(context);
                 }
             }
         }
