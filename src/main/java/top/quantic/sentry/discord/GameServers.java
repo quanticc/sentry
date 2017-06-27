@@ -75,27 +75,30 @@ public class GameServers implements CommandSupplier {
                 String action = args[0];
                 String serverQuery = args[1];
                 List<GameServer> targets = gameServerService.findServersMultiple(Arrays.asList(serverQuery.split("[,;]")));
+                String targetList = targets.stream()
+                    .map(GameServer::getShortNameAndAddress)
+                    .collect(Collectors.joining(", "));
                 if ("restart".equals(action)) {
-                    answerToChannel(channel, "Restarting servers matching " + serverQuery);
-                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    answerToChannel(channel, "Restarting " + inflect(targets.size(), "server") + ": " + targetList);
+                    RequestBuffer.RequestFuture<IMessage> status = null;
                     int completed = 0;
                     for (GameServer target : targets) {
                         String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryRestart(target));
-                        String current = status.get().getContent();
-                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                        String current = (status == null ? "" : status.get().getContent());
+                        if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
                         }
                     }
                 } else if ("stop".equals(action)) {
-                    answerToChannel(channel, "Stopping servers matching " + serverQuery);
-                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    answerToChannel(channel, "Stopping " + inflect(targets.size(), "server") + ": " + targetList);
+                    RequestBuffer.RequestFuture<IMessage> status = null;
                     int completed = 0;
                     for (GameServer target : targets) {
                         String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryStop(target));
-                        String current = status.get().getContent();
-                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                        String current = (status == null ? "" : status.get().getContent());
+                        if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
@@ -103,12 +106,12 @@ public class GameServers implements CommandSupplier {
                     }
                 } else if ("update".equals(action)) {
                     answerToChannel(channel, "Updating game version on servers matching " + serverQuery);
-                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    RequestBuffer.RequestFuture<IMessage> status = null;
                     int completed = 0;
                     for (GameServer target : targets) {
                         String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryUpdate(target));
-                        String current = status.get().getContent();
-                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                        String current = (status == null ? "" : status.get().getContent());
+                        if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
@@ -123,12 +126,12 @@ public class GameServers implements CommandSupplier {
                     Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(Constants.ANY, mod);
                     String modName = setting.map(Setting::getValue).orElse(mod);
                     answerToChannel(channel, "Installing mod " + modName + " on servers matching " + serverQuery);
-                    RequestBuffer.RequestFuture<IMessage> status = answerToChannel(channel, "(0/" + targets.size() + ")");
+                    RequestBuffer.RequestFuture<IMessage> status = null;
                     int completed = 0;
                     for (GameServer target : targets) {
                         String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryModInstall(target, modName));
-                        String current = status.get().getContent();
-                        if (current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+                        String current = (status == null ? "" : status.get().getContent());
+                        if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
