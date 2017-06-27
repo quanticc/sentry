@@ -81,22 +81,35 @@ public class GameServers implements CommandSupplier {
                 if ("restart".equals(action)) {
                     answerToChannel(channel, "Restarting " + inflect(targets.size(), "server") + ": " + targetList);
                     RequestBuffer.RequestFuture<IMessage> status = null;
-                    int completed = 0;
+                    int errors = 0;
                     for (GameServer target : targets) {
-                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryRestart(target));
+                        Result<Void> result = gameServerService.tryRestart(target);
+                        if (!result.isSuccessful()) {
+                            errors++;
+                        }
+                        String toAppend = resultLine(target, result);
                         String current = (status == null ? "" : status.get().getContent());
                         if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
                         }
+                    }
+                    if (errors > 0) {
+                        answerToChannel(channel, "Completed: " + errors + " out of " + inflect(targets.size(), "server") + " processed with errors.");
+                    } else {
+                        answerToChannel(channel, "Completed: " + inflect(targets.size(), "server") + " successfully processed.");
                     }
                 } else if ("stop".equals(action)) {
                     answerToChannel(channel, "Stopping " + inflect(targets.size(), "server") + ": " + targetList);
                     RequestBuffer.RequestFuture<IMessage> status = null;
-                    int completed = 0;
+                    int errors = 0;
                     for (GameServer target : targets) {
-                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryStop(target));
+                        Result<Void> result = gameServerService.tryStop(target);
+                        if (!result.isSuccessful()) {
+                            errors++;
+                        }
+                        String toAppend = resultLine(target, result);
                         String current = (status == null ? "" : status.get().getContent());
                         if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
@@ -104,18 +117,32 @@ public class GameServers implements CommandSupplier {
                             updateMessage(status, current + toAppend);
                         }
                     }
+                    if (errors > 0) {
+                        answerToChannel(channel, "Completed: " + errors + " out of " + inflect(targets.size(), "server") + " processed with errors.");
+                    } else {
+                        answerToChannel(channel, "Completed: " + inflect(targets.size(), "server") + " successfully processed.");
+                    }
                 } else if ("update".equals(action)) {
                     answerToChannel(channel, "Updating game version on servers matching " + serverQuery);
                     RequestBuffer.RequestFuture<IMessage> status = null;
-                    int completed = 0;
+                    int errors = 0;
                     for (GameServer target : targets) {
-                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryUpdate(target));
+                        Result<Void> result = gameServerService.tryUpdate(target);
+                        if (!result.isSuccessful()) {
+                            errors++;
+                        }
+                        String toAppend = resultLine(target, result);
                         String current = (status == null ? "" : status.get().getContent());
                         if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
                         }
+                    }
+                    if (errors > 0) {
+                        answerToChannel(channel, "Completed: " + errors + " out of " + inflect(targets.size(), "server") + " processed with errors.");
+                    } else {
+                        answerToChannel(channel, "Completed: " + inflect(targets.size(), "server") + " successfully processed.");
                     }
                 } else if ("install-mod".equals(action)) {
                     if (args.length < 3) {
@@ -127,15 +154,24 @@ public class GameServers implements CommandSupplier {
                     String modName = setting.map(Setting::getValue).orElse(mod);
                     answerToChannel(channel, "Installing mod " + modName + " on servers matching " + serverQuery);
                     RequestBuffer.RequestFuture<IMessage> status = null;
-                    int completed = 0;
+                    int errors = 0;
                     for (GameServer target : targets) {
-                        String toAppend = "(" + ++completed + "/" + targets.size() + ") " + resultLine(target, gameServerService.tryModInstall(target, modName));
+                        Result<Void> result = gameServerService.tryModInstall(target, modName);
+                        if (!result.isSuccessful()) {
+                            errors++;
+                        }
+                        String toAppend = resultLine(target, result);
                         String current = (status == null ? "" : status.get().getContent());
                         if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
                             updateMessage(status, current + toAppend);
                         }
+                    }
+                    if (errors > 0) {
+                        answerToChannel(channel, "Completed: " + errors + " out of " + inflect(targets.size(), "server") + " processed with errors.");
+                    } else {
+                        answerToChannel(channel, "Completed: " + inflect(targets.size(), "server") + " successfully processed.");
                     }
                 } else if ("status".equals(action)) {
                     answerPrivately(message, "Retrieving status for servers matching " + serverQuery);
@@ -204,16 +240,23 @@ public class GameServers implements CommandSupplier {
                         }
                     }
                 } else if ("console".equals(action)) {
-                    answerPrivately(message, "Retrieving console for servers matching " + serverQuery);
+                    answerToChannel(channel, "Retrieving console for servers matching " + serverQuery);
+                    int errors = 0;
                     for (GameServer target : targets) {
                         Result<String> result = gameServerService.tryGetConsole(target);
                         String response;
                         if (result.isSuccessful()) {
                             response = "• [**" + target.getShortName() + "**] (" + target.getAddress() + ")\n" + result.getContent() + "\n";
                         } else {
+                            errors++;
                             response = resultLine(target, result);
                         }
-                        answerPrivately(message, response);
+                        answerToChannel(channel, response);
+                    }
+                    if (errors > 0) {
+                        answerToChannel(channel, "Completed: " + errors + " out of " + inflect(targets.size(), "server") + " processed with errors.");
+                    } else {
+                        answerToChannel(channel, "Completed: " + inflect(targets.size(), "server") + " successfully processed.");
                     }
                 } else {
                     answer(message, "Invalid action, must be one of: restart, stop, update, install-mod, status or console.");
