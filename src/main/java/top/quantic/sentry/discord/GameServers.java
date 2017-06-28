@@ -88,7 +88,7 @@ public class GameServers implements CommandSupplier {
                             errors++;
                         }
                         String toAppend = resultLine(target, result);
-                        String current = (status == null ? "" : status.get().getContent());
+                        String current = (status == null ? "" : status.get().getContent() + "\n");
                         if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                             status = answerToChannel(channel, toAppend);
                         } else {
