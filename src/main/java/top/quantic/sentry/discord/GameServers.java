@@ -224,10 +224,10 @@ public class GameServers implements CommandSupplier {
             if (status == null || builder.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                 status = answerToChannel(channel, toAppend);
                 builder.setLength(0);
-                builder.append(toAppend).append("\n");
+                builder.append(toAppend);
             } else {
                 IMessage newStatus = status.get();
-                builder.append(toAppend).append("\n");
+                builder.append(toAppend);
                 status = RequestBuffer.request(() -> (IMessage) newStatus.edit(builder.toString()));
             }
         }
