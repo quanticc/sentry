@@ -228,7 +228,7 @@ public class GameServers implements CommandSupplier {
                 String newContent = current + toAppend;
                 status = RequestBuffer.request(() -> (IMessage) newStatus.edit(newContent));
             }
-            current = status.get().getContent();
+            current = status.get().getContent() + "\n";
         }
         return processed;
     }
