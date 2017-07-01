@@ -214,21 +214,20 @@ public class GameServers implements CommandSupplier {
     private int process(List<GameServer> servers, Function<GameServer, Result<?>> action, IChannel channel) {
         RequestBuffer.RequestFuture<IMessage> status = null;
         int processed = 0;
-        String current = "";
+        StringBuilder builder = new StringBuilder();
         for (GameServer target : servers) {
             Result<?> result = action.apply(target);
             if (result.isSuccessful()) {
                 processed++;
             }
             String toAppend = resultLine(target, result);
-            if (status == null || current.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
+            builder.append(toAppend).append("\n");
+            if (status == null || builder.length() + toAppend.length() > Message.MAX_MESSAGE_LENGTH) {
                 status = answerToChannel(channel, toAppend);
             } else {
                 IMessage newStatus = status.get();
-                String newContent = current + toAppend;
-                status = RequestBuffer.request(() -> (IMessage) newStatus.edit(newContent));
+                status = RequestBuffer.request(() -> (IMessage) newStatus.edit(builder.toString()));
             }
-            current = status.get().getContent() + "\n";
         }
         return processed;
     }
