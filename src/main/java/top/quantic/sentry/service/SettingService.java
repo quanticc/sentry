@@ -67,7 +67,7 @@ public class SettingService {
         if (message.getChannel().isPrivate()) {
             return getPrefixes("*");
         } else {
-            return getPrefixes(message.getGuild().getID());
+            return getPrefixes(message.getGuild().getStringID());
         }
     }
 
@@ -87,7 +87,7 @@ public class SettingService {
         if (message.getChannel().isPrivate()) {
             setPrefixes("*", prefixes, append);
         } else {
-            setPrefixes(message.getGuild().getID(), prefixes, append);
+            setPrefixes(message.getGuild().getStringID(), prefixes, append);
         }
     }
 

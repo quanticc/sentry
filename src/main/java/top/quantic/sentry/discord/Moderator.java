@@ -15,6 +15,7 @@ import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.PermissionUtils;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -86,7 +87,7 @@ public class Moderator implements CommandSupplier {
                 String key = content.trim();
                 String id = key.replaceAll("<@!?([0-9]+)>", "$1");
                 List<IUser> matching = guild.getBannedUsers().stream()
-                    .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+                    .filter(u -> u.getStringID().equals(id) || equalsAnyName(u, id, guild))
                     .distinct().collect(Collectors.toList());
                 handleUserMatches(message, reply, key, matching, usersToPardon, title);
 
@@ -104,7 +105,7 @@ public class Moderator implements CommandSupplier {
 
                 for (IUser user : usersToPardon) {
                     log.debug("Pardoning {}", humanize(user));
-                    Result<Void> result = request(() -> guild.pardonUser(user.getID()));
+                    Result<Void> result = request(() -> guild.pardonUser(user.getLongID()));
                     if (!result.isSuccessful()) {
                         sendMessage(reply, authoredErrorEmbed(message)
                             .withTitle(title)
@@ -181,12 +182,12 @@ public class Moderator implements CommandSupplier {
         String key = content.trim();
         String id = key.replaceAll("<@!?([0-9]+)>", "$1");
         List<IUser> matching = guild.getUsers().stream()
-            .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, guild))
+            .filter(u -> u.getStringID().equals(id) || equalsAnyName(u, id, guild))
             .distinct().collect(Collectors.toList());
 
         if (matching.size() == 1) {
             IUser user = matching.get(0);
-            if (DiscordUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+            if (PermissionUtils.isUserHigher(guild, message.getClient().getOurUser(), user.getRolesForGuild(guild))) {
                 usersToBan.add(user);
             } else {
                 sendMessage(reply, authoredErrorEmbed(message)
@@ -247,7 +248,7 @@ public class Moderator implements CommandSupplier {
                     .build());
             } else if (thenPardon) {
                 log.debug("Pardoning {}", humanize(user));
-                Result<Void> result = request(() -> guild.pardonUser(user.getID()));
+                Result<Void> result = request(() -> guild.pardonUser(user.getLongID()));
                 if (!result.isSuccessful()) {
                     sendMessage(reply, authoredErrorEmbed(message)
                         .withTitle(title)
@@ -352,7 +353,7 @@ public class Moderator implements CommandSupplier {
                     for (String key : keys) {
                         String id = key.replaceAll("<@!?([0-9]+)>", "$1");
                         List<IUser> matching = channel.getGuild().getUsers().stream()
-                            .filter(u -> u.getID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
+                            .filter(u -> u.getStringID().equals(id) || equalsAnyName(u, id, channel.getGuild()))
                             .collect(Collectors.toList());
                         if (!matching.isEmpty()) {
                             authorsToMatch.addAll(matching);

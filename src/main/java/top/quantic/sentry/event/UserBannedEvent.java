@@ -23,9 +23,9 @@ public class UserBannedEvent extends SentryEvent {
 
     @Override
     public String getContentId() {
-        return "ban:" + getSource().getClient().getOurUser().getID()
-            + ":" + getSource().getGuild().getID()
-            + ":" + getSource().getUser().getID()
+        return "ban:" + getSource().getClient().getOurUser().getStringID()
+            + ":" + getSource().getGuild().getStringID()
+            + ":" + getSource().getUser().getStringID()
             + "@" + getTimestamp();
     }
 
@@ -39,7 +39,7 @@ public class UserBannedEvent extends SentryEvent {
         if (guilds == null) {
             return null;
         }
-        if (guilds.contains(getSource().getGuild().getID())) {
+        if (guilds.contains(getSource().getGuild().getStringID())) {
             IUser user = getSource().getUser();
             String imagesSpec = (String) dataMap.get("images");
             String image = "";

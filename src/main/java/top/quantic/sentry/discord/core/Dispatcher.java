@@ -69,7 +69,7 @@ public class Dispatcher implements ListenerSupplier, IListener<MessageReceivedEv
     private void execute(MessageReceivedEvent event) {
         IMessage message = event.getMessage();
         String content = message.getContent();
-        String guild = message.getChannel().isPrivate() ? Constants.ANY : message.getChannel().getGuild().getID();
+        String guild = message.getChannel().isPrivate() ? Constants.ANY : message.getChannel().getGuild().getStringID();
         Set<String> prefixes = settingService.getPrefixes(guild);
         Optional<String> prefix = prefixes.stream().filter(content::startsWith).findAny();
         if (prefix.isPresent()) {

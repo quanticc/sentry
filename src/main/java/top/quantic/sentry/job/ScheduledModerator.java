@@ -57,7 +57,7 @@ public class ScheduledModerator implements Job {
             client = clientRegistry.getClients().entrySet().stream()
                 .filter(entry -> bot.equals(entry.getKey().getId())
                     || bot.equals(entry.getKey().getName())
-                    || (entry.getValue().isReady() && bot.equals(entry.getValue().getOurUser().getID())))
+                    || (entry.getValue().isReady() && bot.equals(entry.getValue().getOurUser().getStringID())))
                 .findFirst()
                 .map(Map.Entry::getValue).orElse(null);
         }
@@ -70,7 +70,7 @@ public class ScheduledModerator implements Job {
 
         if ("purge".equals(action)) {
             for (String channel : channels.split(";|,")) {
-                IChannel target = client.getChannelByID(channel);
+                IChannel target = client.getChannelByID(snowflake(channel));
                 if (target == null) {
                     throw new JobExecutionException("Could not find channel with ID " + channel);
                 }

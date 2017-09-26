@@ -129,7 +129,7 @@ public class Info implements CommandSupplier, InitializingBean {
                     List<IUser> users = awareUserList(aware, message);
                     List<IUser> matching = users.stream()
                         .filter(u -> !matched.contains(u))
-                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
+                        .filter(u -> u.getStringID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
                         .distinct()
                         .peek(matched::add)
                         .collect(Collectors.toList());
@@ -171,7 +171,7 @@ public class Info implements CommandSupplier, InitializingBean {
         if (guild != null && !user.getName().equals(Optional.ofNullable(user.getNicknameForGuild(guild)).orElse(user.getName()))) {
             builder.appendField("Nickname", user.getDisplayName(guild), false);
         }
-        builder.appendField("ID", user.getID(), true)
+        builder.appendField("ID", user.getStringID(), true)
             .appendField("Mention", user.mention(), true)
             .appendField("Joined", withRelative(systemToInstant(user.getCreationDate())), false)
             .appendField("Status", formatStatus(presence.getStatus()), true);
@@ -248,7 +248,7 @@ public class Info implements CommandSupplier, InitializingBean {
                     }
                     List<IRole> matching = roles.stream()
                         .filter(r -> !matched.contains(r))
-                        .filter(r -> r.getID().equals(id)
+                        .filter(r -> r.getStringID().equals(id)
                             || r.getName().equalsIgnoreCase(query))
                         .distinct()
                         .peek(matched::add)
@@ -300,7 +300,7 @@ public class Info implements CommandSupplier, InitializingBean {
         EmbedBuilder builder = authoredEmbed(context.getMessage())
             .withColor(role.getColor() != null ? role.getColor() : new Color(0))
             .appendField("Role", mentionBuster(role.getName()), false)
-            .appendField("ID", "<" + role.getID() + ">", false)
+            .appendField("ID", "<" + role.getStringID() + ">", false)
             .appendField("Color", hex, true)
             .appendField("Position", "" + role.getPosition(), true)
             .appendField("Created", withRelative(systemToInstant(role.getCreationDate())), false);
@@ -325,8 +325,8 @@ public class Info implements CommandSupplier, InitializingBean {
             .setLenient(true)
             .withThumbnail(guild.getIconURL())
             .withColor(getDominantColor(asInputStream(guild.getIconURL()), new Color(0x00aa00)))
-            .appendField("Guild", guild.getName() + " <" + guild.getID() + ">", false)
-            .appendField("Owner", guild.getOwner().getName() + " <" + guild.getOwnerID() + ">", false)
+            .appendField("Guild", guild.getName() + " <" + guild.getStringID() + ">", false)
+            .appendField("Owner", guild.getOwner().getName() + " <" + guild.getOwner().getStringID() + ">", false)
             .appendField("Members", "" + guild.getTotalMemberCount(), false)
             .build();
     }
@@ -335,7 +335,7 @@ public class Info implements CommandSupplier, InitializingBean {
         if (role == null) {
             return "";
         }
-        return "• " + mentionBuster(role.getName()) + " <" + role.getID() + ">";
+        return "• " + mentionBuster(role.getName()) + " <" + role.getStringID() + ">";
     }
 
     private String mentionBuster(String name) {
@@ -368,7 +368,7 @@ public class Info implements CommandSupplier, InitializingBean {
                     }
                     List<IChannel> matching = channels.stream()
                         .filter(r -> !matched.contains(r))
-                        .filter(r -> r.getID().equals(id) || r.getName().equalsIgnoreCase(query))
+                        .filter(r -> r.getStringID().equals(id) || r.getName().equalsIgnoreCase(query))
                         .distinct()
                         .peek(matched::add)
                         .collect(Collectors.toList());
@@ -406,7 +406,7 @@ public class Info implements CommandSupplier, InitializingBean {
         String created = systemToInstant(channel.getCreationDate()).toString();
         EmbedBuilder builder = authoredEmbed(context.getMessage())
             .appendField("Channel", channel.getName(), false)
-            .appendField("ID", "<" + channel.getID() + ">", false)
+            .appendField("ID", "<" + channel.getStringID() + ">", false)
             .appendField("Created", created, false);
         if (!isBlank(channel.getTopic())) {
             builder.appendField("Topic", channel.getTopic(), false);
@@ -422,7 +422,7 @@ public class Info implements CommandSupplier, InitializingBean {
             }
         }
         embeds.add(builder.build());
-        if (!channel.isPrivate() && channel.getGuild().getID().equals(channel.getID())) {
+        if (!channel.isPrivate() && channel.getGuild().getStringID().equals(channel.getStringID())) {
             embeds.add(getGuildInfo(channel.getGuild()));
         }
         return embeds;
@@ -432,6 +432,6 @@ public class Info implements CommandSupplier, InitializingBean {
         if (channel == null) {
             return "";
         }
-        return "• " + channel.getName() + " <" + channel.getID() + ">";
+        return "• " + channel.getName() + " <" + channel.getStringID() + ">";
     }
 }

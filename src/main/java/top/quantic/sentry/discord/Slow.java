@@ -11,6 +11,7 @@ import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
 import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.util.PermissionUtils;
 import sx.blah.discord.util.RequestBuffer;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -26,9 +27,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static top.quantic.sentry.discord.util.DiscordUtil.answerToChannel;
-import static top.quantic.sentry.discord.util.DiscordUtil.getTrustedChannel;
-import static top.quantic.sentry.discord.util.DiscordUtil.humanize;
+import static top.quantic.sentry.discord.util.DiscordUtil.*;
 import static top.quantic.sentry.service.util.MiscUtil.inflect;
 
 @Component
@@ -82,9 +81,9 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
             answerToChannel(reply, "This command does not work in private messages");
             return;
         }
-        Setting currentRate = settingService.findMostRecentByGuildAndKey(channel.getGuild().getID(), SLOW_PREFIX + channel.getID())
-            .orElseGet(() -> new Setting().guild(channel.getGuild().getID()).key(SLOW_PREFIX + channel.getID()).value("0"));
-        long currentMinutes = slowRateMap.getOrDefault(channel.getID(), Long.parseLong(currentRate.getValue()));
+        Setting currentRate = settingService.findMostRecentByGuildAndKey(channel.getGuild().getStringID(), SLOW_PREFIX + channel.getStringID())
+            .orElseGet(() -> new Setting().guild(channel.getGuild().getStringID()).key(SLOW_PREFIX + channel.getStringID()).value("0"));
+        long currentMinutes = slowRateMap.getOrDefault(channel.getStringID(), Long.parseLong(currentRate.getValue()));
         if (isBlank(content)) {
             if (currentMinutes > 0) {
                 answerToChannel(reply, "Slow mode: One message to " + channel.mention() + " each " + inflect(currentMinutes, "minute") + " per user.\nUse **slow 0** to disable.");
@@ -117,10 +116,10 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
         } else {
             log.debug("Cancelling current limits to {}", humanize(channel));
             futures.entrySet().stream()
-                .filter(entry -> channel.getID().equals(entry.getKey().split("-")[0]))
+                .filter(entry -> channel.getStringID().equals(entry.getKey().split("-")[0]))
                 .forEach(entry -> {
                     String[] args = entry.getKey().split("-");
-                    IUser user = channel.getClient().getUserByID(args[1]);
+                    IUser user = channel.getClient().getUserByID(snowflake(args[1]));
                     boolean result = entry.getValue().cancel(true);
                     log.debug("Future for {} in {} cancelled: {}", humanize(user), humanize(channel), result);
                     removeUserLimitIn(user, channel);
@@ -128,7 +127,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
             answerToChannel(reply, "Slow mode disabled for " + channel.mention());
         }
         settingService.updateValue(currentRate, updatedMinutes + "");
-        slowRateMap.put(channel.getID(), updatedMinutes);
+        slowRateMap.put(channel.getStringID(), updatedMinutes);
     }
 
     @EventSubscriber
@@ -141,7 +140,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
         IChannel channel = event.getChannel();
         IUser author = event.getAuthor();
         if (!channel.isPrivate()) {
-            long minutes = slowRateMap.getOrDefault(channel.getID(), 0L);
+            long minutes = slowRateMap.getOrDefault(channel.getStringID(), 0L);
             if (minutes > 0) {
                 limitUserInFor(author, channel, TimeUnit.MINUTES.toMillis(minutes));
             }
@@ -160,8 +159,8 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
         futures.clear();
         for (Setting setting : settingService.findByGuild(USER_LIMIT_KEY)) {
             String[] args = setting.getKey().split("-");
-            IChannel channel = client.getChannelByID(args[0]);
-            IUser user = client.getUserByID(args[1]);
+            IChannel channel = client.getChannelByID(snowflake(args[0]));
+            IUser user = client.getUserByID(snowflake(args[1]));
             if (channel == null || user == null) {
                 log.debug("User {} or channel {} does not exist anymore", args[1], args[0]);
             } else {
@@ -178,12 +177,12 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
         for (Setting setting : settingService.findByKeyStartingWith(SLOW_PREFIX)) {
             String channelId = setting.getKey().substring(SLOW_PREFIX.length());
             long minutes = Long.parseLong(setting.getValue());
-            log.debug("Limiting {} to {}", humanize(client.getChannelByID(channelId)), inflect(minutes, "minute"));
+            log.debug("Limiting {} to {}", humanize(client.getChannelByID(snowflake(channelId))), inflect(minutes, "minute"));
             slowRateMap.put(channelId, minutes);
         }
         for (Setting setting : settingService.findByGuild(PREV_OVERRIDE_KEY)) {
             String[] channelUser = setting.getKey().split("-");
-            log.debug("Saving previous overrides for {} in {}", humanize(client.getUserByID(channelUser[1])), humanize(client.getChannelByID(channelUser[0])));
+            log.debug("Saving previous overrides for {} in {}", humanize(client.getUserByID(snowflake(channelUser[1]))), humanize(client.getChannelByID(snowflake(channelUser[0]))));
             settingService.delete(setting.getId());
         }
     }
@@ -193,7 +192,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
     }
 
     private String getChannelUserKey(IChannel channel, IUser user) {
-        return channel.getID() + "-" + user.getID();
+        return channel.getStringID() + "-" + user.getStringID();
     }
 
     private void removeUserLimitIn(IUser user, IChannel channel) {
@@ -201,7 +200,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
             RequestBuffer.request(() -> {
                 String key = getChannelUserKey(channel, user);
                 Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(PREV_OVERRIDE_KEY, key);
-                IChannel.PermissionOverride newUserOverrides = channel.getUserOverrides().get(user.getID());
+                IChannel.PermissionOverride newUserOverrides = channel.getUserOverridesLong().get(user.getLongID());
                 if (setting.isPresent()) {
                     String[] allowDeny = setting.get().getValue().split(";");
                     EnumSet<Permissions> previousAllow = Permissions.getAllowedPermissionsForNumber(Integer.parseInt(allowDeny[0]));
@@ -238,11 +237,11 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
 
     private void limitUserInFor(IUser user, IChannel channel, long millis) {
         IGuild guild = channel.getGuild();
-        if (DiscordUtils.isUserHigher(guild, channel.getClient().getOurUser(), user.getRolesForGuild(guild))) {
+        if (PermissionUtils.isUserHigher(guild, channel.getClient().getOurUser(), user.getRolesForGuild(guild))) {
             log.debug("Disabling send message permissions of {} for {} in {}",
                 humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
             // store pre-limit overrides for this user
-            IChannel.PermissionOverride userOverrides = channel.getUserOverrides().get(user.getID());
+            IChannel.PermissionOverride userOverrides = channel.getUserOverridesLong().get(user.getLongID());
             int allow = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.allow());
             int deny = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.deny());
             String key = getChannelUserKey(channel, user);

@@ -24,9 +24,9 @@ public class UserPardonedEvent extends SentryEvent {
 
     @Override
     public String getContentId() {
-        return "pardon:" + getSource().getClient().getOurUser().getID()
-            + ":" + getSource().getGuild().getID()
-            + ":" + getSource().getUser().getID()
+        return "pardon:" + getSource().getClient().getOurUser().getStringID()
+            + ":" + getSource().getGuild().getStringID()
+            + ":" + getSource().getUser().getStringID()
             + "@" + getTimestamp();
     }
 
@@ -40,7 +40,7 @@ public class UserPardonedEvent extends SentryEvent {
         if (guilds == null) {
             return null;
         }
-        if (guilds.contains(getSource().getGuild().getID())) {
+        if (guilds.contains(getSource().getGuild().getStringID())) {
             IUser user = getSource().getUser();
             return user.getName() + "#" + user.getDiscriminator() + " " + emoji("angel");
         } else {
