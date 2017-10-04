@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageDeleteEvent;
 import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
 import sx.blah.discord.handle.impl.events.guild.member.UserPardonEvent;
 import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
@@ -26,19 +27,12 @@ import static top.quantic.sentry.discord.util.DiscordUtil.ourBotName;
 public class Supervisor implements DiscordSubscriber {
 
     private static final Logger log = LoggerFactory.getLogger(Supervisor.class);
-    private static final String WEBSOCKET_LOGGER_NAME = "org.eclipse.jetty.websocket";
 
     private final ApplicationEventPublisher publisher;
-
-    private final AtomicReference<Level> jettyLevel = new AtomicReference<>(Level.WARN);
-    private final AtomicReference<Level> d4jLevel = new AtomicReference<>(Level.DEBUG);
 
     @Autowired
     public Supervisor(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        this.jettyLevel.set(context.getLogger(WEBSOCKET_LOGGER_NAME).getLevel());
-        this.d4jLevel.set(context.getLogger(Discord4J.class).getLevel());
     }
 
     @EventSubscriber
@@ -50,7 +44,6 @@ public class Supervisor implements DiscordSubscriber {
     @EventSubscriber
     public void onReconnectSuccess(ReconnectSuccessEvent event) {
         publisher.publishEvent(new ReconnectEvent(event));
-        restoreLevel();
     }
 
     @EventSubscriber
@@ -61,7 +54,10 @@ public class Supervisor implements DiscordSubscriber {
     @EventSubscriber
     public void onDisconnect(DisconnectedEvent event) {
         log.info("[{}] Discord bot disconnected due to {}", ourBotName(event), event.getReason());
-        setTraceLevel();
+
+	    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+	    context.getLogger("org.eclipse.jetty.websocket").setLevel(Level.TRACE);
+	    context.getLogger(Discord4J.class).setLevel(Level.TRACE);
     }
 
     @EventSubscriber
@@ -74,15 +70,9 @@ public class Supervisor implements DiscordSubscriber {
         publisher.publishEvent(new UserPardonedEvent(event));
     }
 
-    private void setTraceLevel() {
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        context.getLogger(WEBSOCKET_LOGGER_NAME).setLevel(Level.TRACE);
-        context.getLogger(Discord4J.class).setLevel(Level.TRACE);
+    @EventSubscriber
+    public void onMessageDelete(MessageDeleteEvent event) {
+    	publisher.publishEvent(new MessageDeletedEvent(event));
     }
 
-    private void restoreLevel() {
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        context.getLogger(WEBSOCKET_LOGGER_NAME).setLevel(jettyLevel.get());
-        context.getLogger(Discord4J.class).setLevel(d4jLevel.get());
-    }
 }

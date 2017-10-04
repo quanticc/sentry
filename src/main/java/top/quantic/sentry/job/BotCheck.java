@@ -1,5 +1,7 @@
 package top.quantic.sentry.job;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.codahale.metrics.MetricRegistry;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -7,6 +9,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.IShard;
 import sx.blah.discord.handle.obj.IGuild;
@@ -58,6 +61,10 @@ public class BotCheck implements Job {
                     metricRegistry.histogram(connectedMetric).update(connected);
                     metricRegistry.histogram(joinedMetric).update(joined);
                 }
+
+	            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+	            loggerContext.getLogger("org.eclipse.jetty.websocket").setLevel(Level.WARN);
+	            loggerContext.getLogger(Discord4J.class).setLevel(Level.DEBUG);
             } else {
                 log.warn("Bot {} is not ready!", entry.getKey().getName());
             }
