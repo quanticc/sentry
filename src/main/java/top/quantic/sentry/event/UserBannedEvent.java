@@ -47,7 +47,16 @@ public class UserBannedEvent extends SentryEvent {
                 String[] images = imagesSpec.split(";");
                 image = "\n" + images[random.nextInt(images.length)];
             }
-            return user.getName() + "#" + user.getDiscriminator() + " " + emoji("hammer") + image;
+            String emojiSpec = (String) dataMap.get("emoji");
+	        String emoji = emoji("hammer");
+	        if (emojiSpec != null) {
+		        String[] emojis = emojiSpec.split(";");
+		        emoji = "\n" + emojis[random.nextInt(emojis.length)];
+		        if (emoji.startsWith("alias:")) {
+		        	emoji = emoji(emoji);
+		        }
+	        }
+            return user.getName() + "#" + user.getDiscriminator() + " " + emoji + image;
         } else {
             return null;
         }
