@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -284,6 +286,17 @@ public class UgcService implements InitializingBean {
         return objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcTransaction>>() {
         });
     }
+
+    // Admin level
+
+	@Retryable(maxAttempts = 3, backoff = @Backoff(2000L))
+	public void getActiveTeamTickets() {
+    	ResponseEntity<List<UgcTeamTicket>> responseEntity = restTemplate.exchange(endpoints.get("currentTickets"),
+			    HttpMethod.GET, null,
+			    new ParameterizedTypeReference<List<UgcTeamTicket>>(){});
+	}
+
+    // Utilities
 
     private Map<String, Object> getVariablesMap() {
         Map<String, Object> vars = new LinkedHashMap<>();
