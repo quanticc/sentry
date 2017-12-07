@@ -31,7 +31,7 @@ public class BotHealthIndicator implements HealthIndicator {
             if (client.isReady()) {
                 ready++;
                 bot.put("status", "UP");
-                bot.put("id", client.getOurUser().getID());
+                bot.put("id", client.getOurUser().getStringID());
                 bot.put("name", client.getOurUser().getName());
                 bot.put("shards", client.getShardCount());
                 bot.put("guilds", client.getGuilds().size());

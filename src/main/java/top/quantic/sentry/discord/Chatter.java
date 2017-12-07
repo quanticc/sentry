@@ -92,7 +92,7 @@ public class Chatter implements DiscordSubscriber, InitializingBean {
                         EmojiParser.FitzpatrickAction.REMOVE);
                     try {
                         log.debug("[{}ms] >>> {}", System.currentTimeMillis() - start, content);
-                        String response = getSession(author.getID()).think(content);
+                        String response = getSession(author.getStringID()).think(content);
                         response = StringEscapeUtils.unescapeHtml4(response);
                         Matcher matcher = UNICODE.matcher(response);
                         while (matcher.find()) {

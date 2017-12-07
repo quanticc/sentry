@@ -20,19 +20,19 @@ public class MessageDeletedEvent extends SentryEvent {
 
 	@Override
 	public String getContentId() {
-		return "deleted:" + getSource().getMessage().getID();
+		return "deleted:" + getSource().getMessage().getStringID();
 	}
 
 	@Override
 	public String asContent(Map<String, Object> dataMap) {
 		MessageDeleteEvent source = getSource();
-		return source.getAuthor() + " deleted a message: " + DiscordUtil.humanize(source.getMessage());
+		return source.getMessage().getAuthor() + " deleted a message: " + DiscordUtil.humanize(source.getMessage());
 	}
 
 	@Override
 	public EmbedObject asEmbed(Map<String, Object> dataMap) {
 		MessageDeleteEvent source = getSource();
-		return source.getMessage().getEmbedded().stream()
+		return source.getMessage().getEmbeds().stream()
 				.findFirst()
 				.map(EmbedObject::new)
 				.orElse(null);

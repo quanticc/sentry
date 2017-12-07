@@ -48,7 +48,7 @@ public class ChannelPurgeEvent extends SentryEvent {
     public Map<String, Object> asMap(Map<String, Object> dataMap) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("channel", getSource());
-        map.put("channelId", getSource().getID());
+        map.put("channelId", getSource().getStringID());
         map.put("purged", purged);
         map.put("purgedSize", purged.size());
         return map;

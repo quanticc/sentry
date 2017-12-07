@@ -136,7 +136,7 @@ public class Self implements CommandSupplier {
                     String id = query.replaceAll("<@!?(\\d+)>", "$1");
                     List<IUser> users = awareUserList(aware, message);
                     List<IUser> matching = users.stream()
-                        .filter(u -> u.getID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
+                        .filter(u -> u.getStringID().equals(id) || equalsAnyName(u, query, channel.getGuild()))
                         .distinct()
                         .collect(Collectors.toList());
                     if (matching.size() == 1) {
@@ -238,25 +238,18 @@ public class Self implements CommandSupplier {
         limit = Math.min(maxDepth, limit);
         IMessage message = context.getMessage();
         IDiscordClient client = message.getClient();
-        IChannel c = client.getChannelByID(message.getChannel().getID());
+        IChannel c = client.getChannelByID(message.getChannel().getLongID());
         if (c != null) {
             log.info("Preparing to delete latest {} to channel {}", inflect(limit, "bot message"), c.getName());
-            int cap = c.getMessages().getCacheCapacity();
-            c.getMessages().setCacheCapacity(MessageList.UNLIMITED_CAPACITY);
             int deleted = 0;
             int i = 0;
             List<IMessage> toDelete = new ArrayList<>();
-            while (deleted < limit && i < maxDepth) {
-                try {
-                    IMessage msg = c.getMessages().get(i++);
-                    if (msg.getAuthor().equals(client.getOurUser())) {
-                        toDelete.add(msg);
-                        deleted++;
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    // we reached the end apparently
-                    log.warn("Could not retrieve messages to delete", e);
-                    break;
+	        MessageHistory history = c.getMessageHistory(limit);
+            while (deleted < limit && i < history.size()) {
+                IMessage msg = history.get(i++);
+                if (msg.getAuthor().equals(client.getOurUser())) {
+                    toDelete.add(msg);
+                    deleted++;
                 }
             }
             if (c.isPrivate() || toDelete.size() == 1) {
@@ -274,10 +267,8 @@ public class Self implements CommandSupplier {
                         }
                     }).get();
                 }
-                c.getMessages().setCacheCapacity(cap);
             } else {
-                CompletableFuture.supplyAsync(() -> deleteInBatch(c, toDelete))
-                    .thenRun(() -> c.getMessages().setCacheCapacity(cap));
+                CompletableFuture.supplyAsync(() -> deleteInBatch(c, toDelete));
             }
         }
     }

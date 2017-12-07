@@ -47,6 +47,10 @@ public class DiscordUtil {
         return getRolesWithChannel(message.getAuthor(), message.getChannel(), deep);
     }
 
+    public static long snowflake(String id) {
+    	return Long.parseUnsignedLong(id);
+    }
+
     private static Set<String> getRolesWithChannel(IUser user, IChannel channel, boolean deep) {
         if (user == null) {
             return Collections.emptySet();
@@ -54,16 +58,16 @@ public class DiscordUtil {
             if (deep) {
                 // get all belonging guilds of this user - expensive!
                 return user.getClient().getGuilds().stream()
-                    .filter(guild -> guild.getUserByID(user.getID()) != null)
+                    .filter(guild -> guild.getUserByID(user.getLongID()) != null)
                     .map(guild -> getRolesWithGuild(user, guild))
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
             } else {
-                return Sets.newHashSet(user.getID());
+                return Sets.newHashSet(user.getStringID());
             }
         } else {
             Set<String> roleSet = getRolesWithGuild(user, channel.getGuild());
-            roleSet.add(channel.getID());
+            roleSet.add(channel.getStringID());
             return roleSet;
         }
     }
@@ -72,11 +76,11 @@ public class DiscordUtil {
         if (user == null) {
             return Sets.newHashSet();
         } else if (guild == null) {
-            return Sets.newHashSet(user.getID());
+            return Sets.newHashSet(user.getStringID());
         } else {
-            Set<String> roleSet = Sets.newHashSet(user.getID());
+            Set<String> roleSet = Sets.newHashSet(user.getStringID());
             roleSet.addAll(user.getRolesForGuild(guild).stream()
-                .map(IDiscordObject::getID)
+                .map(IDiscordObject::getStringID)
                 .collect(Collectors.toList()));
             return roleSet;
         }
@@ -101,7 +105,7 @@ public class DiscordUtil {
     }
 
     public static String humanize(IUser user) {
-        return String.format("%s#%s (%s)", user.getName(), user.getDiscriminator(), user.getID());
+        return String.format("%s#%s (%s)", user.getName(), user.getDiscriminator(), user.getStringID());
     }
 
     public static String humanizeAll(Collection<IUser> users, String delimiter) {
@@ -114,9 +118,9 @@ public class DiscordUtil {
 
     public static String humanize(IChannel channel) {
         if (channel.isPrivate()) {
-            return String.format("*PM* (%s)", channel.getID());
+            return String.format("*PM* (%s)", channel.getStringID());
         } else {
-            return String.format("%s/%s (%s)", channel.getGuild().getName(), channel.getName(), channel.getID());
+            return String.format("%s/%s (%s)", channel.getGuild().getName(), channel.getName(), channel.getStringID());
         }
     }
 
@@ -124,23 +128,23 @@ public class DiscordUtil {
         if (channel.isPrivate()) {
             return "*PM*";
         } else {
-            return String.format("%s (#%s)", channel.getName(), channel.getID());
+            return String.format("%s (#%s)", channel.getName(), channel.getStringID());
         }
     }
 
     public static String humanize(IGuild guild) {
-        return String.format("%s (%s)", guild.getName(), guild.getID());
+        return String.format("%s (%s)", guild.getName(), guild.getStringID());
     }
 
     public static String humanize(IRole role) {
-        return String.format("%s/%s (%s)", role.getGuild().getName(), role.getName().replace("@", "@\u200B"), role.getID());
+        return String.format("%s/%s (%s)", role.getGuild().getName(), role.getName().replace("@", "@\u200B"), role.getStringID());
     }
 
     public static String humanizeShort(IUser user) {
         if (user == null) {
             return "";
         }
-        return "• " + user.getName() + " <" + user.getID() + ">\n";
+        return "• " + user.getName() + " <" + user.getStringID() + ">\n";
     }
 
     public static boolean equalsAnyName(IUser user, String name, IGuild guild) {
@@ -174,7 +178,7 @@ public class DiscordUtil {
         return RequestBuffer.request(() -> {
             try {
                 message.delete();
-                return Result.ok(1, "Message #" + message.getID() + " was deleted");
+                return Result.ok(1, "Message #" + message.getStringID() + " was deleted");
             } catch (MissingPermissionsException | DiscordException e) {
                 log.warn("Could not delete message", e);
                 return Result.error("Could not delete message: " + e.getMessage());
@@ -231,7 +235,7 @@ public class DiscordUtil {
     }
 
     public static String ourBotId(IDiscordClient client) {
-        return client.getOurUser().getID();
+        return client.getOurUser().getStringID();
     }
 
     public static String[] safeSplit(String[] args, int limit) {
@@ -266,8 +270,8 @@ public class DiscordUtil {
      */
     public static IChannel getTrustedChannel(SettingService settingService, IMessage message) {
         IChannel channel = message.getChannel();
-        String channelId = channel.getID();
-        if (channel.isPrivate() || !settingService.findSetting(channel.getGuild().getID(), channelId, Constants.TRUSTED).isEmpty()) {
+        String channelId = channel.getStringID();
+        if (channel.isPrivate() || !settingService.findSetting(channel.getGuild().getStringID(), channelId, Constants.TRUSTED).isEmpty()) {
             return message.getChannel();
         } else {
             return message.getAuthor().getOrCreatePMChannel();

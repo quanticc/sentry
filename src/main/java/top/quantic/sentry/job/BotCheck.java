@@ -46,7 +46,7 @@ public class BotCheck implements Job {
                         .update(millis, TimeUnit.MILLISECONDS);
                 }
                 for (IGuild guild : client.getGuilds()) {
-                    String guildTag = "guild:" + guild.getID();
+                    String guildTag = "guild:" + guild.getStringID();
                     long online = guild.getUsers().stream()
                         .filter(user -> user.getPresence().getStatus() == StatusType.ONLINE)
                         .count();

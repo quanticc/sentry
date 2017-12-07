@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
+import static top.quantic.sentry.discord.util.DiscordUtil.snowflake;
 
 public class DiscordMessenger implements Job {
 
@@ -30,11 +31,11 @@ public class DiscordMessenger implements Job {
             Optional<IDiscordClient> client = clientRegistry.getClients().entrySet().stream()
                 .filter(entry -> botId.equals(entry.getKey().getId())
                     || botId.equals(entry.getKey().getName())
-                    || (entry.getValue().isReady() && botId.equals(entry.getValue().getOurUser().getID())))
+                    || (entry.getValue().isReady() && botId.equals(entry.getValue().getOurUser().getStringID())))
                 .map(Map.Entry::getValue)
                 .findAny();
             if (client.isPresent()) {
-                IChannel channel = client.get().getChannelByID(channelId);
+                IChannel channel = client.get().getChannelByID(snowflake(channelId));
                 if (channel != null) {
                     sendMessage(channel, content);
                 } else {

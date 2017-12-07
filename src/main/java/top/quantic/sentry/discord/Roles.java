@@ -65,12 +65,12 @@ public class Roles implements CommandSupplier {
                 }
                 // Map role -> role_id
                 IUser author = message.getAuthor();
-                Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(channel.getGuild().getID(), "roleMap:" + content);
+                Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(channel.getGuild().getStringID(), "roleMap:" + content);
                 if (setting.isPresent()) {
                     String roleId = setting.get().getValue();
-                    if (permissionService.hasPermission(channel.getID(), "assignIn", roleId)) {
-                        if (permissionService.hasPermission(author.getID(), "assignSelf", roleId)) {
-                            IRole role = channel.getGuild().getRoleByID(roleId);
+                    if (permissionService.hasPermission(channel.getStringID(), "assignIn", roleId)) {
+                        if (permissionService.hasPermission(author.getStringID(), "assignSelf", roleId)) {
+                            IRole role = channel.getGuild().getRoleByID(snowflake(roleId));
                             if (role != null) {
                                 // Role is ready to be assigned
                                 Result<?> result = RequestBuffer.request(() -> {

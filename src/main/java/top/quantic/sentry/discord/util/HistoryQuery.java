@@ -68,7 +68,7 @@ public class HistoryQuery {
         MessageHistory history = channel.getMessageHistory(queryChunkSize);
         while ((depth == null || traversed < Math.max(1, depth)) && (limit == null || found.size() < Math.max(1, limit))) {
             if (index >= history.size()) {
-                history = channel.getMessageHistoryFrom(history.getEarliestMessage().getID(), queryChunkSize);
+                history = channel.getMessageHistoryFrom(history.getEarliestMessage().getLongID(), queryChunkSize);
                 index = 1; // we already went through index 0
                 if (index >= history.size()) {
                     break; // beginning of the channel reached

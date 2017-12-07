@@ -35,6 +35,7 @@ import static java.util.Comparator.nullsLast;
 import static top.quantic.sentry.discord.util.DiscordLimiter.acquireWebhook;
 import static top.quantic.sentry.discord.util.DiscordUtil.answerToChannel;
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
+import static top.quantic.sentry.discord.util.DiscordUtil.snowflake;
 
 /**
  * Service Implementation for managing Subscriber.
@@ -177,7 +178,7 @@ public class SubscriberService {
         clientRegistry.getClients().entrySet().stream()
             .filter(entry -> matchesClient(clientId, entry))
             .forEach(entry -> {
-                IChannel channel = entry.getValue().getChannelByID(channelId);
+                IChannel channel = entry.getValue().getChannelByID(snowflake(channelId));
                 if (channel != null) {
                     if (content != null && content.length() > Message.MAX_MESSAGE_LENGTH) {
                         answerToChannel(channel, content, false).get();
