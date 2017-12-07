@@ -138,7 +138,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
     @EventSubscriber
     public void onMessageReceived(MessageReceivedEvent event) {
         IChannel channel = event.getChannel();
-        IUser author = event.getAuthor();
+        IUser author = event.getMessage().getAuthor();
         if (!channel.isPrivate()) {
             long minutes = slowRateMap.getOrDefault(channel.getStringID(), 0L);
             if (minutes > 0) {
@@ -241,7 +241,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
             log.debug("Disabling send message permissions of {} for {} in {}",
                 humanize(user), DateUtil.humanizeShort(Duration.ofMillis(millis)), humanize(channel));
             // store pre-limit overrides for this user
-            IChannel.PermissionOverride userOverrides = channel.getUserOverridesLong().get(user.getLongID());
+            PermissionOverride userOverrides = channel.getUserOverrides().get(user.getLongID());
             int allow = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.allow());
             int deny = userOverrides == null ? 0 : Permissions.generatePermissionsNumber(userOverrides.deny());
             String key = getChannelUserKey(channel, user);
