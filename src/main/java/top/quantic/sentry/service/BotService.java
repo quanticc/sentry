@@ -25,6 +25,7 @@ import top.quantic.sentry.service.dto.BotDTO;
 import top.quantic.sentry.service.mapper.BotMapper;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -120,9 +121,12 @@ public class BotService {
         }
 
         for (CommandSupplier supplier : commandSuppliers) {
-            List<Command> commands = supplier.getCommands();
-//            log.debug("[{}] Registering commands: {}", bot.getName(), commands.stream()
-//                .map(Command::getName).collect(Collectors.joining(", ")));
+            List<Command> commands = supplier.getCommands().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+            log.debug("[{}] Registering commands: {}", bot.getName(), commands.stream()
+                .map(Command::getName)
+                .collect(Collectors.joining(", ")));
             commandRegistry.addAll(client, commands);
         }
 
