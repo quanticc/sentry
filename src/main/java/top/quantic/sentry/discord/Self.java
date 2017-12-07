@@ -26,10 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -71,8 +68,7 @@ public class Self implements CommandSupplier {
             .onExecute(context -> {
                 IMessage message = context.getMessage();
                 OptionSet o = context.getOptionSet();
-                Set<String> prefixesToSet = o.valuesOf(nonOptSpec).stream()
-                    .collect(Collectors.toSet());
+                Set<String> prefixesToSet = new HashSet<>(o.valuesOf(nonOptSpec));
                 if (prefixesToSet.isEmpty()) {
                     replyWithPrefixes(message);
                 } else {

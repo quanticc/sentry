@@ -121,8 +121,8 @@ public class BotService {
 
         for (CommandSupplier supplier : commandSuppliers) {
             List<Command> commands = supplier.getCommands();
-            log.debug("[{}] Registering commands: {}", bot.getName(), commands.stream()
-                .map(Command::getName).collect(Collectors.joining(", ")));
+//            log.debug("[{}] Registering commands: {}", bot.getName(), commands.stream()
+//                .map(Command::getName).collect(Collectors.joining(", ")));
             commandRegistry.addAll(client, commands);
         }
 
