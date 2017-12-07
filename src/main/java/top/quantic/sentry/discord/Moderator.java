@@ -275,7 +275,7 @@ public class Moderator implements CommandSupplier {
         OptionSpec<String> beforeSpec = parser.acceptsAll(asList("before", "until"), "Delete messages before this temporal expression").withRequiredArg().describedAs("timex");
         OptionSpec<String> afterSpec = parser.acceptsAll(asList("after", "since"), "Delete messages after this temporal expression").withRequiredArg().describedAs("timex");
         OptionSpec<Void> testSpec = parser.acceptsAll(asList("preview", "test"), "Don't delete any messages");
-        OptionSpec<Void> includeRequestSpec = parser.acceptsAll(asList("include-this", "include-request", "with-request"), "Include this message on the deletion candidates");
+        OptionSpec<Void> includeRequestSpec = parser.acceptsAll(asList("this", "include-this", "include-request", "with-request"), "Include this message on the deletion candidates");
         return CommandBuilder.of("delete")
             .describedAs("Delete messages on this channel")
             .in("Moderation")
@@ -452,7 +452,7 @@ public class Moderator implements CommandSupplier {
     }
 
     private String deleteExamples() {
-        return "Usage: **delete** [**last** __number__] [**from** __user__] [**after** __timex__] [**before** __timex__] [**like** __content__] [**matching** __regex__] [**depth** __number__] [**include-this**] [**test**] [__user1__ [__user2__ ...]]\n\n" +
+        return "Usage: **delete** [**last** __number__] [**from** __user__] [**after** __timex__] [**before** __timex__] [**like** __content__] [**matching** __regex__] [**depth** __number__] [**this**] [**test**] [__user1__ [__user2__ ...]]\n\n" +
             "This command lets you set a bunch of criteria, so let me explain this step by step:\n" +
             "- Option **last** specifies the maximum number of messages to be deleted. For example, if you set 1 it will delete the most recent message matching your criteria. If you omit this it defaults to 100.\n" +
             "- Option **from** lets you set the user that will have their messages deleted. It can be an ID, a name, a nickname or a mention.\n" +
@@ -460,7 +460,7 @@ public class Moderator implements CommandSupplier {
             "- Option **like** lets you specify a string (wrap within quotes if you need spaces) to delete all messages (until depth or limit is reached) that contain it.\n" +
             "- Option **matching** lets you specify a regex (regular expression) to delete all messages (until depth or limit is reached) that match it.\n" +
             "- Option **depth** lets you set the maximum number of messages searched. If omitted it defaults to 1000.\n" +
-            "- Option **include-this** makes your own command to be included in the search criteria, otherwise it will be ignored, even if it matches the given criteria.\n" +
+            "- Option **this** makes your own command to be included in the search criteria, otherwise it will be ignored, even if it matches the given criteria.\n" +
             "- Option **test** won't delete any message, instead it will PM you what would be deleted with the given criteria.\n" +
             "- After all options, you can set additional users by ID, name, nickname or mention in case you want to delete messages from multiple users.\n\n" +
             "To delete all messages in the past hour: `delete after \"1 hour ago\"` (see the quotes in order to use spaces)\n" +
