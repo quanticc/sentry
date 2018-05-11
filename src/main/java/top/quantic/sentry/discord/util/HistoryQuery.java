@@ -85,11 +85,11 @@ public class HistoryQuery {
                 continue;
             }
             // continue (skip) if we are after "--before" timex
-            if (before != null && msg.getTimestamp().isAfter(before.toLocalDateTime())) {
+            if (before != null && msg.getTimestamp().isAfter(before.toInstant())) {
                 continue;
             }
             // break if we reach "--after" timex
-            if (after != null && msg.getTimestamp().isBefore(after.toLocalDateTime())) {
+            if (after != null && msg.getTimestamp().isBefore(after.toInstant())) {
                 log.debug("Search interrupted after hitting date constraint");
                 break;
             }

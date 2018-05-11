@@ -9,10 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.handle.obj.Permissions;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 import top.quantic.sentry.discord.core.Command;
 import top.quantic.sentry.discord.core.CommandBuilder;
@@ -165,20 +162,20 @@ public class Self implements CommandSupplier {
                     }
                 }
                 if (o.has(gameSpec)) {
-                    client.online(o.valueOf(gameSpec));
+                    client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, o.valueOf(gameSpec));
                 } else if (o.has(urlSpec)) {
-                    client.streaming(o.valueOf(streamSpec), o.valueOf(urlSpec));
+                    client.changeStreamingPresence(StatusType.ONLINE, o.valueOf(streamSpec), o.valueOf(urlSpec));
                 } else if (o.has(emptySpec)) {
-                    client.online();
+                    client.changePresence(StatusType.ONLINE);
                 }
                 if (o.has(presenceSpec)) {
                     String presence = o.valueOf(presenceSpec);
                     switch (presence.toLowerCase()) {
                         case "online":
-                            client.online();
+                            client.changePresence(StatusType.ONLINE);
                             break;
                         case "idle":
-                            client.idle();
+                            client.changePresence(StatusType.IDLE);
                             break;
                         default:
                             answerPrivately(message, "Invalid presence - use either online or idle");

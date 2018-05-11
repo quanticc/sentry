@@ -68,7 +68,7 @@ public class Info implements CommandSupplier, InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         try (InputStream stream = Discord4J.class.getClassLoader().getResourceAsStream("app.properties")) {
             properties.load(stream);
         } catch (IOException e) {
@@ -174,10 +174,10 @@ public class Info implements CommandSupplier, InitializingBean {
         }
         builder.appendField("ID", user.getStringID(), true)
             .appendField("Mention", user.mention(), true)
-            .appendField("Joined", withRelative(systemToInstant(user.getCreationDate())), false)
+            .appendField("Joined", withRelative(user.getCreationDate()), false)
             .appendField("Status", formatStatus(presence.getStatus()), true);
-        if (presence.getPlayingText().isPresent()) {
-            builder.appendField("Playing", presence.getPlayingText().get(), true);
+        if (presence.getText().isPresent()) {
+            builder.appendField("Playing", presence.getText().get(), true);
         }
         if (presence.getStreamingUrl().isPresent()) {
             builder.appendField("Streaming", presence.getStreamingUrl().get(), true);
@@ -304,7 +304,7 @@ public class Info implements CommandSupplier, InitializingBean {
             .appendField("ID", "<" + role.getStringID() + ">", false)
             .appendField("Color", hex, true)
             .appendField("Position", "" + role.getPosition(), true)
-            .appendField("Created", withRelative(systemToInstant(role.getCreationDate())), false);
+            .appendField("Created", withRelative(role.getCreationDate()), false);
         if (!isEveryone && (hoisted || mentionable || managed)) {
             builder.appendField("Tags", Stream.of((hoisted ? "hoisted" : ""), (mentionable ? "mentionable" : ""), (managed ? "managed" : ""))
                 .filter(s -> !s.isEmpty())
@@ -404,7 +404,7 @@ public class Info implements CommandSupplier, InitializingBean {
         if (channel == null) {
             return embeds;
         }
-        String created = systemToInstant(channel.getCreationDate()).toString();
+        String created = channel.getCreationDate().toString();
         EmbedBuilder builder = authoredEmbed(context.getMessage())
             .appendField("Channel", channel.getName(), false)
             .appendField("ID", "<" + channel.getStringID() + ">", false)

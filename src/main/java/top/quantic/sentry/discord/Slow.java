@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.shard.DisconnectedEvent;
@@ -200,7 +199,7 @@ public class Slow implements CommandSupplier, DiscordSubscriber {
             RequestBuffer.request(() -> {
                 String key = getChannelUserKey(channel, user);
                 Optional<Setting> setting = settingService.findMostRecentByGuildAndKey(PREV_OVERRIDE_KEY, key);
-                IChannel.PermissionOverride newUserOverrides = channel.getUserOverridesLong().get(user.getLongID());
+                PermissionOverride newUserOverrides = channel.getUserOverrides().get(user.getLongID());
                 if (setting.isPresent()) {
                     String[] allowDeny = setting.get().getValue().split(";");
                     EnumSet<Permissions> previousAllow = Permissions.getAllowedPermissionsForNumber(Integer.parseInt(allowDeny[0]));
