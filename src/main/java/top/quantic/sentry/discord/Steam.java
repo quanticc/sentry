@@ -26,7 +26,6 @@ import static top.quantic.sentry.discord.util.DiscordUtil.answer;
 import static top.quantic.sentry.discord.util.DiscordUtil.sendMessage;
 import static top.quantic.sentry.service.util.DateUtil.withRelative;
 import static top.quantic.sentry.service.util.MiscUtil.getDominantColor;
-import static top.quantic.sentry.service.util.MiscUtil.inflect;
 import static top.quantic.sentry.service.util.SteamIdConverter.steam2To3;
 import static top.quantic.sentry.service.util.SteamIdConverter.steamId64To2;
 
@@ -59,24 +58,22 @@ public class Steam implements CommandSupplier {
             .parsedBy(parser)
             .onExecute(context -> {
                 IMessage message = context.getMessage();
-                List<String> queries = context.getOptionSet().valuesOf(nonOptSpec);
-                answer(message, "Retrieving " + inflect(queries.size(), "profile") + "...");
-                for (String query : queries) {
-                    Long steamId64 = gameQueryService.getSteamId64(query)
-                        .exceptionally(t -> {
-                            log.warn("Could not resolve {} to a steamId64", query, t);
-                            return null;
-                        }).join();
-                    if (steamId64 == null) {
-                        sendMessage(message.getChannel(), baseEmbed()
-                            .withColor(new Color(0xaa0000))
-                            .withTitle("Error")
-                            .appendDescription("Could not resolve " + query + " to a valid Steam ID")
-                            .build());
-                        continue;
-                    }
-                    sendMessage(message.getChannel(), getUserInfo(steamId64));
+                String query = String.join(" ", context.getOptionSet().valuesOf(nonOptSpec));
+                answer(message, "Retrieving profile...");
+                Long steamId64 = gameQueryService.getSteamId64(query)
+                    .exceptionally(t -> {
+                        log.warn("Could not resolve {} to a steamId64", query, t);
+                        return null;
+                    }).join();
+                if (steamId64 == null) {
+                    sendMessage(message.getChannel(), baseEmbed()
+                        .withColor(new Color(0xaa0000))
+                        .withTitle("Error")
+                        .appendDescription("Could not resolve " + query + " to a valid Steam ID")
+                        .build());
+                    return;
                 }
+                sendMessage(message.getChannel(), getUserInfo(steamId64));
             }).build();
     }
 
