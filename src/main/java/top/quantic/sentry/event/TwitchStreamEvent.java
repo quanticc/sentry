@@ -147,7 +147,6 @@ public class TwitchStreamEvent extends SentryEvent {
             .withThumbnail(stream.getChannel().getLogo())
             .withUrl(stream.getChannel().getUrl())
             .withImage(stream.getPreview().get("medium"))
-            .withFooterIcon("https://www.twitch.tv/favicon.ico")
             .withFooterText("twitch.tv")
             .appendField("Playing", stream.getGame(), true);
         if (stream.getViewers() >= 10) {
