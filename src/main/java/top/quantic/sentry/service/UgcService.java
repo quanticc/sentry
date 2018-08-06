@@ -82,7 +82,7 @@ public class UgcService implements InitializingBean {
         UgcLadder ladderSpec = ladderAliases.get(ladder.toLowerCase());
         if (ladderSpec == null) {
             throw new CustomParameterizedException("Invalid ladder name: " + ladder + ". Use one of: " +
-                ladderAliases.keySet().stream().collect(Collectors.joining(", ")));
+                String.join(", ", ladderAliases.keySet()));
         }
         Long ladderId = ladderSpec.getLadderId();
         Map<String, Object> vars = getVariablesMap();
@@ -97,7 +97,7 @@ public class UgcService implements InitializingBean {
             divisionSpec = findDivisionByAlias(ladderId, division);
             if (divisionSpec == null) {
                 throw new CustomParameterizedException("Invalid division name: " + division + ". Use one of: " +
-                    divByLadderAliases.get(ladderId).keySet().stream().collect(Collectors.joining(", ")));
+                    String.join(", ", divByLadderAliases.get(ladderId).keySet()));
             }
             vars.put("div", divisionSpec.getDivId());
             responseEntity = restTemplate.getForEntity(endpoints.get("scheduleByDiv"), String.class, vars);
@@ -190,10 +190,25 @@ public class UgcService implements InitializingBean {
 
     @Retryable(maxAttempts = 10, backoff = @Backoff(2000L))
     @Cacheable("results")
-    public UgcResults getResults(Long season, Long week) throws IOException {
+    public UgcResults getResults(String ladder, Long season, Long week) throws IOException {
+        Objects.requireNonNull(ladder, "Ladder must not be null");
         Objects.requireNonNull(season, "Season must not be null");
         Objects.requireNonNull(week, "Week must not be null");
+        UgcLadder ladderSpec = ladderAliases.get(ladder.toLowerCase());
+        if (ladderSpec == null) {
+            throw new CustomParameterizedException("Invalid ladder name: " + ladder + ". Use one of: " +
+                String.join(", ", ladderAliases.keySet()));
+        }
         Map<String, Object> vars = getVariablesMap();
+        String formatSimple;
+        if ("HL".equals(ladderSpec.getShortName())) {
+            formatSimple = "h";
+        } else if ("6s".equals(ladderSpec.getShortName())) {
+            formatSimple = "6";
+        } else {
+            throw new CustomParameterizedException("Invalid ladder name: only HL and 6s supported");
+        }
+        vars.put("format", formatSimple);
         vars.put("season", season);
         vars.put("week", week);
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(endpoints.get("matchResults"), String.class, vars);
@@ -203,7 +218,7 @@ public class UgcService implements InitializingBean {
         }
         JsonUgcResponse response = objectMapper.readValue(responseEntity.getBody(), JsonUgcResponse.class);
         UgcResults results = new UgcResults();
-        results.setLadder("hl"); // only available for HL
+        results.setLadder(ladderSpec.getShortName());
         results.setSeason(season);
         results.setWeek(week);
         results.setMatches(objectMapper.convertValue(convertTabularData(response), new TypeReference<List<UgcResults.Match>>() {

@@ -57,14 +57,15 @@ public class UgcResource {
         return ResponseEntity.ok(ugcService.getTeam(id, roster != null ? roster : true));
     }
 
-    @GetMapping("/results/{season}/{week}")
+    @GetMapping("/results/{ladder}/{season}/{week}")
     @Timed
     @RateLimited(1)
     public ResponseEntity<UgcResults> getResults(@ApiIgnore HttpServletRequest request,
+                                                 @PathVariable String ladder,
                                                  @PathVariable Long season,
                                                  @PathVariable Long week) throws IOException {
-        log.debug("REST request to get results from s{}w{}", season, week);
-        return ResponseEntity.ok(ugcService.getResults(season, week));
+        log.debug("REST request to get results from {} s{}w{}", season, week);
+        return ResponseEntity.ok(ugcService.getResults(ladder, season, week));
     }
 
     @GetMapping("/player-legacy/{steamId64}")
